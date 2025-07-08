@@ -3,7 +3,7 @@ steps:
     args:
       - build
       - '--no-cache'
-      - '-e'
+      - '--build-arg'
       - 'BUILDPLATFORM=$_BUILDPLATFORM'
       - '-t'
       - >-
