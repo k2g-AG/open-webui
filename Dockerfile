@@ -22,7 +22,7 @@ ARG GID=0
 
 ######## WebUI frontend ########
 ARG BUILDPLATFORM=$_BUILDPLATFORM
-ARG NODE_OPTIONS="--max-old-space-size=8192"
+ENV NODE_OPTIONS="--max-old-space-size=8192"
 
 FROM --platform=$BUILDPLATFORM node:22-alpine3.20 AS build
 
