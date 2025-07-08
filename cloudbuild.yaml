@@ -41,7 +41,7 @@ options:
   logging: CLOUD_LOGGING_ONLY
 substitutions:
   # _BUILDPLATFORM: linux/amd64
-  _DEPLOY_REGION: europe-west3
+  _DEPLOY_REGION: europe-west4
   _AR_HOSTNAME: eu.gcr.io
   _TRIGGER_ID: ef153364-2803-48d0-81fa-25c59e54bb7c
   _PLATFORM: managed
