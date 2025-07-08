@@ -22,7 +22,7 @@ ARG GID=0
 
 ######## WebUI frontend ########
 ARG BUILDPLATFORM=_BUILDPLATFORM
-ARG NODE_OPTIONS=--max-old-space-size=8192
+# ARG NODE_OPTIONS=--max-old-space-size=8192
 
 RUN echo "BUILDPLATFORM is $BUILDPLATFORM"
 RUN echo "NODE_OPTIONS is $NODE_OPTIONS"
