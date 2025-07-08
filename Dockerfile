@@ -21,12 +21,7 @@ ARG UID=0
 ARG GID=0
 
 ######## WebUI frontend ########
-ARG NODE_OPTIONS="--max-old-space-size=8192"
-
 FROM --platform=linux/amd64 node:22-alpine3.20 AS build
-
-RUN export NODE_OPTIONS="--max-old-space-size=8192"
-RUN echo "NODE_OPTIONS is $NODE_OPTIONS"
 
 ARG BUILD_HASH
 
@@ -40,7 +35,7 @@ RUN npm ci
 
 COPY . .
 ENV APP_BUILD_HASH=${BUILD_HASH}
-RUN npm run build
+RUN export NODE_OPTIONS="--max-old-space-size=8192" && echo "NODE_OPTIONS is $NODE_OPTIONS" && npm run build 
 
 ######## WebUI backend ########
 FROM python:3.11-slim-bookworm AS base
