@@ -25,7 +25,7 @@ ARG NODE_OPTIONS="--max-old-space-size=8192"
 
 FROM --platform=linux/amd64 node:22-alpine3.20 AS build
 
-RUN EXPORT NODE_OPTIONS="--max-old-space-size=8192"
+RUN export NODE_OPTIONS="--max-old-space-size=8192"
 RUN echo "NODE_OPTIONS is $NODE_OPTIONS"
 
 ARG BUILD_HASH
