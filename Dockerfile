@@ -21,12 +21,10 @@ ARG UID=0
 ARG GID=0
 
 ######## WebUI frontend ########
-ARG BUILDPLATFORM=$_BUILDPLATFORM
 ARG NODE_OPTIONS="--max-old-space-size=8192"
 
-FROM --platform=$_BUILDPLATFORM node:22-alpine3.20 AS build
+FROM --platform=linux/amd64 node:22-alpine3.20 AS build
 
-RUN echo "BUILDPLATFORM is $BUILDPLATFORM"
 RUN echo "NODE_OPTIONS is $NODE_OPTIONS"
 
 ARG BUILD_HASH
