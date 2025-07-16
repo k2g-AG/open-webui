@@ -90,10 +90,6 @@
 			return;
 		}
 
-		if (embeddingEngine === 'openai' && (OpenAIKey === '' || OpenAIUrl === '')) {
-			toast.error($i18n.t('OpenAI URL/Key required.'));
-			return;
-		}
 		if (
 			embeddingEngine === 'azure_openai' &&
 			(AzureOpenAIKey === '' || AzureOpenAIUrl === '' || AzureOpenAIVersion === '')
@@ -199,6 +195,9 @@
 			ALLOWED_FILE_EXTENSIONS: RAGConfig.ALLOWED_FILE_EXTENSIONS.split(',')
 				.map((ext) => ext.trim())
 				.filter((ext) => ext !== ''),
+			ALLOWED_DIRECT_FILE_EXTENSIONS: RAGConfig.ALLOWED_DIRECT_FILE_EXTENSIONS.split(',')
+				.map((ext) => ext.trim())
+				.filter((ext) => ext !== ''),
 			DATALAB_MARKER_LANGS: RAGConfig.DATALAB_MARKER_LANGS.split(',')
 				.map((code) => code.trim())
 				.filter((code) => code !== '')
@@ -235,6 +234,8 @@
 
 		const config = await getRAGConfig(localStorage.token);
 		config.ALLOWED_FILE_EXTENSIONS = (config?.ALLOWED_FILE_EXTENSIONS ?? []).join(', ');
+
+		config.ALLOWED_DIRECT_FILE_EXTENSIONS = (config?.ALLOWED_DIRECT_FILE_EXTENSIONS ?? []).join(', ');
 
 		config.DOCLING_PICTURE_DESCRIPTION_LOCAL = JSON.stringify(
 			config.DOCLING_PICTURE_DESCRIPTION_LOCAL ?? {},
@@ -643,6 +644,7 @@
 								>
 									<option value="">{$i18n.t('Default')} ({$i18n.t('Character')})</option>
 									<option value="token">{$i18n.t('Token')} ({$i18n.t('Tiktoken')})</option>
+									<option value="markdown_header">{$i18n.t('Markdown (Header)')}</option>
 								</select>
 							</div>
 						</div>
@@ -731,7 +733,11 @@
 										required
 									/>
 
-									<SensitiveInput placeholder={$i18n.t('API Key')} bind:value={OpenAIKey} />
+									<SensitiveInput
+										placeholder={$i18n.t('API Key')}
+										bind:value={OpenAIKey}
+										required={false}
+									/>
 								</div>
 							{:else if embeddingEngine === 'ollama'}
 								<div class="my-0.5 flex gap-2 pr-2">
@@ -808,33 +814,7 @@
 											>
 												{#if updateEmbeddingModelLoading}
 													<div class="self-center">
-														<svg
-															class=" w-4 h-4"
-															viewBox="0 0 24 24"
-															fill="currentColor"
-															xmlns="http://www.w3.org/2000/svg"
-														>
-															<style>
-																.spinner_ajPY {
-																	transform-origin: center;
-																	animation: spinner_AtaB 0.75s infinite linear;
-																}
-
-																@keyframes spinner_AtaB {
-																	100% {
-																		transform: rotate(360deg);
-																	}
-																}
-															</style>
-															<path
-																d="M12,1A11,11,0,1,0,23,12,11,11,0,0,0,12,1Zm0,19a8,8,0,1,1,8-8A8,8,0,0,1,12,20Z"
-																opacity=".25"
-															/>
-															<path
-																d="M10.14,1.16a11,11,0,0,0-9,8.92A1.59,1.59,0,0,0,2.46,12,1.52,1.52,0,0,0,4.11,10.7a8,8,0,0,1,6.66-6.61A1.42,1.42,0,0,0,12,2.69h0A1.57,1.57,0,0,0,10.14,1.16Z"
-																class="spinner_ajPY"
-															/>
-														</svg>
+														<Spinner />
 													</div>
 												{:else}
 													<svg
@@ -1146,6 +1126,68 @@
 					</div>
 
 					<div class="  mb-2.5 flex w-full justify-between">
+						<div class=" self-center text-xs font-medium">{$i18n.t('Allowed Direct File Extensions')}</div>
+						<div class="flex items-center relative">
+							<Tooltip
+								content={$i18n.t(
+									'Allowed direct file extensions for upload. Separate multiple extensions with commas. Leave empty for all file types.'
+								)}
+								placement="top-start"
+							>
+								<input
+									class="flex-1 w-full text-sm bg-transparent outline-hidden"
+									type="text"
+									placeholder={$i18n.t('e.g. csv')}
+									bind:value={RAGConfig.ALLOWED_DIRECT_FILE_EXTENSIONS}
+									autocomplete="off"
+								/>
+							</Tooltip>
+						</div>
+					</div>
+
+					<div class="  mb-2.5 flex w-full justify-between">
+						<div class=" self-center text-xs font-medium">{$i18n.t('Max Direct Upload Size')}</div>
+						<div class="flex items-center relative">
+							<Tooltip
+								content={$i18n.t(
+									'The maximum direct file size in MB. If the file size exceeds this limit, the file will not be uploaded.'
+								)}
+								placement="top-start"
+							>
+								<input
+									class="flex-1 w-full text-sm bg-transparent outline-hidden"
+									type="number"
+									placeholder={$i18n.t('Leave empty for unlimited')}
+									bind:value={RAGConfig.DIRECT_FILE_MAX_SIZE}
+									autocomplete="off"
+									min="0"
+								/>
+							</Tooltip>
+						</div>
+					</div>
+
+					<div class="  mb-2.5 flex w-full justify-between">
+						<div class=" self-center text-xs font-medium">{$i18n.t('Max Direct Upload Count')}</div>
+						<div class="flex items-center relative">
+							<Tooltip
+								content={$i18n.t(
+									'The maximum number of direct files that can be used at once in chat. If the number of files exceeds this limit, the files will not be uploaded.'
+								)}
+								placement="top-start"
+							>
+								<input
+									class="flex-1 w-full text-sm bg-transparent outline-hidden"
+									type="number"
+									placeholder={$i18n.t('Leave empty for unlimited')}
+									bind:value={RAGConfig.DIRECT_FILE_MAX_COUNT}
+									autocomplete="off"
+									min="0"
+								/>
+							</Tooltip>
+						</div>
+					</div>
+
+					<div class="  mb-2.5 flex w-full justify-between">
 						<div class=" self-center text-xs font-medium">{$i18n.t('Image Compression Width')}</div>
 						<div class="flex items-center relative">
 							<Tooltip
@@ -1272,7 +1314,7 @@
 		</div>
 	{:else}
 		<div class="flex items-center justify-center h-full">
-			<Spinner />
+			<Spinner className="size-5" />
 		</div>
 	{/if}
 </form>

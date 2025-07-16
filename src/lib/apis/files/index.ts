@@ -34,6 +34,42 @@ export const uploadFile = async (token: string, file: File, metadata?: object | 
 	return res;
 };
 
+export const uploadDirectFile = async (token: string, file: File, metadata?: object | null) => {
+	const data = new FormData();
+	data.append('file', file);
+	if (metadata) {
+		data.append('metadata', JSON.stringify(metadata));
+	}
+
+	data.append('uploadType', 'direct');
+
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/files/`, {
+		method: 'POST',
+		headers: {
+			Accept: 'application/json',
+			authorization: `Bearer ${token}`
+		},
+		body: data
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			error = err.detail;
+			console.error(err);
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
+};
+
 export const uploadDir = async (token: string) => {
 	let error = null;
 

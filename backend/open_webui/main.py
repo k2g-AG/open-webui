@@ -36,7 +36,6 @@ from fastapi import (
     applications,
     BackgroundTasks,
 )
-
 from fastapi.openapi.docs import get_swagger_ui_html
 
 from fastapi.middleware.cors import CORSMiddleware
@@ -49,6 +48,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.responses import Response, StreamingResponse
+from starlette.datastructures import Headers
 
 
 from open_webui.utils import logger
@@ -89,6 +89,7 @@ from open_webui.routers import (
 
 from open_webui.routers.retrieval import (
     get_embedding_function,
+    get_reranking_function,
     get_ef,
     get_rf,
 )
@@ -116,6 +117,8 @@ from open_webui.config import (
     OPENAI_API_CONFIGS,
     # Direct Connections
     ENABLE_DIRECT_CONNECTIONS,
+    # Model list
+    ENABLE_BASE_MODELS_CACHE,
     # Thread pool size for FastAPI/AnyIO
     THREAD_POOL_SIZE,
     # Tool Server Configs
@@ -208,9 +211,15 @@ from open_webui.config import (
     RAG_TOP_K_RERANKER,
     RAG_RELEVANCE_THRESHOLD,
     RAG_HYBRID_BM25_WEIGHT,
+    
     RAG_ALLOWED_FILE_EXTENSIONS,
     RAG_FILE_MAX_COUNT,
     RAG_FILE_MAX_SIZE,
+
+    DIRECT_ALLOWED_FILE_EXTENSIONS,
+    DIRECT_FILE_MAX_COUNT,
+    DIRECT_FILE_MAX_SIZE,
+
     FILE_IMAGE_COMPRESSION_WIDTH,
     FILE_IMAGE_COMPRESSION_HEIGHT,
     RAG_OPENAI_API_BASE_URL,
@@ -396,6 +405,7 @@ from open_webui.env import (
     AUDIT_LOG_LEVEL,
     CHANGELOG,
     REDIS_URL,
+    REDIS_KEY_PREFIX,
     REDIS_SENTINEL_HOSTS,
     REDIS_SENTINEL_PORT,
     GLOBAL_LOG_LEVEL,
@@ -411,10 +421,11 @@ from open_webui.env import (
     WEBUI_AUTH_TRUSTED_EMAIL_HEADER,
     WEBUI_AUTH_TRUSTED_NAME_HEADER,
     WEBUI_AUTH_SIGNOUT_REDIRECT_URL,
+    ENABLE_COMPRESSION_MIDDLEWARE,
     ENABLE_WEBSOCKET_SUPPORT,
     BYPASS_MODEL_ACCESS_CONTROL,
     RESET_CONFIG_ON_START,
-    OFFLINE_MODE,
+    ENABLE_VERSION_UPDATE_CHECK,
     ENABLE_OTEL,
     EXTERNAL_PWA_MANIFEST_URL,
     AIOHTTP_CLIENT_SESSION_SSL,
@@ -449,7 +460,7 @@ from open_webui.utils.redis import get_redis_connection
 
 from open_webui.tasks import (
     redis_task_command_listener,
-    list_task_ids_by_chat_id,
+    list_task_ids_by_item_id,
     stop_task,
     list_tasks,
 )  # Import from tasks.py
@@ -533,6 +544,27 @@ async def lifespan(app: FastAPI):
 
     asyncio.create_task(periodic_usage_pool_cleanup())
 
+    if app.state.config.ENABLE_BASE_MODELS_CACHE:
+        await get_all_models(
+            Request(
+                # Creating a mock request object to pass to get_all_models
+                {
+                    "type": "http",
+                    "asgi.version": "3.0",
+                    "asgi.spec_version": "2.0",
+                    "method": "GET",
+                    "path": "/internal",
+                    "query_string": b"",
+                    "headers": Headers({}).raw,
+                    "client": ("127.0.0.1", 12345),
+                    "server": ("127.0.0.1", 80),
+                    "scheme": "http",
+                    "app": app,
+                }
+            ),
+            None,
+        )
+
     yield
 
     if hasattr(app.state, "redis_task_command_listener"):
@@ -553,6 +585,7 @@ app.state.instance_id = None
 app.state.config = AppConfig(
     redis_url=REDIS_URL,
     redis_sentinels=get_sentinels_from_env(REDIS_SENTINEL_HOSTS, REDIS_SENTINEL_PORT),
+    redis_key_prefix=REDIS_KEY_PREFIX,
 )
 app.state.redis = None
 
@@ -614,6 +647,15 @@ app.state.TOOL_SERVERS = []
 ########################################
 
 app.state.config.ENABLE_DIRECT_CONNECTIONS = ENABLE_DIRECT_CONNECTIONS
+
+########################################
+#
+# MODELS
+#
+########################################
+
+app.state.config.ENABLE_BASE_MODELS_CACHE = ENABLE_BASE_MODELS_CACHE
+app.state.BASE_MODELS = []
 
 ########################################
 #
@@ -720,6 +762,11 @@ app.state.config.HYBRID_BM25_WEIGHT = RAG_HYBRID_BM25_WEIGHT
 app.state.config.ALLOWED_FILE_EXTENSIONS = RAG_ALLOWED_FILE_EXTENSIONS
 app.state.config.FILE_MAX_SIZE = RAG_FILE_MAX_SIZE
 app.state.config.FILE_MAX_COUNT = RAG_FILE_MAX_COUNT
+
+app.state.config.ALLOWED_DIRECT_FILE_EXTENSIONS = DIRECT_ALLOWED_FILE_EXTENSIONS
+app.state.config.DIRECT_FILE_MAX_SIZE = DIRECT_FILE_MAX_SIZE
+app.state.config.DIRECT_FILE_MAX_COUNT = DIRECT_FILE_MAX_COUNT
+
 app.state.config.FILE_IMAGE_COMPRESSION_WIDTH = FILE_IMAGE_COMPRESSION_WIDTH
 app.state.config.FILE_IMAGE_COMPRESSION_HEIGHT = FILE_IMAGE_COMPRESSION_HEIGHT
 
@@ -843,6 +890,7 @@ app.state.config.FIRECRAWL_API_KEY = FIRECRAWL_API_KEY
 app.state.config.TAVILY_EXTRACT_DEPTH = TAVILY_EXTRACT_DEPTH
 
 app.state.EMBEDDING_FUNCTION = None
+app.state.RERANKING_FUNCTION = None
 app.state.ef = None
 app.state.rf = None
 
@@ -871,8 +919,8 @@ except Exception as e:
 app.state.EMBEDDING_FUNCTION = get_embedding_function(
     app.state.config.RAG_EMBEDDING_ENGINE,
     app.state.config.RAG_EMBEDDING_MODEL,
-    app.state.ef,
-    (
+    embedding_function=app.state.ef,
+    url=(
         app.state.config.RAG_OPENAI_API_BASE_URL
         if app.state.config.RAG_EMBEDDING_ENGINE == "openai"
         else (
@@ -881,7 +929,7 @@ app.state.EMBEDDING_FUNCTION = get_embedding_function(
             else app.state.config.RAG_AZURE_OPENAI_BASE_URL
         )
     ),
-    (
+    key=(
         app.state.config.RAG_OPENAI_API_KEY
         if app.state.config.RAG_EMBEDDING_ENGINE == "openai"
         else (
@@ -890,12 +938,18 @@ app.state.EMBEDDING_FUNCTION = get_embedding_function(
             else app.state.config.RAG_AZURE_OPENAI_API_KEY
         )
     ),
-    app.state.config.RAG_EMBEDDING_BATCH_SIZE,
+    embedding_batch_size=app.state.config.RAG_EMBEDDING_BATCH_SIZE,
     azure_api_version=(
         app.state.config.RAG_AZURE_OPENAI_API_VERSION
         if app.state.config.RAG_EMBEDDING_ENGINE == "azure_openai"
         else None
     ),
+)
+
+app.state.RERANKING_FUNCTION = get_reranking_function(
+    app.state.config.RAG_RERANKING_ENGINE,
+    app.state.config.RAG_RERANKING_MODEL,
+    reranking_function=app.state.rf,
 )
 
 ########################################
@@ -1072,7 +1126,9 @@ class RedirectMiddleware(BaseHTTPMiddleware):
 
 
 # Add the middleware to the app
-app.add_middleware(CompressMiddleware)
+if ENABLE_COMPRESSION_MIDDLEWARE:
+    app.add_middleware(CompressMiddleware)
+
 app.add_middleware(RedirectMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 
@@ -1188,7 +1244,9 @@ if audit_level != AuditLevel.NONE:
 
 
 @app.get("/api/models")
-async def get_models(request: Request, user=Depends(get_verified_user)):
+async def get_models(
+    request: Request, refresh: bool = False, user=Depends(get_verified_user)
+):
     def get_filtered_models(models, user):
         filtered_models = []
         for model in models:
@@ -1212,7 +1270,7 @@ async def get_models(request: Request, user=Depends(get_verified_user)):
 
         return filtered_models
 
-    all_models = await get_all_models(request, user=user)
+    all_models = await get_all_models(request, refresh=refresh, user=user)
 
     models = []
     for model in all_models:
@@ -1447,7 +1505,7 @@ async def stop_task_endpoint(
     request: Request, task_id: str, user=Depends(get_verified_user)
 ):
     try:
-        result = await stop_task(request, task_id)
+        result = await stop_task(request.app.state.redis, task_id)
         return result
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
@@ -1455,7 +1513,7 @@ async def stop_task_endpoint(
 
 @app.get("/api/tasks")
 async def list_tasks_endpoint(request: Request, user=Depends(get_verified_user)):
-    return {"tasks": await list_tasks(request)}
+    return {"tasks": await list_tasks(request.app.state.redis)}
 
 
 @app.get("/api/tasks/chat/{chat_id}")
@@ -1466,9 +1524,9 @@ async def list_tasks_by_chat_id_endpoint(
     if chat is None or chat.user_id != user.id:
         return {"task_ids": []}
 
-    task_ids = await list_task_ids_by_chat_id(request, chat_id)
+    task_ids = await list_task_ids_by_item_id(request.app.state.redis, chat_id)
 
-    print(f"Task IDs for chat {chat_id}: {task_ids}")
+    log.debug(f"Task IDs for chat {chat_id}: {task_ids}")
     return {"task_ids": task_ids}
 
 
@@ -1521,6 +1579,7 @@ async def get_app_config(request: Request):
             "enable_signup": app.state.config.ENABLE_SIGNUP,
             "enable_login_form": app.state.config.ENABLE_LOGIN_FORM,
             "enable_websocket": ENABLE_WEBSOCKET_SUPPORT,
+            "enable_version_update_check": ENABLE_VERSION_UPDATE_CHECK,
             **(
                 {
                     "enable_direct_connections": app.state.config.ENABLE_DIRECT_CONNECTIONS,
@@ -1564,6 +1623,10 @@ async def get_app_config(request: Request):
                 "file": {
                     "max_size": app.state.config.FILE_MAX_SIZE,
                     "max_count": app.state.config.FILE_MAX_COUNT,
+                    "allow_file_extensions": app.state.config.ALLOWED_FILE_EXTENSIONS,
+                    "allow_direct_file_extensions": app.state.config.ALLOWED_DIRECT_FILE_EXTENSIONS,
+                    "direct_max_size": app.state.config.DIRECT_FILE_MAX_SIZE,
+                    "direct_max_count": app.state.config.DIRECT_FILE_MAX_COUNT,
                     "image_compression": {
                         "width": app.state.config.FILE_IMAGE_COMPRESSION_WIDTH,
                         "height": app.state.config.FILE_IMAGE_COMPRESSION_HEIGHT,
@@ -1594,7 +1657,19 @@ async def get_app_config(request: Request):
                 ),
             }
             if user is not None
-            else {}
+            else {
+                **(
+                    {
+                        "metadata": {
+                            "login_footer": app.state.LICENSE_METADATA.get(
+                                "login_footer", ""
+                            )
+                        }
+                    }
+                    if app.state.LICENSE_METADATA
+                    else {}
+                )
+            }
         ),
     }
 
@@ -1626,9 +1701,9 @@ async def get_app_version():
 
 @app.get("/api/version/updates")
 async def get_app_latest_release_version(user=Depends(get_verified_user)):
-    if OFFLINE_MODE:
+    if not ENABLE_VERSION_UPDATE_CHECK:
         log.debug(
-            f"Offline mode is enabled, returning current version as latest version"
+            f"Version update check is disabled, returning current version as latest version"
         )
         return {"current": VERSION, "latest": VERSION}
     try:
