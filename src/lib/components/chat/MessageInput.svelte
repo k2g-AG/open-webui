@@ -45,7 +45,7 @@
 		getUserTimezone,
 		getWeekday
 	} from '$lib/utils';
-	import { uploadFile } from '$lib/apis/files';
+	import { uploadFile, uploadDirectFile } from '$lib/apis/files';
 	import { generateAutoCompletion } from '$lib/apis';
 	import { deleteFileById } from '$lib/apis/files';
 
@@ -384,6 +384,7 @@
 	let chatInputElement;
 
 	let filesInputElement;
+	let filesDirectInputElement;
 	let commandsElement;
 
 	let inputFiles;
@@ -707,6 +708,175 @@
 		});
 	};
 
+	// ------------- DIRECT File upload ------------------
+
+	const uploadDirectFileHandler = async (file, fullContext: boolean = false) => {
+		if ($_user?.role !== 'admin' && !($_user?.permissions?.chat?.file_upload ?? true)) {
+			toast.error($i18n.t('You do not have permission to upload files.'));
+			return null;
+		}
+		
+		toast.warning('uploadDirectFileHandler started..');
+
+		const tempItemId = uuidv4();
+		const fileItem = {
+			type: 'file',
+			file: '',
+			id: null,
+			url: '',
+			name: file.name,
+			collection_name: '',
+			status: 'uploading',
+			size: file.size,
+			error: '',
+			itemId: tempItemId,
+			...(fullContext ? { context: 'full' } : {})
+		};
+
+		if (fileItem.size == 0) {
+			toast.error($i18n.t('You cannot upload an empty file.'));
+			return null;
+		}
+
+		files = [...files, fileItem];
+
+		if (!$temporaryChatEnabled) {
+			try {
+				// If the file is an audio file, provide the language for STT.
+				let metadata = {'uploadType': 'direct'};
+				if (!file.type.toLowerCase().includes('csv')) {
+					console.warn('File upload warning: file type not .csv');
+					toast.warning('File upload warning: file type not .csv');
+					return null;
+				}
+
+				// During the file upload, file content is automatically extracted.
+				const uploadedFile = await uploadDirectFile(localStorage.token, file, metadata);
+
+				if (uploadedFile) {
+					console.log('File upload completed:', {
+						id: uploadedFile.id,
+						name: fileItem.name,
+						collection: uploadedFile?.meta?.collection_name
+					});
+
+					if (uploadedFile.error) {
+						console.warn('File direct upload warning:', uploadedFile.error);
+						toast.warning(uploadedFile.error);
+					}
+
+					fileItem.status = 'uploaded';
+					fileItem.file = uploadedFile;
+					fileItem.id = uploadedFile.id;
+					fileItem.collection_name =
+						uploadedFile?.meta?.collection_name || uploadedFile?.collection_name;
+					fileItem.url = `${WEBUI_API_BASE_URL}/files/${uploadedFile.id}`;
+
+					files = files;
+				} else {
+					files = files.filter((item) => item?.itemId !== tempItemId);
+				}
+			} catch (e) {
+				toast.error(`${e}`);
+				files = files.filter((item) => item?.itemId !== tempItemId);
+			}
+		} else {
+			// If temporary chat is enabled, we just add the file to the list without uploading it.
+
+			const content = await extractContentFromFile(file, pdfjsLib).catch((error) => {
+				toast.error(
+					$i18n.t('Failed to extract content from the file: {{error}}', { error: error })
+				);
+				return null;
+			});
+
+			if (content === null) {
+				toast.error($i18n.t('Failed to extract content from the file.'));
+				files = files.filter((item) => item?.itemId !== tempItemId);
+				return null;
+			} else {
+				console.log('Extracted content from file:', {
+					name: file.name,
+					size: file.size,
+					content: content
+				});
+
+				fileItem.status = 'uploaded';
+				fileItem.type = 'text';
+				fileItem.content = content;
+				fileItem.id = uuidv4(); // Temporary ID for the file
+
+				files = files;
+			}
+		}
+	};
+
+	const inputDirectFilesHandler = async (inputFiles) => {
+		console.log('Input files handler called with:', inputFiles);
+
+		if (
+			($config?.file?.direct_max_count ?? null) !== null &&
+			files.length + inputFiles.length > $config?.file?.direct_max_count
+		) {
+			toast.error(
+				$i18n.t(`You can only chat with a maximum of {{maxCount}} file(s) at a time.`, {
+					maxCount: $config?.file?.direct_max_count
+				})
+			);
+			return;
+		}
+
+		let totalFileSize = 0;
+		inputFiles.forEach(async (file) => {
+			let extension = file.name.split('.').at(-1);
+			console.log('Processing file:', {
+				name: file.name,
+				type: file.type,
+				size: file.size,
+				extension: extension
+			});
+			totalFileSize += file.size;
+			if (
+				($config?.file?.direct_max_size ?? null) !== null &&
+				totalFileSize > ($config?.file?.direct_max_size ?? 0) * 1024 * 1024
+			) {
+				console.log('Files total exceeds max size limit:', {
+					totalFileSize: totalFileSize,
+					maxSize: ($config?.file?.direct_max_size ?? 0) * 1024 * 1024
+				});
+				toast.error(
+					$i18n.t(`Files size total should not exceed {{maxSize}} MB.`, {
+						maxSize: $config?.file?.direct_max_size
+					})
+				);
+				return;
+			}
+			// ToDo: change for check in $config?.file?.allow_direct_file_extensions
+			let allow_direct_file_extensions = $config?.file?.allow_direct_file_extensions;
+			if (typeof $config?.file?.allow_direct_file_extensions === 'string') {
+				allow_direct_file_extensions = $config?.file?.allow_direct_file_extensions
+					.split(',')
+					.map((ext) => ext.trim().toLowerCase());
+			}
+			if (extension.toLowerCase() in allow_direct_file_extensions) {
+				uploadDirectFileHandler(file);
+			} else {
+				console.warn('File upload warning: file type not in', {
+					allow_direct_file_extensions: $config?.file?.allow_direct_file_extensions,
+					extension: extension.toLowerCase()
+				});
+				toast.warning(
+					$i18n.t(`File upload warning: file type not in {{allow_direct_file_extensions}}`, {
+						allow_direct_file_extensions: $config?.file?.allow_direct_file_extensions,
+						extension: extension.toLowerCase()
+					})
+				);
+			}
+		});
+	};
+
+	// ---------------------------------------------------
+
 	const onDragOver = (e) => {
 		e.preventDefault();
 
@@ -936,6 +1106,7 @@
 						hidden
 						multiple
 						on:change={async () => {
+							console.log('MessageInput files :', inputFiles);
 							if (inputFiles && inputFiles.length > 0) {
 								const _inputFiles = Array.from(inputFiles);
 								inputFilesHandler(_inputFiles);
@@ -944,6 +1115,25 @@
 							}
 
 							filesInputElement.value = '';
+						}}
+					/>
+
+					<input
+						bind:this={filesDirectInputElement}
+						bind:files={inputFiles}
+						type="file"
+						hidden
+						multiple
+						on:change={async () => {
+							console.log('MessageInput direct files :', inputFiles);
+							if (inputFiles && inputFiles.length > 0) {
+								const _inputFiles = Array.from(inputFiles);
+								inputDirectFilesHandler(_inputFiles);
+							} else {
+								toast.error($i18n.t(`File not found.`));
+							}
+
+							filesDirectInputElement.value = '';
 						}}
 					/>
 
@@ -1549,8 +1739,12 @@
 											{fileUploadCapableModels}
 											{screenCaptureHandler}
 											{inputFilesHandler}
+											{inputDirectFilesHandler}
 											uploadFilesHandler={() => {
 												filesInputElement.click();
+											}}
+											uploadDirectFilesHandler={() => {
+												filesDirectInputElement.click();
 											}}
 											uploadGoogleDriveHandler={async () => {
 												try {

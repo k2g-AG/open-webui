@@ -2226,6 +2226,40 @@ RAG_ALLOWED_FILE_EXTENSIONS = PersistentConfig(
     ],
 )
 
+# ---------------------------------------------------------------------------------------------
+
+DIRECT_ALLOWED_FILE_EXTENSIONS = PersistentConfig(
+    "DIRECT_ALLOWED_FILE_EXTENSIONS",
+    "file.allowed_direct_extensions",
+    [
+        ext.strip()
+        for ext in os.environ.get("DIRECT_ALLOWED_FILE_EXTENSIONS", "csv").split(",")
+        if ext.strip()
+    ],
+)
+
+DIRECT_FILE_MAX_COUNT = PersistentConfig(
+    "DIRECT_FILE_MAX_COUNT",
+    "file.direct_max_count",
+    (
+        int(os.environ.get("DIRECT_FILE_MAX_COUNT", 1))
+        if os.environ.get("DIRECT_FILE_MAX_COUNT", 1)
+        else None
+    ),
+)
+
+DIRECT_FILE_MAX_SIZE = PersistentConfig(
+    "DIRECT_FILE_MAX_SIZE",
+    "file.direct_max_size",
+    (
+        int(os.environ.get("DIRECT_FILE_MAX_SIZE", 10000))
+        if os.environ.get("DIRECT_FILE_MAX_SIZE", 10000)
+        else None
+    ),
+)
+
+# ---------------------------------------------------------------------------------------------
+
 RAG_EMBEDDING_ENGINE = PersistentConfig(
     "RAG_EMBEDDING_ENGINE",
     "rag.embedding_engine",

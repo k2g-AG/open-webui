@@ -437,6 +437,12 @@ async def get_rag_config(request: Request, user=Depends(get_admin_user)):
         "FILE_IMAGE_COMPRESSION_WIDTH": request.app.state.config.FILE_IMAGE_COMPRESSION_WIDTH,
         "FILE_IMAGE_COMPRESSION_HEIGHT": request.app.state.config.FILE_IMAGE_COMPRESSION_HEIGHT,
         "ALLOWED_FILE_EXTENSIONS": request.app.state.config.ALLOWED_FILE_EXTENSIONS,
+        
+        # Direct file settings
+        "DIRECT_FILE_MAX_SIZE": request.app.state.config.DIRECT_FILE_MAX_SIZE,
+        "DIRECT_FILE_MAX_COUNT": request.app.state.config.DIRECT_FILE_MAX_COUNT,
+        "ALLOWED_DIRECT_FILE_EXTENSIONS": request.app.state.config.ALLOWED_DIRECT_FILE_EXTENSIONS,
+
         # Integration settings
         "ENABLE_GOOGLE_DRIVE_INTEGRATION": request.app.state.config.ENABLE_GOOGLE_DRIVE_INTEGRATION,
         "ENABLE_ONEDRIVE_INTEGRATION": request.app.state.config.ENABLE_ONEDRIVE_INTEGRATION,
@@ -606,6 +612,11 @@ class ConfigForm(BaseModel):
     FILE_IMAGE_COMPRESSION_WIDTH: Optional[int] = None
     FILE_IMAGE_COMPRESSION_HEIGHT: Optional[int] = None
     ALLOWED_FILE_EXTENSIONS: Optional[List[str]] = None
+
+    # Direct file upload settings
+    DIRECT_FILE_MAX_SIZE: Optional[int] = None
+    DIRECT_FILE_MAX_COUNT: Optional[int] = None
+    ALLOWED_DIRECT_FILE_EXTENSIONS: Optional[List[str]] = None
 
     # Integration settings
     ENABLE_GOOGLE_DRIVE_INTEGRATION: Optional[bool] = None
@@ -861,6 +872,7 @@ async def update_rag_config(
     # File upload settings
     request.app.state.config.FILE_MAX_SIZE = form_data.FILE_MAX_SIZE
     request.app.state.config.FILE_MAX_COUNT = form_data.FILE_MAX_COUNT
+    
     request.app.state.config.FILE_IMAGE_COMPRESSION_WIDTH = (
         form_data.FILE_IMAGE_COMPRESSION_WIDTH
     )
@@ -871,6 +883,15 @@ async def update_rag_config(
         form_data.ALLOWED_FILE_EXTENSIONS
         if form_data.ALLOWED_FILE_EXTENSIONS is not None
         else request.app.state.config.ALLOWED_FILE_EXTENSIONS
+    )
+
+    # Direct file upload settings
+    request.app.state.config.DIRECT_FILE_MAX_SIZE = form_data.DIRECT_FILE_MAX_SIZE
+    request.app.state.config.DIRECT_FILE_MAX_COUNT = form_data.DIRECT_FILE_MAX_COUNT
+    request.app.state.config.ALLOWED_DIRECT_FILE_EXTENSIONS = (
+        form_data.ALLOWED_DIRECT_FILE_EXTENSIONS
+        if form_data.ALLOWED_DIRECT_FILE_EXTENSIONS is not None
+        else request.app.state.config.ALLOWED_DIRECT_FILE_EXTENSIONS
     )
 
     # Integration settings
@@ -1038,6 +1059,12 @@ async def update_rag_config(
         "FILE_IMAGE_COMPRESSION_WIDTH": request.app.state.config.FILE_IMAGE_COMPRESSION_WIDTH,
         "FILE_IMAGE_COMPRESSION_HEIGHT": request.app.state.config.FILE_IMAGE_COMPRESSION_HEIGHT,
         "ALLOWED_FILE_EXTENSIONS": request.app.state.config.ALLOWED_FILE_EXTENSIONS,
+        
+        # Direct file settings
+        "DIRECT_FILE_MAX_SIZE": request.app.state.config.DIRECT_FILE_MAX_SIZE,
+        "DIRECT_FILE_MAX_COUNT": request.app.state.config.DIRECT_FILE_MAX_COUNT,
+        "ALLOWED_DIRECT_FILE_EXTENSIONS": request.app.state.config.ALLOWED_DIRECT_FILE_EXTENSIONS,
+
         # Integration settings
         "ENABLE_GOOGLE_DRIVE_INTEGRATION": request.app.state.config.ENABLE_GOOGLE_DRIVE_INTEGRATION,
         "ENABLE_ONEDRIVE_INTEGRATION": request.app.state.config.ENABLE_ONEDRIVE_INTEGRATION,

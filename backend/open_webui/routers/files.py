@@ -92,10 +92,15 @@ def upload_file(
     user=Depends(get_verified_user),
 ):
     log.info(f"file.content_type: {file.content_type}")
+    log.info(f"request headers: {request.headers}")
+    log.info(f"request form: {request.form}")
+    log.info(f"request query_params: {request.query_params}")
+    log.info(f"metadata: {metadata}")
 
     if isinstance(metadata, str):
         try:
             metadata = json.loads(metadata)
+            log.info(f"metadata json: {metadata}")
         except json.JSONDecodeError:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -103,6 +108,11 @@ def upload_file(
             )
     file_metadata = metadata if metadata else {}
 
+    uploadType = file_metadata.get("uploadType", "standart")
+    direct = uploadType == "direct"
+    if uploadType in ['direct']:
+        process = False
+        
     try:
         unsanitized_filename = file.filename
         filename = os.path.basename(unsanitized_filename)
@@ -111,7 +121,20 @@ def upload_file(
         # Remove the leading dot from the file extension
         file_extension = file_extension[1:] if file_extension else ""
 
-        if (not internal) and request.app.state.config.ALLOWED_FILE_EXTENSIONS:
+        if direct:
+            if (not internal) and request.app.state.config.ALLOWED_DIRECT_FILE_EXTENSIONS:
+                request.app.state.config.ALLOWED_DIRECT_FILE_EXTENSIONS = [
+                ext for ext in request.app.state.config.ALLOWED_DIRECT_FILE_EXTENSIONS if ext
+            ]
+
+                if file_extension not in request.app.state.config.ALLOWED_DIRECT_FILE_EXTENSIONS:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=ERROR_MESSAGES.DEFAULT(
+                            f"File type {file_extension} is not allowed for direct upload"
+                        ),
+                    )
+        elif (not internal) and request.app.state.config.ALLOWED_FILE_EXTENSIONS:
             request.app.state.config.ALLOWED_FILE_EXTENSIONS = [
                 ext for ext in request.app.state.config.ALLOWED_FILE_EXTENSIONS if ext
             ]
@@ -133,8 +156,13 @@ def upload_file(
             "OpenWebUI-User-Id": user.id,
             "OpenWebUI-User-Name": user.name,
             "OpenWebUI-File-Id": id,
+            "OpenWebUI-Upload-Type": uploadType,
         }
-        contents, file_path = Storage.upload_file(file.file, filename, tags)
+        
+        log.info(f"file tags: {tags}")
+        log.info(f"file lenght: {file.size}")
+        
+        _, file_path = Storage.upload_file(file.file, filename, tags)
 
         file_item = Files.insert_new_file(
             user.id,
@@ -146,7 +174,7 @@ def upload_file(
                     "meta": {
                         "name": name,
                         "content_type": file.content_type,
-                        "size": len(contents),
+                        "size": file.size,
                         "data": file_metadata,
                     },
                 }
