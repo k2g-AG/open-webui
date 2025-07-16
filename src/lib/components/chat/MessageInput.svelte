@@ -717,6 +717,7 @@
 		}
 		
 		toast.warning('uploadDirectFileHandler started..');
+		let extension = file.name.split('.').at(-1);
 
 		const tempItemId = uuidv4();
 		const fileItem = {
@@ -744,9 +745,25 @@
 			try {
 				// If the file is an audio file, provide the language for STT.
 				let metadata = {'uploadType': 'direct'};
-				if (!file.type.toLowerCase().includes('csv')) {
-					console.warn('File upload warning: file type not .csv');
-					toast.warning('File upload warning: file type not .csv');
+
+				// ToDo: change for check in $config?.file?.allow_direct_file_extensions
+				let allow_direct_file_extensions = $config?.file?.allow_direct_file_extensions;
+				if (typeof $config?.file?.allow_direct_file_extensions === 'string') {
+					allow_direct_file_extensions = $config?.file?.allow_direct_file_extensions
+						.split(',')
+						.map((ext) => ext.trim().toLowerCase());
+				}
+				if (allow_direct_file_extensions.includes(extension.toLowerCase())) {
+					console.warn('File upload warning: file type not in', {
+						allow_direct_file_extensions: $config?.file?.allow_direct_file_extensions,
+						extension: extension.toLowerCase()
+					});
+					toast.warning(
+						$i18n.t(`File upload warning: file type not in {{allow_direct_file_extensions}}`, {
+							allow_direct_file_extensions: $config?.file?.allow_direct_file_extensions,
+							extension: extension.toLowerCase()
+						})
+					);
 					return null;
 				}
 
@@ -858,7 +875,7 @@
 					.split(',')
 					.map((ext) => ext.trim().toLowerCase());
 			}
-			if (extension.toLowerCase() in allow_direct_file_extensions) {
+			if (allow_direct_file_extensions.includes(extension.toLowerCase())) {
 				uploadDirectFileHandler(file);
 			} else {
 				console.warn('File upload warning: file type not in', {
