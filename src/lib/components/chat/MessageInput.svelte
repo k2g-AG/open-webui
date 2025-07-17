@@ -716,7 +716,6 @@
 			return null;
 		}
 		
-		toast.warning('uploadDirectFileHandler started..');
 		let extension = file.name.split('.').at(-1);
 
 		const tempItemId = uuidv4();
@@ -744,33 +743,11 @@
 		try {
 			// If the file is an audio file, provide the language for STT.
 			let metadata = {'uploadType': 'direct'};
-
-			// ToDo: change for check in $config?.file?.allow_direct_file_extensions
-			let allow_direct_file_extensions = $config?.file?.allow_direct_file_extensions;
-			if (typeof $config?.file?.allow_direct_file_extensions === 'string') {
-				allow_direct_file_extensions = $config?.file?.allow_direct_file_extensions
-					.split(',')
-					.map((ext) => ext.trim().toLowerCase());
-			}
-			if (!allow_direct_file_extensions.includes(extension.toLowerCase())) {
-				console.warn('File upload warning: file type not in', {
-					allow_direct_file_extensions: $config?.file?.allow_direct_file_extensions,
-					extension: extension.toLowerCase()
-				});
-				toast.warning(
-					$i18n.t(`File upload warning: file type not in {{allow_direct_file_extensions}}`, {
-						allow_direct_file_extensions: $config?.file?.allow_direct_file_extensions,
-						extension: extension.toLowerCase()
-					})
-				);
-				return null;
-			}
-
 			// During the file upload, file content is automatically extracted.
 			const uploadedFile = await uploadDirectFile(localStorage.token, file, metadata);
 
 			if (uploadedFile) {
-				console.log('File upload completed:', {
+				console.warn('File upload completed:', {
 					id: uploadedFile.id,
 					name: fileItem.name,
 					collection: uploadedFile?.meta?.collection_name
@@ -784,8 +761,7 @@
 				fileItem.status = 'uploaded';
 				fileItem.file = uploadedFile;
 				fileItem.id = uploadedFile.id;
-				fileItem.collection_name =
-					uploadedFile?.meta?.collection_name || uploadedFile?.collection_name;
+				fileItem.collection_name = uploadedFile?.meta?.collection_name || uploadedFile?.collection_name;
 				fileItem.url = `${WEBUI_API_BASE_URL}/files/${uploadedFile.id}`;
 
 				files = files;
@@ -814,21 +790,28 @@
 			return;
 		}
 
+		let allow_direct_file_extensions = $config?.file?.allow_direct_file_extensions;
+		if (typeof $config?.file?.allow_direct_file_extensions === 'string') {
+			allow_direct_file_extensions = $config?.file?.allow_direct_file_extensions
+				.split(',')
+				.map((ext) => ext.trim().toLowerCase());
+		}
+
 		let totalFileSize = 0;
-		inputFiles.forEach(async (file) => {
+		let inputFilesFiltered = [];
+		inputFiles.forEach((file) => {
 			let extension = file.name.split('.').at(-1);
-			console.log('Processing file:', {
-				name: file.name,
-				type: file.type,
-				size: file.size,
-				extension: extension
-			});
-			totalFileSize += file.size;
+
+			if (allow_direct_file_extensions.includes(extension.toLowerCase())) {
+				totalFileSize += file.size;
+				inputFilesFiltered = [...inputFilesFiltered, file];
+			}
+
 			if (
 				($config?.file?.direct_max_size ?? null) !== null &&
 				totalFileSize > ($config?.file?.direct_max_size ?? 0) * 1024 * 1024
 			) {
-				console.log('Files total exceeds max size limit:', {
+				console.warn('Files total exceeds max size limit:', {
 					totalFileSize: totalFileSize,
 					maxSize: ($config?.file?.direct_max_size ?? 0) * 1024 * 1024
 				});
@@ -839,27 +822,17 @@
 				);
 				return;
 			}
-			// ToDo: change for check in $config?.file?.allow_direct_file_extensions
-			let allow_direct_file_extensions = $config?.file?.allow_direct_file_extensions;
-			if (typeof $config?.file?.allow_direct_file_extensions === 'string') {
-				allow_direct_file_extensions = $config?.file?.allow_direct_file_extensions
-					.split(',')
-					.map((ext) => ext.trim().toLowerCase());
-			}
-			if (allow_direct_file_extensions.includes(extension.toLowerCase())) {
-				uploadDirectFileHandler(file);
-			} else {
-				console.warn('File upload warning: file type not in', {
-					allow_direct_file_extensions: $config?.file?.allow_direct_file_extensions,
-					extension: extension.toLowerCase()
-				});
-				toast.warning(
-					$i18n.t(`File upload warning: file type not in {{allow_direct_file_extensions}}`, {
-						allow_direct_file_extensions: $config?.file?.allow_direct_file_extensions,
-						extension: extension.toLowerCase()
-					})
-				);
-			}
+		});
+
+		inputFilesFiltered.forEach(async (file) => {
+			let extension = file.name.split('.').at(-1);
+			console.warn('Processing file:', {
+				name: file.name,
+				type: file.type,
+				size: file.size,
+				extension: extension
+			});
+			uploadDirectFileHandler(file);
 		});
 	};
 
