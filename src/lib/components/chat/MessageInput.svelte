@@ -752,7 +752,7 @@
 					.split(',')
 					.map((ext) => ext.trim().toLowerCase());
 			}
-			if (allow_direct_file_extensions.includes(extension.toLowerCase())) {
+			if (!allow_direct_file_extensions.includes(extension.toLowerCase())) {
 				console.warn('File upload warning: file type not in', {
 					allow_direct_file_extensions: $config?.file?.allow_direct_file_extensions,
 					extension: extension.toLowerCase()
