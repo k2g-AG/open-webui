@@ -741,91 +741,62 @@
 
 		files = [...files, fileItem];
 
-		if (!$temporaryChatEnabled) {
-			try {
-				// If the file is an audio file, provide the language for STT.
-				let metadata = {'uploadType': 'direct'};
+		try {
+			// If the file is an audio file, provide the language for STT.
+			let metadata = {'uploadType': 'direct'};
 
-				// ToDo: change for check in $config?.file?.allow_direct_file_extensions
-				let allow_direct_file_extensions = $config?.file?.allow_direct_file_extensions;
-				if (typeof $config?.file?.allow_direct_file_extensions === 'string') {
-					allow_direct_file_extensions = $config?.file?.allow_direct_file_extensions
-						.split(',')
-						.map((ext) => ext.trim().toLowerCase());
-				}
-				if (allow_direct_file_extensions.includes(extension.toLowerCase())) {
-					console.warn('File upload warning: file type not in', {
+			// ToDo: change for check in $config?.file?.allow_direct_file_extensions
+			let allow_direct_file_extensions = $config?.file?.allow_direct_file_extensions;
+			if (typeof $config?.file?.allow_direct_file_extensions === 'string') {
+				allow_direct_file_extensions = $config?.file?.allow_direct_file_extensions
+					.split(',')
+					.map((ext) => ext.trim().toLowerCase());
+			}
+			if (allow_direct_file_extensions.includes(extension.toLowerCase())) {
+				console.warn('File upload warning: file type not in', {
+					allow_direct_file_extensions: $config?.file?.allow_direct_file_extensions,
+					extension: extension.toLowerCase()
+				});
+				toast.warning(
+					$i18n.t(`File upload warning: file type not in {{allow_direct_file_extensions}}`, {
 						allow_direct_file_extensions: $config?.file?.allow_direct_file_extensions,
 						extension: extension.toLowerCase()
-					});
-					toast.warning(
-						$i18n.t(`File upload warning: file type not in {{allow_direct_file_extensions}}`, {
-							allow_direct_file_extensions: $config?.file?.allow_direct_file_extensions,
-							extension: extension.toLowerCase()
-						})
-					);
-					return null;
-				}
-
-				// During the file upload, file content is automatically extracted.
-				const uploadedFile = await uploadDirectFile(localStorage.token, file, metadata);
-
-				if (uploadedFile) {
-					console.log('File upload completed:', {
-						id: uploadedFile.id,
-						name: fileItem.name,
-						collection: uploadedFile?.meta?.collection_name
-					});
-
-					if (uploadedFile.error) {
-						console.warn('File direct upload warning:', uploadedFile.error);
-						toast.warning(uploadedFile.error);
-					}
-
-					fileItem.status = 'uploaded';
-					fileItem.file = uploadedFile;
-					fileItem.id = uploadedFile.id;
-					fileItem.collection_name =
-						uploadedFile?.meta?.collection_name || uploadedFile?.collection_name;
-					fileItem.url = `${WEBUI_API_BASE_URL}/files/${uploadedFile.id}`;
-
-					files = files;
-				} else {
-					files = files.filter((item) => item?.itemId !== tempItemId);
-				}
-			} catch (e) {
-				toast.error(`${e}`);
-				files = files.filter((item) => item?.itemId !== tempItemId);
-			}
-		} else {
-			// If temporary chat is enabled, we just add the file to the list without uploading it.
-
-			const content = await extractContentFromFile(file, pdfjsLib).catch((error) => {
-				toast.error(
-					$i18n.t('Failed to extract content from the file: {{error}}', { error: error })
+					})
 				);
 				return null;
-			});
+			}
 
-			if (content === null) {
-				toast.error($i18n.t('Failed to extract content from the file.'));
-				files = files.filter((item) => item?.itemId !== tempItemId);
-				return null;
-			} else {
-				console.log('Extracted content from file:', {
-					name: file.name,
-					size: file.size,
-					content: content
+			// During the file upload, file content is automatically extracted.
+			const uploadedFile = await uploadDirectFile(localStorage.token, file, metadata);
+
+			if (uploadedFile) {
+				console.log('File upload completed:', {
+					id: uploadedFile.id,
+					name: fileItem.name,
+					collection: uploadedFile?.meta?.collection_name
 				});
 
+				if (uploadedFile.error) {
+					console.warn('File direct upload warning:', uploadedFile.error);
+					toast.warning(uploadedFile.error);
+				}
+
 				fileItem.status = 'uploaded';
-				fileItem.type = 'text';
-				fileItem.content = content;
-				fileItem.id = uuidv4(); // Temporary ID for the file
+				fileItem.file = uploadedFile;
+				fileItem.id = uploadedFile.id;
+				fileItem.collection_name =
+					uploadedFile?.meta?.collection_name || uploadedFile?.collection_name;
+				fileItem.url = `${WEBUI_API_BASE_URL}/files/${uploadedFile.id}`;
 
 				files = files;
+			} else {
+				files = files.filter((item) => item?.itemId !== tempItemId);
 			}
+		} catch (e) {
+			toast.error(`${e}`);
+			files = files.filter((item) => item?.itemId !== tempItemId);
 		}
+
 	};
 
 	const inputDirectFilesHandler = async (inputFiles) => {
