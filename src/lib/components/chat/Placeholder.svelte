@@ -121,7 +121,7 @@
 										.join(', ')}
 									placement="top"
 								>
-									<button
+									<!-- <button
 										aria-hidden={models.length <= 1}
 										aria-label={$i18n.t('Get information on {{name}} in the UI', {
 											name: models[modelIdx]?.name
@@ -129,18 +129,17 @@
 										on:click={() => {
 											selectedModelIdx = modelIdx;
 										}}
-									>
-										<img
-											crossorigin="anonymous"
-											src={model?.info?.meta?.profile_image_url ??
-												($i18n.language === 'dg-DG'
-													? `${WEBUI_BASE_URL}/doge.png`
-													: `${WEBUI_BASE_URL}/static/favicon.png`)}
-											class=" size-9 @sm:size-10 rounded-full border-[1px] border-gray-100 dark:border-none"
-											aria-hidden="true"
-											draggable="false"
-										/>
-									</button>
+									> -->
+									<img
+										crossorigin="anonymous"
+										src={model?.info?.meta?.profile_image_url ??
+											($i18n.language === 'dg-DG'
+												? `${WEBUI_BASE_URL}/doge.png`
+												: `/static/TalkToDataText-logo.svg`)}
+										aria-hidden="true"
+										draggable="false"
+									/>
+									<!-- </button> -->
 								</Tooltip>
 							{/each}
 						</div>
@@ -161,7 +160,7 @@
 								</span>
 							</Tooltip>
 						{:else}
-							{$i18n.t('Hello, {{name}}', { name: $user?.name })}
+							<!-- {$i18n.t('Hello, {{name}}', { name: $user?.name })} -->
 						{/if}
 					</div>
 				</div>

@@ -54,7 +54,6 @@ export const uploadDirectFile = async (token: string, file: File, metadata?: obj
 		body: data
 	})
 		.then(async (res) => {
-			console.log(res);
 			if (!res.ok) throw await res.json();
 			return res.json();
 		})
@@ -65,11 +64,9 @@ export const uploadDirectFile = async (token: string, file: File, metadata?: obj
 		});
 
 	if (error) {
-		console.error(error);
 		throw error;
 	}
 
-	console.warn('res: ', res);
 	return res;
 };
 
