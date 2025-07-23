@@ -21,7 +21,9 @@ ARG UID=0
 ARG GID=0
 
 ######## WebUI frontend ########
-FROM --platform=$BUILDPLATFORM node:22-alpine3.20 AS build
+ARG BUILDPLATFORM
+FROM --platform=${BUILDPLATFORM} node:22-alpine3.20 AS build
+
 ARG BUILD_HASH
 
 WORKDIR /app
@@ -30,11 +32,15 @@ WORKDIR /app
 RUN apk add --no-cache git
 
 COPY package.json package-lock.json ./
+
+RUN npm install --save tus-js-client
+RUN npm i tus-js-client
+
 RUN npm ci --force
 
 COPY . .
 ENV APP_BUILD_HASH=${BUILD_HASH}
-RUN npm run build
+RUN export NODE_OPTIONS="--max-old-space-size=8192" && echo "NODE_OPTIONS is $NODE_OPTIONS" && npm run build 
 
 ######## WebUI backend ########
 FROM python:3.11-slim-bookworm AS base
@@ -49,7 +55,8 @@ ARG UID
 ARG GID
 
 ## Basis ##
-ENV ENV=prod \
+# ENV ENV=prod \
+ENV ENV=dev \
     PORT=8080 \
     # pass build args to the build
     USE_OLLAMA_DOCKER=${USE_OLLAMA} \
@@ -135,6 +142,7 @@ RUN if [ "$USE_OLLAMA" = "true" ]; then \
 # install python dependencies
 COPY --chown=$UID:$GID ./backend/requirements.txt ./requirements.txt
 
+RUN pip install --upgrade pip
 RUN pip3 install --no-cache-dir uv && \
     if [ "$USE_CUDA" = "true" ]; then \
     # If you use CUDA the whisper and embedding model will be downloaded on first use

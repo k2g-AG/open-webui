@@ -78,16 +78,20 @@
 					}
 				});
 				const isDarkMode = document.documentElement.classList.contains('dark');
-
+				// <progress class="pure-material-progress-linear" />
+				// const progress = document.createElement('progress');
+				// progress.className = 'pure-material-progress-linear';
 				const logo = document.createElement('img');
 				logo.id = 'logo';
 				logo.style =
 					'position: absolute; width: auto; height: 6rem; top: 44%; left: 50%; transform: translateX(-50%); display:block;';
-				logo.src = isDarkMode ? '/static/splash-dark.png' : '/static/splash.png';
+				logo.src = isDarkMode ? '/static/TalkToData-logo.svg' : '/static/TalkToData-logo.svg';
 
 				document.addEventListener('DOMContentLoaded', function () {
 					const splash = document.getElementById('splash-screen');
-					if (splash) splash.prepend(logo);
+					if (splash) {
+						splash.prepend(logo);
+					}
 				});
 			})();
 		</script>
@@ -124,13 +128,15 @@
 					align-items: center;
 				"
 			>
-				<img
-					id="logo-her"
-					style="width: auto; height: 13rem"
-					src="/static/splash.png"
-					class="animate-pulse-fast"
-				/>
-
+				<div style="display: flex; align-items: center; gap: 1rem">
+					<img
+						id="logo-her"
+						style="width: auto; height: 13rem"
+						src="/static/TalkToData-logo.svg"
+						class="animate-pulse-fast"
+					/>
+					<progress class="pure-material-progress-linear" style="margin-top: 200px" />
+				</div>
 				<div style="position: relative; width: 24rem; margin-top: 0.5rem">
 					<div
 						id="progress-background"
@@ -229,5 +235,91 @@
 
 	.animate-pulse-fast {
 		animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+	}
+	.loader {
+		width: 1.25rem;
+		height: 1.25rem;
+		border: 3px solid #ccc;
+		border-top-color: #1abc9c;
+		border-radius: 50%;
+		animation: spin 0.8s linear infinite;
+	}
+
+	@keyframes spin {
+		to {
+			transform: rotate(360deg);
+		}
+	}
+	.pure-material-progress-linear {
+		border-radius: 2px;
+		-webkit-appearance: none;
+		-moz-appearance: none;
+		appearance: none;
+		border: none;
+		height: 4px;
+		color: rgba(96, 195, 173, 1);
+		background-color: rgba(96, 195, 173, 0.3);
+		font-size: 26px;
+	}
+
+	.pure-material-progress-linear::-webkit-progress-bar {
+		background-color: transparent;
+	}
+
+	/* Determinate */
+	.pure-material-progress-linear::-webkit-progress-value {
+		background-color: currentColor;
+		transition: all 0.2s;
+	}
+
+	.pure-material-progress-linear::-moz-progress-bar {
+		background-color: currentColor;
+		transition: all 0.2s;
+	}
+
+	.pure-material-progress-linear::-ms-fill {
+		border: none;
+		background-color: currentColor;
+		transition: all 0.2s;
+	}
+
+	/* Indeterminate */
+	.pure-material-progress-linear:indeterminate {
+		background-size: 200% 100%;
+		background-image: linear-gradient(
+			to right,
+			transparent 50%,
+			currentColor 50%,
+			currentColor 60%,
+			transparent 60%,
+			transparent 71.5%,
+			currentColor 71.5%,
+			currentColor 84%,
+			transparent 84%
+		);
+		animation: pure-material-progress-linear 2s infinite linear;
+	}
+
+	.pure-material-progress-linear:indeterminate::-moz-progress-bar {
+		background-color: transparent;
+	}
+
+	.pure-material-progress-linear:indeterminate::-ms-fill {
+		animation-name: none;
+	}
+
+	@keyframes pure-material-progress-linear {
+		0% {
+			background-size: 200% 100%;
+			background-position: left -31.25% top 0%;
+		}
+		50% {
+			background-size: 800% 100%;
+			background-position: left -49% top 0%;
+		}
+		100% {
+			background-size: 400% 100%;
+			background-position: left -102% top 0%;
+		}
 	}
 </style>

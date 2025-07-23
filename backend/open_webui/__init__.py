@@ -4,7 +4,13 @@ import random
 from pathlib import Path
 
 import typer
+
 import uvicorn
+
+import asyncio
+from hypercorn.config import Config
+from hypercorn.asyncio import serve as serve_hypercorn
+
 from typing import Optional
 from typing_extensions import Annotated
 
@@ -75,28 +81,50 @@ def serve(
     import open_webui.main  # we need set environment variables before importing main
     from open_webui.env import UVICORN_WORKERS  # Import the workers setting
 
-    uvicorn.run(
-        "open_webui.main:app",
-        host=host,
-        port=port,
-        forwarded_allow_ips="*",
-        workers=UVICORN_WORKERS,
-    )
+    # uvicorn.run(
+    #     "open_webui.main:app",
+    #     host=host,
+    #     port=port,
+    #     forwarded_allow_ips="*",
+    #     workers=UVICORN_WORKERS,
+    # )
 
+    asyncio.run(serve_hypercorn(
+        open_webui.main.app,
+        Config(
+            bind=[f"{host}:{port}"],
+            workers=UVICORN_WORKERS,
+            access_logfile="-",
+            forwarded_allow_ips="*",
+            h2=True,  # Enable HTTP/2 support
+        ),
+    ))
 
+    # Config()
 @app.command()
 def dev(
     host: str = "0.0.0.0",
     port: int = 8080,
     reload: bool = True,
 ):
-    uvicorn.run(
-        "open_webui.main:app",
-        host=host,
-        port=port,
-        reload=reload,
-        forwarded_allow_ips="*",
-    )
+    import open_webui.main  # we need set environment variables before importing main
+
+    asyncio.run(serve_hypercorn(
+        open_webui.main.app,
+        Config(
+            bind=[f"{host}:{port}"],
+            access_logfile="-",
+            forwarded_allow_ips="*",
+            h2=True,  # Enable HTTP/2 support
+        ),
+    ))
+    # uvicorn.run(
+    #     "open_webui.main:app",
+    #     host=host,
+    #     port=port,
+    #     reload=reload,
+    #     forwarded_allow_ips="*",
+    # )
 
 
 if __name__ == "__main__":

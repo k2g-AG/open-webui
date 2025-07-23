@@ -195,6 +195,9 @@
 			ALLOWED_FILE_EXTENSIONS: RAGConfig.ALLOWED_FILE_EXTENSIONS.split(',')
 				.map((ext) => ext.trim())
 				.filter((ext) => ext !== ''),
+			ALLOWED_DIRECT_FILE_EXTENSIONS: RAGConfig.ALLOWED_DIRECT_FILE_EXTENSIONS.split(',')
+				.map((ext) => ext.trim())
+				.filter((ext) => ext !== ''),
 			DATALAB_MARKER_LANGS: RAGConfig.DATALAB_MARKER_LANGS.split(',')
 				.map((code) => code.trim())
 				.filter((code) => code !== '')
@@ -231,6 +234,8 @@
 
 		const config = await getRAGConfig(localStorage.token);
 		config.ALLOWED_FILE_EXTENSIONS = (config?.ALLOWED_FILE_EXTENSIONS ?? []).join(', ');
+
+		config.ALLOWED_DIRECT_FILE_EXTENSIONS = (config?.ALLOWED_DIRECT_FILE_EXTENSIONS ?? []).join(', ');
 
 		config.DOCLING_PICTURE_DESCRIPTION_LOCAL = JSON.stringify(
 			config.DOCLING_PICTURE_DESCRIPTION_LOCAL ?? {},
@@ -1113,6 +1118,68 @@
 									type="number"
 									placeholder={$i18n.t('Leave empty for unlimited')}
 									bind:value={RAGConfig.FILE_MAX_COUNT}
+									autocomplete="off"
+									min="0"
+								/>
+							</Tooltip>
+						</div>
+					</div>
+
+					<div class="  mb-2.5 flex w-full justify-between">
+						<div class=" self-center text-xs font-medium">{$i18n.t('Allowed Direct File Extensions')}</div>
+						<div class="flex items-center relative">
+							<Tooltip
+								content={$i18n.t(
+									'Allowed direct file extensions for upload. Separate multiple extensions with commas. Leave empty for all file types.'
+								)}
+								placement="top-start"
+							>
+								<input
+									class="flex-1 w-full text-sm bg-transparent outline-hidden"
+									type="text"
+									placeholder={$i18n.t('e.g. csv')}
+									bind:value={RAGConfig.ALLOWED_DIRECT_FILE_EXTENSIONS}
+									autocomplete="off"
+								/>
+							</Tooltip>
+						</div>
+					</div>
+
+					<div class="  mb-2.5 flex w-full justify-between">
+						<div class=" self-center text-xs font-medium">{$i18n.t('Max Direct Upload Size')}</div>
+						<div class="flex items-center relative">
+							<Tooltip
+								content={$i18n.t(
+									'The maximum direct file size in MB. If the file size exceeds this limit, the file will not be uploaded.'
+								)}
+								placement="top-start"
+							>
+								<input
+									class="flex-1 w-full text-sm bg-transparent outline-hidden"
+									type="number"
+									placeholder={$i18n.t('Leave empty for unlimited')}
+									bind:value={RAGConfig.DIRECT_FILE_MAX_SIZE}
+									autocomplete="off"
+									min="0"
+								/>
+							</Tooltip>
+						</div>
+					</div>
+
+					<div class="  mb-2.5 flex w-full justify-between">
+						<div class=" self-center text-xs font-medium">{$i18n.t('Max Direct Upload Count')}</div>
+						<div class="flex items-center relative">
+							<Tooltip
+								content={$i18n.t(
+									'The maximum number of direct files that can be used at once in chat. If the number of files exceeds this limit, the files will not be uploaded.'
+								)}
+								placement="top-start"
+							>
+								<input
+									class="flex-1 w-full text-sm bg-transparent outline-hidden"
+									type="number"
+									placeholder={$i18n.t('Leave empty for unlimited')}
+									bind:value={RAGConfig.DIRECT_FILE_MAX_COUNT}
 									autocomplete="off"
 									min="0"
 								/>
