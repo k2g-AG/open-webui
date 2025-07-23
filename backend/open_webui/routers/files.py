@@ -7,6 +7,11 @@ from pathlib import Path
 from typing import Optional
 from urllib.parse import quote
 
+from fastapi_tusd import TusRouter
+from open_webui.config import (
+    UPLOAD_DIR,
+)
+
 from fastapi import (
     APIRouter,
     Depends,
@@ -37,6 +42,7 @@ from open_webui.routers.audio import transcribe
 from open_webui.storage.provider import Storage
 from open_webui.utils.auth import get_admin_user, get_verified_user
 from pydantic import BaseModel
+
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MODELS"])
@@ -225,6 +231,165 @@ def upload_file(
                     }
                 )
 
+        if file_item:
+            return file_item
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=ERROR_MESSAGES.DEFAULT("Error uploading file"),
+            )
+
+    except Exception as e:
+        log.exception(e)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ERROR_MESSAGES.DEFAULT("Error uploading file"),
+        )
+
+############################
+# TUS Upload File
+############################
+
+from tuspyserver import create_tus_router
+
+def on_upload_complete(file_id: str, metadata: dict):
+    """
+    Callback function to handle actions after a file upload is complete.
+    This can be used to process the file or update the database.
+    """
+    log.info(f"File uploaded successfully: {file_id}, metadata: {metadata}")
+    
+    # Here you can add any post-upload processing logic
+    # For example, you can insert the file into the database
+    # Files.insert_new_file(user_id, FileForm(...)
+    
+router.include_router(TusRouter(store_dir=f"{UPLOAD_DIR}/tus", location=f"/api/v1/files/tus"), prefix="/tus")
+# router.include_router(TusRouter(store_dir=f"{UPLOAD_DIR}/tus", location=f"{WEBUI_BASE_URL}{WEBUI_API_BASE_URL}/files/tus"), prefix="/tus")
+
+# tus_router = create_tus_router(
+#     prefix="/",                  # route prefix (default: 'files')
+#     files_dir=f"{UPLOAD_DIR}/tus",              # path to store files
+#     max_size=128849018880,                      # max upload size in bytes (default is ~128GB)
+#     auth=None,                                  # authentication dependency
+#     days_to_keep=5,                             # retention period
+#     on_upload_complete=on_upload_complete,      # upload callback
+#     upload_complete_dep=None,                   # upload callback (dependency injector)
+# )
+
+# # router.include_router(tus_router, prefix="/api/v1/files/tus", tags=["files"])
+# router.include_router(tus_router, prefix="/tus", tags=["files"])
+
+class FileTUSDone(BaseModel):
+    filename: str
+    filetype: str
+    filesize: int
+    uploadType: str
+    fileURL: str
+
+
+@router.post("/tusdone", response_model=FileModelResponse)
+async def upload_file_tus(
+    request: Request,
+    tusDoneData: FileTUSDone,
+    user=Depends(get_verified_user),
+):
+    
+    log.info(f"tusDoneData.filename: {tusDoneData.filename}")
+    log.info(f"tusDoneData.filetype: {tusDoneData.filetype}")
+    log.info(f"tusDoneData.filesize: {tusDoneData.filesize}")
+    log.info(f"tusDoneData.uploadType: {tusDoneData.uploadType}")
+    log.info(f"tusDoneData.fileURL: {tusDoneData.fileURL}")
+    direct = tusDoneData.uploadType == "direct"
+
+    try:
+
+        filename = os.path.basename(tusDoneData.filename)
+
+        file_extension = os.path.splitext(filename)[1]
+        # Remove the leading dot from the file extension
+        file_extension = file_extension[1:] if file_extension else ""
+
+        if direct:
+            if request.app.state.config.ALLOWED_DIRECT_FILE_EXTENSIONS:
+                request.app.state.config.ALLOWED_DIRECT_FILE_EXTENSIONS = [
+                ext for ext in request.app.state.config.ALLOWED_DIRECT_FILE_EXTENSIONS if ext
+            ]
+
+                if file_extension not in request.app.state.config.ALLOWED_DIRECT_FILE_EXTENSIONS:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=ERROR_MESSAGES.DEFAULT(
+                            f"File type {file_extension} is not allowed for direct upload"
+                        ),
+                    )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=ERROR_MESSAGES.DEFAULT(
+                    f"File is not direct"
+                ),
+            )
+
+        tusId = ''
+        # replace filename with uuid
+        splitURL = tusDoneData.fileURL.split('/')
+        if len(splitURL) > 1:
+            tusId = splitURL[-1]  # Get the last part of the URL
+        
+        import re
+        pattern = re.compile('[0-9a-f]{32}', re.I)
+        if not pattern.match(tusId):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=ERROR_MESSAGES.DEFAULT(
+                    f"File {tusDoneData.fileURL} is not found on TUS for direct upload"
+                )
+            )
+
+
+        name = filename
+        # 94d6aec9-e643-4abc-823a-5708d02b2794_result-1-002
+        tusIdUUID = f'{tusId[:8]}-{tusId[8:12]}-{tusId[12:16]}-{tusId[16:20]}-{tusId[20:]}'
+        filename = f"{tusIdUUID}_{filename}"
+        tags = {
+            "OpenWebUI-User-Email": user.email,
+            "OpenWebUI-User-Id": user.id,
+            "OpenWebUI-User-Name": user.name,
+            "OpenWebUI-File-Id": tusIdUUID,
+            "OpenWebUI-Upload-Type": tusDoneData.uploadType,
+        }
+        
+        log.info(f"file tags: {tags}")
+        log.info(f"file lenght: {tusDoneData.filesize}")
+        
+        file_path = f"{UPLOAD_DIR}/{filename}"
+        tus_file_path = f"{UPLOAD_DIR}/tus/{tusId}"
+        if not os.path.exists(tus_file_path):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=ERROR_MESSAGES.DEFAULT(
+                    f"File {tusId} is not found on TUS for direct upload"
+                )
+            )
+        os.rename(tus_file_path, file_path)
+    
+        file_item = Files.insert_new_file(
+            user.id,
+            FileForm(
+                **{
+                    "id": tusIdUUID,
+                    "filename": name,
+                    "path": file_path,
+                    "meta": {
+                        "name": name,
+                        "content_type": tusDoneData.filetype,
+                        "size": tusDoneData.filesize,
+                        "data": {'uploadType': tusDoneData.uploadType},
+                    },
+                }
+            ),
+        )
+        
         if file_item:
             return file_item
         else:

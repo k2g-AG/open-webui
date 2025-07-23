@@ -1,4 +1,6 @@
-import { WEBUI_API_BASE_URL } from '$lib/constants';
+import { WEBUI_API_BASE_URL, WEBUI_BASE_URL } from '$lib/constants';
+import * as tus from 'tus-js-client'
+
 
 export const uploadFile = async (token: string, file: File, metadata?: object | null) => {
 	const data = new FormData();
@@ -34,7 +36,104 @@ export const uploadFile = async (token: string, file: File, metadata?: object | 
 	return res;
 };
 
+async function uploadFileTUS(token: string, file: File, metadata?: object | null) {
+	return new Promise((resolve, reject) => {
+		const upload = new tus.Upload(file, {
+			endpoint: `${WEBUI_BASE_URL}${WEBUI_API_BASE_URL}/files/tus`, // Replace with your tus server URL
+			headers: { Authorization: `Bearer ${token}` },
+			retryDelays: [0, 3000, 5000, 10000, 20000],
+			chunkSize: 20 * 1024 * 1024, // 20MB chunk size
+			metadata: {
+				filename: file.name,
+				filetype: file.type,
+				filesize: file.size,
+				'uploadType': 'direct',
+				'metadata': JSON.stringify(metadata)
+			},
+			onError: (error) => {
+				console.error("Failed because: " + error);
+				reject(error);
+			},
+			onProgress: (bytesSent, bytesTotal) => {
+				const percentage = (bytesSent / bytesTotal * 100).toFixed(2);
+				console.warn(bytesSent, bytesTotal, percentage + "%");
+			},
+			onSuccess: () => {
+				console.warn("Upload finished:", upload.url);
+				resolve(upload.url);
+			}
+		});
+
+		// Start the upload
+		upload.start();
+	});
+}
+
 export const uploadDirectFile = async (token: string, file: File, metadata?: object | null) => {
+	let error = null;
+    console.warn(`URL2: ${WEBUI_BASE_URL}${WEBUI_API_BASE_URL}/files/tus`);
+	
+	let uploadedUrl = '';
+
+    if (file) {
+        // const upload = new Upload(file, {
+        try {
+			console.warn("File uploaded successfully to:", uploadedUrl);
+			uploadedUrl = await uploadFileTUS(token, file, metadata);
+		} catch (err) {
+			console.error("Upload failed:", err);
+			error = err;
+		}
+        console.warn('Upload finished 2:', uploadedUrl);
+
+    } else {
+        console.warn('No file selected.');
+    }
+
+	if (error) {
+		console.error(error);
+		throw error;
+	}
+
+	const fileMetadata = {
+		'filename': file.name,
+		'filetype': file.type,
+		'filesize': file.size,
+		'uploadType': 'direct',
+		'fileURL': uploadedUrl
+	};
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/files/tusdone`, {
+		method: 'POST',
+		headers: {
+			Accept: 'application/json', 
+			'Content-Type': 'application/json',
+			authorization: `Bearer ${token}`
+		},
+		body: JSON.stringify(fileMetadata)
+	})
+	.then(async (res) => {
+		if (!res.ok) throw await res.json();
+		return res.json();
+	})
+	.then((json) => {
+		return json;
+	})
+	.catch((err) => {
+		error = err.detail;
+		console.error(err);
+		return null;
+	});
+
+	if (error) {
+		throw error;
+	}
+
+	console.warn('res: ', res);
+	return res;
+};
+
+export const uploadDirectFileOld = async (token: string, file: File, metadata?: object | null) => {
 	const data = new FormData();
 	data.append('file', file);
 	if (metadata) {
@@ -53,20 +152,23 @@ export const uploadDirectFile = async (token: string, file: File, metadata?: obj
 		},
 		body: data
 	})
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
-		.catch((err) => {
-			error = err.detail;
-			console.error(err);
-			return null;
-		});
+	.then(async (res) => {
+		console.log(res);
+		if (!res.ok) throw await res.json();
+		return res.json();
+	})
+	.catch((err) => {
+		error = err.detail;
+		console.error(err);
+		return null;
+	});
 
 	if (error) {
+		console.error(error);
 		throw error;
 	}
 
+	console.warn('res: ', res);
 	return res;
 };
 
