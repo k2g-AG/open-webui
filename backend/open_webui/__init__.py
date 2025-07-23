@@ -118,13 +118,13 @@ def dev(
             h2=True,  # Enable HTTP/2 support
         ),
     ))
-    uvicorn.run(
-        "open_webui.main:app",
-        host=host,
-        port=port,
-        reload=reload,
-        forwarded_allow_ips="*",
-    )
+    # uvicorn.run(
+    #     "open_webui.main:app",
+    #     host=host,
+    #     port=port,
+    #     reload=reload,
+    #     forwarded_allow_ips="*",
+    # )
 
 
 if __name__ == "__main__":
