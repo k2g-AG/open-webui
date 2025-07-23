@@ -33,8 +33,8 @@ RUN apk add --no-cache git
 
 COPY package.json package-lock.json ./
 
-RUN npm install --save tus-js-client
-RUN npm i tus-js-client
+RUN npm install --save --force tus-js-client
+RUN npm i --force tus-js-client
 
 RUN npm ci --force
 
