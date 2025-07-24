@@ -439,6 +439,7 @@ async def get_rag_config(request: Request, user=Depends(get_admin_user)):
         "ALLOWED_FILE_EXTENSIONS": request.app.state.config.ALLOWED_FILE_EXTENSIONS,
         
         # Direct file settings
+        "ENABLE_DIRECT_FILE_UPLOAD": request.app.state.config.ENABLE_DIRECT_FILE_UPLOAD,
         "DIRECT_FILE_MAX_SIZE": request.app.state.config.DIRECT_FILE_MAX_SIZE,
         "DIRECT_FILE_MAX_COUNT": request.app.state.config.DIRECT_FILE_MAX_COUNT,
         "ALLOWED_DIRECT_FILE_EXTENSIONS": request.app.state.config.ALLOWED_DIRECT_FILE_EXTENSIONS,
@@ -614,6 +615,7 @@ class ConfigForm(BaseModel):
     ALLOWED_FILE_EXTENSIONS: Optional[List[str]] = None
 
     # Direct file upload settings
+    ENABLE_DIRECT_FILE_UPLOAD: Optional[bool] = None
     DIRECT_FILE_MAX_SIZE: Optional[int] = None
     DIRECT_FILE_MAX_COUNT: Optional[int] = None
     ALLOWED_DIRECT_FILE_EXTENSIONS: Optional[List[str]] = None
@@ -890,6 +892,11 @@ async def update_rag_config(
     )
 
     # Direct file upload settings
+    request.app.state.config.ENABLE_DIRECT_FILE_UPLOAD = (
+        form_data.ENABLE_DIRECT_FILE_UPLOAD
+        if form_data.ENABLE_DIRECT_FILE_UPLOAD is not None
+        else request.app.state.config.ENABLE_DIRECT_FILE_UPLOAD
+    )
     request.app.state.config.DIRECT_FILE_MAX_SIZE = form_data.DIRECT_FILE_MAX_SIZE
     request.app.state.config.DIRECT_FILE_MAX_COUNT = form_data.DIRECT_FILE_MAX_COUNT
     request.app.state.config.ALLOWED_DIRECT_FILE_EXTENSIONS = (
@@ -1065,6 +1072,7 @@ async def update_rag_config(
         "ALLOWED_FILE_EXTENSIONS": request.app.state.config.ALLOWED_FILE_EXTENSIONS,
         
         # Direct file settings
+        "ENABLE_DIRECT_FILE_UPLOAD": request.app.state.config.ENABLE_DIRECT_FILE_UPLOAD,
         "DIRECT_FILE_MAX_SIZE": request.app.state.config.DIRECT_FILE_MAX_SIZE,
         "DIRECT_FILE_MAX_COUNT": request.app.state.config.DIRECT_FILE_MAX_COUNT,
         "ALLOWED_DIRECT_FILE_EXTENSIONS": request.app.state.config.ALLOWED_DIRECT_FILE_EXTENSIONS,

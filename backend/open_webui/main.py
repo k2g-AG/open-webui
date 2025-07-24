@@ -216,6 +216,7 @@ from open_webui.config import (
     RAG_FILE_MAX_COUNT,
     RAG_FILE_MAX_SIZE,
 
+    ENABLE_DIRECT_FILE_UPLOAD,
     DIRECT_ALLOWED_FILE_EXTENSIONS,
     DIRECT_FILE_MAX_COUNT,
     DIRECT_FILE_MAX_SIZE,
@@ -763,6 +764,7 @@ app.state.config.ALLOWED_FILE_EXTENSIONS = RAG_ALLOWED_FILE_EXTENSIONS
 app.state.config.FILE_MAX_SIZE = RAG_FILE_MAX_SIZE
 app.state.config.FILE_MAX_COUNT = RAG_FILE_MAX_COUNT
 
+app.state.config.ENABLE_DIRECT_FILE_UPLOAD = ENABLE_DIRECT_FILE_UPLOAD
 app.state.config.ALLOWED_DIRECT_FILE_EXTENSIONS = DIRECT_ALLOWED_FILE_EXTENSIONS
 app.state.config.DIRECT_FILE_MAX_SIZE = DIRECT_FILE_MAX_SIZE
 app.state.config.DIRECT_FILE_MAX_COUNT = DIRECT_FILE_MAX_COUNT
@@ -1634,9 +1636,12 @@ async def get_app_config(request: Request):
                     "max_size": app.state.config.FILE_MAX_SIZE,
                     "max_count": app.state.config.FILE_MAX_COUNT,
                     "allow_file_extensions": app.state.config.ALLOWED_FILE_EXTENSIONS,
+                    
+                    "enable_direct_file_upload": app.state.config.ENABLE_DIRECT_FILE_UPLOAD,
                     "allow_direct_file_extensions": app.state.config.ALLOWED_DIRECT_FILE_EXTENSIONS,
                     "direct_max_size": app.state.config.DIRECT_FILE_MAX_SIZE,
                     "direct_max_count": app.state.config.DIRECT_FILE_MAX_COUNT,
+                    
                     "image_compression": {
                         "width": app.state.config.FILE_IMAGE_COMPRESSION_WIDTH,
                         "height": app.state.config.FILE_IMAGE_COMPRESSION_HEIGHT,

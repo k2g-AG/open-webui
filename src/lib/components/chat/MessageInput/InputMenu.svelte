@@ -48,6 +48,11 @@
 		fileUploadCapableModels.length === selectedModels.length &&
 		($user?.role === 'admin' || $user?.permissions?.chat?.file_upload);
 
+	let directFileUploadEnabled = true;
+	$: directFileUploadEnabled =
+		fileUploadCapableModels.length === selectedModels.length &&
+		($user?.role === 'admin' || $user?.permissions?.chat?.file_upload);
+
 	const init = async () => {
 		if ($_tools === null) {
 			await _tools.set(await getTools(localStorage.token));
@@ -231,17 +236,17 @@
 			<Tooltip
 				content={fileUploadCapableModels.length !== selectedModels.length
 					? $i18n.t('Model(s) do not support file upload')
-					: !fileUploadEnabled
+					: !directFileUploadEnabled
 						? $i18n.t('You do not have permission to upload files.')
 						: ''}
 				className="w-full"
 			>
 				<DropdownMenu.Item
-					class="flex gap-2 items-center px-3 py-2 text-sm font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl {!fileUploadEnabled
+					class="flex gap-2 items-center px-3 py-2 text-sm font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl {!directFileUploadEnabled
 						? 'opacity-50'
 						: ''}"
 					on:click={() => {
-						if (fileUploadEnabled) {
+						if (directFileUploadEnabled) {
 							console.log('uploadDirectFilesHandler called..');
 							uploadDirectFilesHandler();
 						}

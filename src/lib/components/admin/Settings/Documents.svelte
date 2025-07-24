@@ -1126,6 +1126,13 @@
 					</div>
 
 					<div class="  mb-2.5 flex w-full justify-between">
+						<div class=" self-center text-xs font-medium">{$i18n.t('Enable Direct File Upload')}</div>
+						<div class="flex items-center relative">
+							<Switch bind:state={RAGConfig.ENABLE_DIRECT_FILE_UPLOAD} />
+						</div>
+					</div>
+
+					<div class="  mb-2.5 flex w-full justify-between">
 						<div class=" self-center text-xs font-medium">{$i18n.t('Allowed Direct File Extensions')}</div>
 						<div class="flex items-center relative">
 							<Tooltip

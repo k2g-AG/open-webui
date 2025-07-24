@@ -2282,6 +2282,16 @@ DIRECT_FILE_MAX_SIZE = PersistentConfig(
     ),
 )
 
+ENABLE_DIRECT_FILE_UPLOAD = PersistentConfig(
+    "ENABLE_DIRECT_FILE_UPLOAD",
+    "file.enable_direct_upload",
+    (
+        int(os.environ.get("ENABLE_DIRECT_FILE_UPLOAD", True))
+        if os.environ.get("ENABLE_DIRECT_FILE_UPLOAD", True)
+        else None
+    ),
+)
+
 # ---------------------------------------------------------------------------------------------
 
 RAG_EMBEDDING_ENGINE = PersistentConfig(
