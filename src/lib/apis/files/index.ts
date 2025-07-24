@@ -43,7 +43,7 @@ async function uploadFileTUS(token: string, file: File, metadata?: object | null
 			endpoint: `${WEBUI_BASE_URL}${WEBUI_API_BASE_URL}/files/tus`, // Replace with your tus server URL
 			headers: { Authorization: `Bearer ${token}` },
 			retryDelays: [0, 3000, 5000, 10000, 20000],
-			chunkSize: 100 * 1024 * 1024, // 100MB chunk size
+			chunkSize: 50 * 1024 * 1024, // 50MB chunk size
 			metadata: {
 				filename: file.name,
 				filetype: file.type,
