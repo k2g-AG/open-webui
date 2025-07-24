@@ -462,8 +462,8 @@
 			const res = await userSignOut();
 			user.set(null);
 			localStorage.removeItem('token');
-
-			location.href = res?.redirect_url ?? '/auth';
+			console.log({res})
+			location.href = res?.redirect_url ?? `${WEBUI_BASE_URL}/oauth/oidc/login` ?? '/auth';
 		}
 	};
 
