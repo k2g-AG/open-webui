@@ -186,12 +186,11 @@
 			<DropdownMenu.Item
 				class="flex rounded-md py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition"
 				on:click={async () => {
-					console.log("Sign out")
 					const res = await userSignOut();
 					user.set(null);
 					localStorage.removeItem('token');
 					console.log({res, WEBUI_BASE_URL})
-					// location.href = res?.redirect_url ?? `${WEBUI_BASE_URL}/oauth/oidc/login` ?? '/auth';
+					location.href = res?.redirect_url ?? `${WEBUI_BASE_URL}/oauth/oidc/login` ?? '/auth';
 					show = false;
 				}}
 			>

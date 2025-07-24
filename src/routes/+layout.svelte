@@ -462,7 +462,7 @@
 			const res = await userSignOut();
 			user.set(null);
 			localStorage.removeItem('token');
-			console.log({res})
+			console.log({ res });
 			location.href = res?.redirect_url ?? `${WEBUI_BASE_URL}/oauth/oidc/login` ?? '/auth';
 		}
 	};
@@ -599,7 +599,7 @@
 					// Don't redirect if we're already on the auth page
 					// Needed because we pass in tokens from OAuth logins via URL fragments
 					if ($page.url.pathname !== '/auth') {
-						await goto(`/auth?redirect=${encodedUrl}`);
+						location.href = `${WEBUI_BASE_URL}/oauth/oidc/login`;
 					}
 				}
 			}
