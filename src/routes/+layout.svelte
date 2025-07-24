@@ -462,6 +462,8 @@
 			const res = await userSignOut();
 			user.set(null);
 			localStorage.removeItem('token');
+			
+			console.warn('TOKEN_EXPIRY_BUFFER:', res);
 
 			location.href = res?.redirect_url ?? '/auth';
 		}
