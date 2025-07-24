@@ -462,7 +462,7 @@
 			const res = await userSignOut();
 			user.set(null);
 			localStorage.removeItem('token');
-
+			console.log({res})
 			location.href = res?.redirect_url ?? '/auth';
 		}
 	};

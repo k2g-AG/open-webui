@@ -155,6 +155,7 @@
 		} else {
 			onboarding = $config?.onboarding ?? false;
 		}
+		console.log({ config: $config });
 	});
 </script>
 
