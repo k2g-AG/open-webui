@@ -2,6 +2,7 @@
 	import { getAdminDetails } from '$lib/apis/auths';
 	import { onMount, tick, getContext } from 'svelte';
 	import { config } from '$lib/stores';
+	import { WEBUI_BASE_URL } from '$lib/constants';
 
 	const i18n = getContext('i18n');
 
@@ -66,7 +67,7 @@
 						class="text-xs text-center w-full mt-2 text-gray-400 underline"
 						on:click={async () => {
 							localStorage.removeItem('token');
-							location.href = '/auth';
+							location.href = `${WEBUI_BASE_URL}/oauth/oidc/login`;
 						}}>{$i18n.t('Sign Out')}</button
 					>
 				</div>
