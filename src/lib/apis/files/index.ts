@@ -38,11 +38,12 @@ export const uploadFile = async (token: string, file: File, metadata?: object | 
 
 async function uploadFileTUS(token: string, file: File, metadata?: object | null) {
 	return new Promise((resolve, reject) => {
+		let percentageView = 0;
 		const upload = new tus.Upload(file, {
 			endpoint: `${WEBUI_BASE_URL}${WEBUI_API_BASE_URL}/files/tus`, // Replace with your tus server URL
 			headers: { Authorization: `Bearer ${token}` },
 			retryDelays: [0, 3000, 5000, 10000, 20000],
-			chunkSize: 20 * 1024 * 1024, // 20MB chunk size
+			chunkSize: 100 * 1024 * 1024, // 100MB chunk size
 			metadata: {
 				filename: file.name,
 				filetype: file.type,
@@ -55,8 +56,11 @@ async function uploadFileTUS(token: string, file: File, metadata?: object | null
 				reject(error);
 			},
 			onProgress: (bytesSent, bytesTotal) => {
-				const percentage = (bytesSent / bytesTotal * 100).toFixed(2);
-				console.warn(bytesSent, bytesTotal, percentage + "%");
+				if (Math.abs(percentageView - bytesSent / bytesTotal * 100) >= 1) {
+					const percentage = (bytesSent / bytesTotal * 100).toFixed(2);
+					console.warn(bytesSent, bytesTotal, percentage + "%");
+					percentageView = bytesSent / bytesTotal * 100
+				}
 			},
 			onSuccess: () => {
 				console.warn("Upload finished:", upload.url);
