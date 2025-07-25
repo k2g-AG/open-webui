@@ -17,7 +17,7 @@
 	import CameraSolid from '$lib/components/icons/CameraSolid.svelte';
 	import PhotoSolid from '$lib/components/icons/PhotoSolid.svelte';
 	import CommandLineSolid from '$lib/components/icons/CommandLineSolid.svelte';
-
+	
 	const i18n = getContext('i18n');
 
 	export let selectedToolIds: string[] = [];
@@ -51,7 +51,8 @@
 	let directFileUploadEnabled = true;
 	$: directFileUploadEnabled =
 		fileUploadCapableModels.length === selectedModels.length &&
-		($user?.role === 'admin' || $user?.permissions?.chat?.file_upload);
+		($user?.role === 'admin' || $user?.permissions?.chat?.file_upload)
+		&& $config?.file?.enable_direct_file_upload;
 
 	const init = async () => {
 		if ($_tools === null) {
