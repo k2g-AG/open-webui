@@ -51,7 +51,7 @@
 	let directFileUploadEnabled = true;
 	$: directFileUploadEnabled =
 		fileUploadCapableModels.length === selectedModels.length &&
-		($user?.role === 'admin' || $user?.permissions?.chat?.file_upload)
+		($user?.role === 'admin' || $user?.permissions?.chat?.file_direct_upload)
 		&& $config?.file?.enable_direct_file_upload;
 
 	const init = async () => {

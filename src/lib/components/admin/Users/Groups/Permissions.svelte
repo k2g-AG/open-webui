@@ -22,6 +22,7 @@
 		chat: {
 			controls: true,
 			file_upload: true,
+			file_direct_upload: true,
 			delete: true,
 			edit: true,
 			share: true,
@@ -253,6 +254,14 @@
 			</div>
 
 			<Switch bind:state={permissions.chat.file_upload} />
+		</div>
+
+		<div class="  flex w-full justify-between my-2 pr-2">
+			<div class=" self-center text-xs font-medium">
+				{$i18n.t('Allow File Direct Upload')}
+			</div>
+
+			<Switch bind:state={permissions.chat.file_direct_upload} />
 		</div>
 
 		<div class="  flex w-full justify-between my-2 pr-2">

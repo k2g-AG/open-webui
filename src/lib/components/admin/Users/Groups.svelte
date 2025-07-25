@@ -68,6 +68,7 @@
 			controls: true,
 			system_prompt: true,
 			file_upload: true,
+			file_direct_upload: true,
 			delete: true,
 			edit: true,
 			share: true,

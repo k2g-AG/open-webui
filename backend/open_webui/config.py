@@ -1157,6 +1157,11 @@ USER_PERMISSIONS_CHAT_FILE_UPLOAD = (
     os.environ.get("USER_PERMISSIONS_CHAT_FILE_UPLOAD", "True").lower() == "true"
 )
 
+
+USER_PERMISSIONS_CHAT_FILE_DIRECT_UPLOAD = (
+    os.environ.get("USER_PERMISSIONS_CHAT_FILE_DIRECT_UPLOAD", "True").lower() == "true"
+)
+
 USER_PERMISSIONS_CHAT_DELETE = (
     os.environ.get("USER_PERMISSIONS_CHAT_DELETE", "True").lower() == "true"
 )
@@ -1240,6 +1245,7 @@ DEFAULT_USER_PERMISSIONS = {
         "controls": USER_PERMISSIONS_CHAT_CONTROLS,
         "system_prompt": USER_PERMISSIONS_CHAT_SYSTEM_PROMPT,
         "file_upload": USER_PERMISSIONS_CHAT_FILE_UPLOAD,
+        "file_direct_upload": USER_PERMISSIONS_CHAT_FILE_DIRECT_UPLOAD,
         "delete": USER_PERMISSIONS_CHAT_DELETE,
         "edit": USER_PERMISSIONS_CHAT_EDIT,
         "share": USER_PERMISSIONS_CHAT_SHARE,

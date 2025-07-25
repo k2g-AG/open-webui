@@ -15,6 +15,10 @@
 			label: $i18n.t('File Upload'),
 			description: $i18n.t('Model accepts file inputs')
 		},
+		file_direct_upload: {
+			label: $i18n.t('File Direct Upload'),
+			description: $i18n.t('Model accepts direct file inputs')
+		},
 		web_search: {
 			label: $i18n.t('Web Search'),
 			description: $i18n.t('Model can search the web for information')
@@ -42,6 +46,7 @@
 	export let capabilities: {
 		vision?: boolean;
 		file_upload?: boolean;
+		file_direct_upload?: boolean;
 		web_search?: boolean;
 		image_generation?: boolean;
 		code_interpreter?: boolean;

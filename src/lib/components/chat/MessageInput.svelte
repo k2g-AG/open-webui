@@ -716,7 +716,7 @@
 	// ------------- DIRECT File upload ------------------
 
 	const uploadDirectFileHandler = async (file, fullContext: boolean = false) => {
-		if ($_user?.role !== 'admin' && !($_user?.permissions?.chat?.file_upload ?? true)) {
+		if ($_user?.role !== 'admin' && !($_user?.permissions?.chat?.file_direct_upload ?? true)) {
 			toast.error($i18n.t('You do not have permission to upload files.'));
 			return null;
 		}

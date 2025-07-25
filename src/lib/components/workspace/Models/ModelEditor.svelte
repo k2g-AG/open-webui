@@ -82,6 +82,7 @@
 	let capabilities = {
 		vision: true,
 		file_upload: true,
+		file_direct_upload: true,
 		web_search: true,
 		image_generation: true,
 		code_interpreter: true,
