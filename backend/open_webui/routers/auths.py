@@ -618,6 +618,8 @@ async def signup(request: Request, response: Response, form_data: SignupForm):
                 else None
             )
 
+            log.info(f'Creating token for user {user.id} with expires_at: {expires_at}, JWT_EXPIRES_IN: {request.app.state.config.JWT_EXPIRES_IN}, expires_delta: {expires_delta}, datetime_expires_at: {datetime_expires_at}')
+
             # Set the cookie token
             response.set_cookie(
                 key="token",
