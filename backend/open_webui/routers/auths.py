@@ -514,7 +514,7 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
             expires_delta=expires_delta,
         )
         
-        log.info(f'signin Creating token for user {user.id} with expires_at: {expires_at}, JWT_EXPIRES_IN: {request.app.state.config.JWT_EXPIRES_IN}, JWT_EXPIRES_IN2: {JWT_EXPIRES_IN}, expires_delta: {expires_delta}, datetime_expires_at: {datetime_expires_at}')
+        log.info(f'signin Creating token for user {user.id} with expires_at: {expires_at}, JWT_EXPIRES_IN: {request.app.state.config.JWT_EXPIRES_IN}, JWT_EXPIRES_IN2: {JWT_EXPIRES_IN.env_value}, expires_delta: {expires_delta}, datetime_expires_at: {datetime_expires_at}')
 
         datetime_expires_at = (
             datetime.datetime.fromtimestamp(expires_at, datetime.timezone.utc)
@@ -620,7 +620,7 @@ async def signup(request: Request, response: Response, form_data: SignupForm):
                 else None
             )
 
-            log.info(f'signup Creating token for user {user.id} with expires_at: {expires_at}, JWT_EXPIRES_IN: {request.app.state.config.JWT_EXPIRES_IN}, JWT_EXPIRES_IN2: {JWT_EXPIRES_IN}, expires_delta: {expires_delta}, datetime_expires_at: {datetime_expires_at}')
+            log.info(f'signup Creating token for user {user.id} with expires_at: {expires_at}, JWT_EXPIRES_IN: {request.app.state.config.JWT_EXPIRES_IN}, JWT_EXPIRES_IN2: {JWT_EXPIRES_IN.env_value}, expires_delta: {expires_delta}, datetime_expires_at: {datetime_expires_at}')
 
             # Set the cookie token
             response.set_cookie(
@@ -753,7 +753,7 @@ async def add_user(form_data: AddUserForm, user=Depends(get_admin_user)):
         )
 
         if user:
-            expires_delta = parse_duration(JWT_EXPIRES_IN)
+            expires_delta = parse_duration(JWT_EXPIRES_IN.env_value)
             expires_at = None
             if expires_delta:
                 expires_at = int(time.time()) + int(expires_delta.total_seconds())
@@ -765,7 +765,7 @@ async def add_user(form_data: AddUserForm, user=Depends(get_admin_user)):
 
             token = create_token(data={"id": user.id})
             
-            log.info(f'add_user Creating token for user {user.id} with expires_at: {expires_at}, JWT_EXPIRES_IN: {JWT_EXPIRES_IN}, expires_delta: {expires_delta}')
+            log.info(f'add_user Creating token for user {user.id} with expires_at: {expires_at}, JWT_EXPIRES_IN: {JWT_EXPIRES_IN.env_value}, expires_delta: {expires_delta}')
 
             return {
                 "token": token,
