@@ -52,7 +52,7 @@
 			file_direct_upload: true,
 			delete: true,
 			edit: true,
-			temporary: true
+			temporary: false
 		},
 		features: {
 			direct_tool_servers: false,

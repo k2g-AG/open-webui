@@ -103,11 +103,13 @@ class AuthsTable:
         profile_image_url: str = "/user.png",
         role: str = "pending",
         oauth_sub: Optional[str] = None,
+        id: Optional[str] = None,
     ) -> Optional[UserModel]:
         with get_db() as db:
             log.info("insert_new_auth")
 
-            id = str(uuid.uuid4())
+            if not id:
+                id = str(uuid.uuid4())
 
             auth = AuthModel(
                 **{"id": id, "email": email, "password": password, "active": True}

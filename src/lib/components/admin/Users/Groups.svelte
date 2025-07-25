@@ -77,7 +77,7 @@
 			tts: true,
 			call: true,
 			multiple_models: true,
-			temporary: true,
+			temporary: false,
 			temporary_enforced: false
 		},
 		features: {

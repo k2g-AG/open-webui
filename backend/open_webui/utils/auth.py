@@ -131,6 +131,8 @@ def create_token(data: dict, expires_delta: Union[timedelta, None] = None) -> st
         expire = datetime.now(UTC) + expires_delta
         payload.update({"exp": expire})
 
+    log.info(f"create_token -> Creating token with payload: {payload}")
+    
     encoded_jwt = jwt.encode(payload, SESSION_SECRET, algorithm=ALGORITHM)
     return encoded_jwt
 
@@ -138,6 +140,7 @@ def create_token(data: dict, expires_delta: Union[timedelta, None] = None) -> st
 def decode_token(token: str) -> Optional[dict]:
     try:
         decoded = jwt.decode(token, SESSION_SECRET, algorithms=[ALGORITHM])
+        log.info(f"decode_token -> Decoded token with payload: {decoded}")
         return decoded
     except Exception:
         return None

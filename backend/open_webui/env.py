@@ -377,10 +377,13 @@ except ValueError:
 ####################################
 
 WEBUI_AUTH = os.environ.get("WEBUI_AUTH", "True").lower() == "true"
+
 WEBUI_AUTH_TRUSTED_EMAIL_HEADER = os.environ.get(
     "WEBUI_AUTH_TRUSTED_EMAIL_HEADER", None
 )
+
 WEBUI_AUTH_TRUSTED_NAME_HEADER = os.environ.get("WEBUI_AUTH_TRUSTED_NAME_HEADER", None)
+
 WEBUI_AUTH_TRUSTED_GROUPS_HEADER = os.environ.get(
     "WEBUI_AUTH_TRUSTED_GROUPS_HEADER", None
 )
