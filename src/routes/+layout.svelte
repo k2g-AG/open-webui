@@ -459,10 +459,16 @@
 		}
 
 		if (now >= exp - TOKEN_EXPIRY_BUFFER) {
-			const res = await userSignOut();
-			user.set(null);
-			localStorage.removeItem('token');
+			console.warn('Token is about to expire or has expired, redirecting to auth page');
+			// const res = await userSignOut();
+			// user.set(null);
+			// localStorage.removeItem('token');
 			console.log({ res });
+			console.warn({ res });
+			console.warn( res?.redirect_url );
+			console.warn( `${WEBUI_BASE_URL}/oauth/oidc/login` );
+			console.warn( res?.redirect_url ?? `${WEBUI_BASE_URL}/oauth/oidc/login` ?? '/auth' );
+
 			location.href = res?.redirect_url ?? `${WEBUI_BASE_URL}/oauth/oidc/login` ?? '/auth';
 		}
 	};
