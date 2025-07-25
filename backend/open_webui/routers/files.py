@@ -345,6 +345,9 @@ async def upload_file_tus(
                             f"File {tusId} is not final on TUS for direct upload"
                         )
                     )
+                
+                log.info(f"json tusFileInfoData: {tusFileInfoData}")
+
                 tusDoneData.uploadType = tusFileInfoData.get('metadata', {}).get('uploadType', tusDoneData.uploadType)
                 tusDoneData.filetype = tusFileInfoData.get('metadata', {}).get('filetype', tusDoneData.filetype)
                 tusDoneData.filesize = tusFileInfoData.get('metadata', {}).get('filesize', tusDoneData.filesize)
@@ -357,7 +360,7 @@ async def upload_file_tus(
 
         os.rename(tus_file_path, file_path)
         fileInfo = os.stat(file_path)
-        if fileInfo.st_size != tusDoneData.filesize:
+        if int(fileInfo.st_size) != int(tusDoneData.filesize):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=ERROR_MESSAGES.DEFAULT(
