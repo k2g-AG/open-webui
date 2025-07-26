@@ -514,10 +514,9 @@ class OAuthManager:
         # jwt_token = token_provier
         
         jwt_token = create_token(
-            data={"id": user.id},
+            data={"id": user.id, 'keycloak_token': token,},
             # expires_delta=parse_duration(auth_manager_config.JWT_EXPIRES_IN),
             expires_delta=parse_duration(JWT_EXPIRES_IN.env_value),
-            keycloak_token=token,
             source="oauth_callback",
         )
         
