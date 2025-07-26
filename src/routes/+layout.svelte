@@ -465,11 +465,12 @@
 			// localStorage.removeItem('token');
 			// console.log({ res });
 			// console.warn({ res });
-			console.warn( res?.redirect_url );
+			// console.warn( res?.redirect_url );
 			console.warn( `${WEBUI_BASE_URL}/oauth/oidc/login` );
-			console.warn( res?.redirect_url ?? `${WEBUI_BASE_URL}/oauth/oidc/login` ?? '/auth' );
+			// console.warn( res?.redirect_url ?? `${WEBUI_BASE_URL}/oauth/oidc/login` ?? '/auth' );
 
-			location.href = res?.redirect_url ?? `${WEBUI_BASE_URL}/oauth/oidc/login` ?? '/auth';
+			// location.href = res?.redirect_url ?? `${WEBUI_BASE_URL}/oauth/oidc/login` ?? '/auth';
+			location.href = `${WEBUI_BASE_URL}/oauth/oidc/login` ?? '/auth';
 		}
 	};
 
