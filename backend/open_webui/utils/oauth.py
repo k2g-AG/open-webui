@@ -351,6 +351,9 @@ class OAuthManager:
         except Exception as e:
             log.warning(f"OAuth callback error: {e}")
             raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
+        
+        log.info(f"handle_login: OAuth callback received token: {token}")
+        
         user_data: UserInfo = token.get("userinfo")
         if not user_data or auth_manager_config.OAUTH_EMAIL_CLAIM not in user_data:
             user_data: UserInfo = await client.userinfo(token=token)
@@ -363,6 +366,9 @@ class OAuthManager:
             log.warning(f"OAuth callback failed, sub is missing: {user_data}")
             raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
         provider_sub = f"{provider}@{sub}"
+        
+        # token_provier = token
+        
         email_claim = auth_manager_config.OAUTH_EMAIL_CLAIM
         email = user_data.get(email_claim, "")
         # We currently mandate that email addresses are provided
@@ -505,7 +511,8 @@ class OAuthManager:
                     status.HTTP_403_FORBIDDEN, detail=ERROR_MESSAGES.ACCESS_PROHIBITED
                 )
 
-
+        # jwt_token = token_provier
+        
         jwt_token = create_token(
             data={"id": user.id},
             # expires_delta=parse_duration(auth_manager_config.JWT_EXPIRES_IN),
