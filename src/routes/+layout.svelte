@@ -463,8 +463,8 @@
 			// const res = await userSignOut();
 			// user.set(null);
 			// localStorage.removeItem('token');
-			console.log({ res });
-			console.warn({ res });
+			// console.log({ res });
+			// console.warn({ res });
 			console.warn( res?.redirect_url );
 			console.warn( `${WEBUI_BASE_URL}/oauth/oidc/login` );
 			console.warn( res?.redirect_url ?? `${WEBUI_BASE_URL}/oauth/oidc/login` ?? '/auth' );
