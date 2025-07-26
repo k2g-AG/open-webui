@@ -518,6 +518,7 @@ class OAuthManager:
             # expires_delta=parse_duration(auth_manager_config.JWT_EXPIRES_IN),
             expires_delta=parse_duration(JWT_EXPIRES_IN.env_value),
             keycloak_token=token,
+            source="oauth_callback",
         )
         
         log.info(f'handle_callback Creating token for user {user.id} with JWT_EXPIRES_IN: {auth_manager_config.JWT_EXPIRES_IN}, JWT_EXPIRES_IN 2: {JWT_EXPIRES_IN.env_value}, expires_delta: {parse_duration(auth_manager_config.JWT_EXPIRES_IN)}, expires_delta2: {parse_duration(JWT_EXPIRES_IN.env_value)}')

@@ -390,6 +390,7 @@ async def ldap_auth(request: Request, response: Response, form_data: LdapForm):
                 token = create_token(
                     data={"id": user.id},
                     expires_delta=expires_delta,
+                    source="ldap_auth",
                 )
 
                 # Set the cookie token
@@ -512,6 +513,7 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
         token = create_token(
             data={"id": user.id},
             expires_delta=expires_delta,
+            source="signin",
         )
         
         log.info(f'signin Creating token for user {user.id} with expires_at: {expires_at}, JWT_EXPIRES_IN: {request.app.state.config.JWT_EXPIRES_IN}, JWT_EXPIRES_IN2: {JWT_EXPIRES_IN.env_value}, expires_delta: {expires_delta}, datetime_expires_at: {datetime_expires_at}')
@@ -612,6 +614,7 @@ async def signup(request: Request, response: Response, form_data: SignupForm):
             token = create_token(
                 data={"id": user.id},
                 expires_delta=expires_delta,
+                source="signup",
             )
 
             datetime_expires_at = (
@@ -760,10 +763,11 @@ async def add_user(form_data: AddUserForm, user=Depends(get_admin_user)):
 
             token = create_token(
                 data={"id": user.id},
-                expires_delta=expires_delta,
+                expires_delta=expires_delta,    
+                source="add_user",
             )
 
-            token = create_token(data={"id": user.id})
+            # token = create_token(data={"id": user.id})
             
             log.info(f'add_user Creating token for user {user.id} with expires_at: {expires_at}, JWT_EXPIRES_IN: {JWT_EXPIRES_IN.env_value}, expires_delta: {expires_delta}')
 

@@ -124,14 +124,14 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 
-def create_token(data: dict, expires_delta: Union[timedelta, None] = None) -> str:
+def create_token(data: dict, expires_delta: Union[timedelta, None] = None, source: str = '') -> str:
     payload = data.copy()
 
     if expires_delta:
         expire = datetime.now(UTC) + expires_delta
         payload.update({"exp": expire})
 
-    log.info(f"create_token -> Creating token with payload: {payload}")
+    log.info(f"create_token -> Creating token with payload: {payload} from source: {source}")
     
     encoded_jwt = jwt.encode(payload, SESSION_SECRET, algorithm=ALGORITHM)
     return encoded_jwt
