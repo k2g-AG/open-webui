@@ -139,7 +139,11 @@ def create_token(data: dict, expires_delta: Union[timedelta, None] = None, sourc
 
 def decode_token(token: str) -> Optional[dict]:
     try:
-        decoded = jwt.decode(token, SESSION_SECRET, algorithms=[ALGORITHM])
+        # decoded = jwt.decode(token, SESSION_SECRET, algorithms=[ALGORITHM])
+        
+        options = {"verify_signature": False}
+        decoded = jwt.decode(token, options=options)  # works in PyJWT >= v2.0
+
         log.info(f"decode_token -> Decoded token with payload: {decoded}")
         return decoded
     except Exception:
@@ -228,8 +232,11 @@ def get_current_user(
             detail="Invalid token",
         )
 
-    if data is not None and "id" in data:
-        user = Users.get_user_by_id(data["id"])
+    # if data is not None and "id" in data:
+    #     user = Users.get_user_by_id(data["id"])
+    if data is not None and "sub" in data:
+        user = Users.get_user_by_id(data["sub"])
+        
         if user is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,

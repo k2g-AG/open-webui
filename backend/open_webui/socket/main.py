@@ -255,8 +255,10 @@ async def connect(sid, environ, auth):
     if auth and "token" in auth:
         data = decode_token(auth["token"])
 
-        if data is not None and "id" in data:
-            user = Users.get_user_by_id(data["id"])
+        # if data is not None and "id" in data:
+        #     user = Users.get_user_by_id(data["id"])
+        if data is not None and "sub" in data:
+            user = Users.get_user_by_id(data["sub"])
 
         if user:
             SESSION_POOL[sid] = user.model_dump()
@@ -274,10 +276,13 @@ async def user_join(sid, data):
         return
 
     data = decode_token(auth["token"])
-    if data is None or "id" not in data:
+    
+    # if data is None or "id" not in data:
+    if data is None or "sub" not in data:
         return
 
-    user = Users.get_user_by_id(data["id"])
+    # user = Users.get_user_by_id(data["id"])
+    user = Users.get_user_by_id(data["sub"])
     if not user:
         return
 
@@ -302,10 +307,13 @@ async def join_channel(sid, data):
         return
 
     data = decode_token(auth["token"])
-    if data is None or "id" not in data:
+
+    # if data is None or "id" not in data:
+    if data is None or "sub" not in data:
         return
 
-    user = Users.get_user_by_id(data["id"])
+    # user = Users.get_user_by_id(data["id"])
+    user = Users.get_user_by_id(data["sub"])
     if not user:
         return
 
@@ -323,10 +331,12 @@ async def join_note(sid, data):
         return
 
     token_data = decode_token(auth["token"])
-    if token_data is None or "id" not in token_data:
+    # if token_data is None or "id" not in token_data:
+    if token_data is None or "sub" not in token_data:
         return
 
-    user = Users.get_user_by_id(token_data["id"])
+    # user = Users.get_user_by_id(token_data["id"])
+    user = Users.get_user_by_id(token_data["sub"])
     if not user:
         return
 

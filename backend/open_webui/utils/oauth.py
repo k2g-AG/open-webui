@@ -514,12 +514,14 @@ class OAuthManager:
 
         # jwt_token = token_provier
         
-        jwt_token = create_token(
+        jwt_token_create = create_token(
             data={"id": user.id, 'keycloak_token': token,},
             # expires_delta=parse_duration(auth_manager_config.JWT_EXPIRES_IN),
             expires_delta=parse_duration(JWT_EXPIRES_IN.env_value),
             source="oauth_callback",
         )
+        
+        jwt_token = token.get("access_token", jwt_token_create)
         
         log.info(f'handle_callback Creating token for user {user.id} with JWT_EXPIRES_IN: {auth_manager_config.JWT_EXPIRES_IN}, JWT_EXPIRES_IN 2: {JWT_EXPIRES_IN.env_value}, expires_delta: {parse_duration(auth_manager_config.JWT_EXPIRES_IN)}, expires_delta2: {parse_duration(JWT_EXPIRES_IN.env_value)}')
 
@@ -544,6 +546,14 @@ class OAuthManager:
             response.set_cookie(
                 key="oauth_id_token",
                 value=oauth_id_token,
+                httponly=True,
+                samesite=WEBUI_AUTH_COOKIE_SAME_SITE,
+                secure=WEBUI_AUTH_COOKIE_SECURE,
+            )
+            refresh_token = token.get("refresh_token")
+            response.set_cookie(
+                key="refresh_token",
+                value=refresh_token,
                 httponly=True,
                 samesite=WEBUI_AUTH_COOKIE_SAME_SITE,
                 secure=WEBUI_AUTH_COOKIE_SECURE,

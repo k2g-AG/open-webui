@@ -1562,8 +1562,10 @@ async def get_app_config(request: Request):
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid token",
             )
-        if data is not None and "id" in data:
-            user = Users.get_user_by_id(data["id"])
+        # if data is not None and "id" in data:
+        #     user = Users.get_user_by_id(data["id"])
+        if data is not None and "sub" in data:
+            user = Users.get_user_by_id(data["sub"])
 
     user_count = Users.get_num_users()
     onboarding = False
