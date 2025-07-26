@@ -493,6 +493,7 @@ class OAuthManager:
                     profile_image_url=picture_url,
                     role=role,
                     oauth_sub=provider_sub,
+                    id = sub
                 )
 
                 if auth_manager_config.WEBHOOK_URL:
