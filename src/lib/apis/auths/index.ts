@@ -356,7 +356,7 @@ export const userSignRefreshToken = async () => {
 	let error = null;
 	let url = localStorage.getItem('token_refresh_url');
 	const res = await fetch(`https://oi.k2g.ai/oauth/oidc/callback`, {
-		method: 'GET ',
+		method: 'GET',
 		headers: {
 			'Content-Type': 'application/json'
 		},
