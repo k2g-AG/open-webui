@@ -1,7 +1,9 @@
 import base64
+import datetime
 import logging
 import mimetypes
 import sys
+import time
 import uuid
 import json
 
@@ -12,8 +14,10 @@ from fastapi import (
     HTTPException,
     status,
 )
+import requests
 from starlette.responses import RedirectResponse
 
+from open_webui.utils.access_control import get_permissions
 from open_webui.models.auths import Auths
 from open_webui.models.users import Users
 from open_webui.models.groups import Groups, GroupModel, GroupUpdateForm, GroupForm
@@ -47,7 +51,7 @@ from open_webui.env import (
     WEBUI_AUTH_COOKIE_SECURE,
 )
 from open_webui.utils.misc import parse_duration
-from open_webui.utils.auth import get_password_hash, create_token
+from open_webui.utils.auth import decode_token, get_http_authorization_cred, get_password_hash, create_token
 from open_webui.utils.webhook import post_webhook
 
 from open_webui.env import SRC_LOG_LEVELS, GLOBAL_LOG_LEVEL
@@ -566,3 +570,295 @@ class OAuthManager:
         redirect_url = f"{redirect_base_url}/auth#token={jwt_token}"
 
         return RedirectResponse(url=redirect_url, headers=response.headers)
+
+# ------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------------
+    async def oauth_refresh(self, request, provider, response):
+        if provider not in OAUTH_PROVIDERS:
+            raise HTTPException(404)
+                
+        auth_header = request.headers.get("Authorization")
+        auth_token = get_http_authorization_cred(auth_header)
+        token = auth_token.credentials
+        data = decode_token(token)
+        
+        refresh_token = request.cookies.get("refresh_token", '')
+
+        if not refresh_token:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=ERROR_MESSAGES.INVALID_TOKEN,
+            )
+        
+        url = f'{data.get("iss")}/protocol/openid-connect/token'
+        payload = f'client_id={data.get("azp")}&refresh_token={refresh_token}&grant_type=refresh_token'
+        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+        try:
+            response = requests.request("POST", url, headers=headers, data=payload)
+        except Exception as e:
+            log.warning(f"Refresh token error: {e}")
+            raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
+        
+        try:
+            resp_json = response.json()
+        except Exception as e:
+            log.warning(f"Failed to parse refresh token response: {e}")
+            raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
+
+        refresh_token = resp_json.get("refresh_token")
+        id_token = resp_json.get("id_token")
+        access_token = resp_json.get("access_token")
+        
+        access_token_json = decode_token(access_token)
+        
+        token = {
+            "refresh_token": refresh_token,
+            "id_token": id_token,
+            "access_token": access_token,
+            "userinfo": access_token_json,
+        }
+                
+        log.info(f"handle_login: OAuth callback received token: {token}")
+        
+        user_data: UserInfo = token.get("userinfo")
+        if not user_data or auth_manager_config.OAUTH_EMAIL_CLAIM not in user_data:
+            client = self.get_client(provider)
+            user_data: UserInfo = await client.userinfo(token=token)
+        if not user_data:
+            log.warning(f"OAuth callback failed, user data is missing: {token}")
+            raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
+
+        sub = user_data.get(OAUTH_PROVIDERS[provider].get("sub_claim", "sub"))
+        if not sub:
+            log.warning(f"OAuth callback failed, sub is missing: {user_data}")
+            raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
+        provider_sub = f"{provider}@{sub}"
+        
+        # token_provier = token
+        
+        email_claim = auth_manager_config.OAUTH_EMAIL_CLAIM
+        email = user_data.get(email_claim, "")
+        # We currently mandate that email addresses are provided
+        if not email:
+            # If the provider is GitHub,and public email is not provided, we can use the access token to fetch the user's email
+            if provider == "github":
+                try:
+                    access_token = token.get("access_token")
+                    headers = {"Authorization": f"Bearer {access_token}"}
+                    async with aiohttp.ClientSession(trust_env=True) as session:
+                        async with session.get(
+                            "https://api.github.com/user/emails",
+                            headers=headers,
+                            ssl=AIOHTTP_CLIENT_SESSION_SSL,
+                        ) as resp:
+                            if resp.ok:
+                                emails = await resp.json()
+                                # use the primary email as the user's email
+                                primary_email = next(
+                                    (e["email"] for e in emails if e.get("primary")),
+                                    None,
+                                )
+                                if primary_email:
+                                    email = primary_email
+                                else:
+                                    log.warning(
+                                        "No primary email found in GitHub response"
+                                    )
+                                    raise HTTPException(
+                                        400, detail=ERROR_MESSAGES.INVALID_CRED
+                                    )
+                            else:
+                                log.warning("Failed to fetch GitHub email")
+                                raise HTTPException(
+                                    400, detail=ERROR_MESSAGES.INVALID_CRED
+                                )
+                except Exception as e:
+                    log.warning(f"Error fetching GitHub email: {e}")
+                    raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
+            else:
+                log.warning(f"OAuth callback failed, email is missing: {user_data}")
+                raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
+        email = email.lower()
+        if (
+            "*" not in auth_manager_config.OAUTH_ALLOWED_DOMAINS
+            and email.split("@")[-1] not in auth_manager_config.OAUTH_ALLOWED_DOMAINS
+        ):
+            log.warning(
+                f"OAuth callback failed, e-mail domain is not in the list of allowed domains: {user_data}"
+            )
+            raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
+
+        # Check if the user exists
+        user = Users.get_user_by_oauth_sub(provider_sub)
+
+        if not user:
+            # If the user does not exist, check if merging is enabled
+            if auth_manager_config.OAUTH_MERGE_ACCOUNTS_BY_EMAIL:
+                # Check if the user exists by email
+                user = Users.get_user_by_email(email)
+                if user:
+                    # Update the user with the new oauth sub
+                    Users.update_user_oauth_sub_by_id(user.id, provider_sub)
+
+        if user:
+            determined_role = self.get_user_role(user, user_data)
+            if user.role != determined_role:
+                Users.update_user_role_by_id(user.id, determined_role)
+
+            # Update profile picture if enabled and different from current
+            if auth_manager_config.OAUTH_UPDATE_PICTURE_ON_LOGIN:
+                picture_claim = auth_manager_config.OAUTH_PICTURE_CLAIM
+                if picture_claim:
+                    new_picture_url = user_data.get(
+                        picture_claim, OAUTH_PROVIDERS[provider].get("picture_url", "")
+                    )
+                    processed_picture_url = await self._process_picture_url(
+                        new_picture_url, token.get("access_token")
+                    )
+                    if processed_picture_url != user.profile_image_url:
+                        Users.update_user_profile_image_url_by_id(
+                            user.id, processed_picture_url
+                        )
+                        log.debug(f"Updated profile picture for user {user.email}")
+
+        if not user:
+            # If the user does not exist, check if signups are enabled
+            if auth_manager_config.ENABLE_OAUTH_SIGNUP:
+                # Check if an existing user with the same email already exists
+                existing_user = Users.get_user_by_email(email)
+                if existing_user:
+                    raise HTTPException(400, detail=ERROR_MESSAGES.EMAIL_TAKEN)
+
+                picture_claim = auth_manager_config.OAUTH_PICTURE_CLAIM
+                if picture_claim:
+                    picture_url = user_data.get(
+                        picture_claim, OAUTH_PROVIDERS[provider].get("picture_url", "")
+                    )
+                    picture_url = await self._process_picture_url(
+                        picture_url, token.get("access_token")
+                    )
+                else:
+                    picture_url = "/user.png"
+
+                username_claim = auth_manager_config.OAUTH_USERNAME_CLAIM
+
+                name = user_data.get(username_claim)
+                if not name:
+                    log.warning("Username claim is missing, using email as name")
+                    name = email
+
+                role = self.get_user_role(None, user_data)
+
+                user = Auths.insert_new_auth(
+                    email=email,
+                    password=get_password_hash(
+                        str(uuid.uuid4())
+                    ),  # Random password, not used
+                    name=name,
+                    profile_image_url=picture_url,
+                    role=role,
+                    oauth_sub=provider_sub,
+                    id = sub
+                )
+
+                if auth_manager_config.WEBHOOK_URL:
+                    post_webhook(
+                        WEBUI_NAME,
+                        auth_manager_config.WEBHOOK_URL,
+                        WEBHOOK_MESSAGES.USER_SIGNUP(user.name),
+                        {
+                            "action": "signup",
+                            "message": WEBHOOK_MESSAGES.USER_SIGNUP(user.name),
+                            "user": user.model_dump_json(exclude_none=True),
+                        },
+                    )
+            else:
+                raise HTTPException(
+                    status.HTTP_403_FORBIDDEN, detail=ERROR_MESSAGES.ACCESS_PROHIBITED
+                )
+        
+        jwt_token_create = create_token(
+            data={"id": user.id, 'keycloak_token': token,},
+            # expires_delta=parse_duration(auth_manager_config.JWT_EXPIRES_IN),
+            expires_delta=parse_duration(JWT_EXPIRES_IN.env_value),
+            source="oauth_callback",
+        )
+        
+        jwt_token = token.get("access_token", jwt_token_create)
+        
+        log.info(f'handle_callback Creating token for user {user.id} with JWT_EXPIRES_IN: {auth_manager_config.JWT_EXPIRES_IN}, JWT_EXPIRES_IN 2: {JWT_EXPIRES_IN.env_value}, expires_delta: {parse_duration(auth_manager_config.JWT_EXPIRES_IN)}, expires_delta2: {parse_duration(JWT_EXPIRES_IN.env_value)}')
+
+        if auth_manager_config.ENABLE_OAUTH_GROUP_MANAGEMENT and user.role != "admin":
+            self.update_user_groups(
+                user=user,
+                user_data=user_data,
+                default_permissions=request.app.state.config.USER_PERMISSIONS,
+            )
+
+        # Set the cookie token
+        response.set_cookie(
+            key="token",
+            value=jwt_token,
+            httponly=True,  # Ensures the cookie is not accessible via JavaScript
+            samesite=WEBUI_AUTH_COOKIE_SAME_SITE,
+            secure=WEBUI_AUTH_COOKIE_SECURE,
+        )
+
+        if ENABLE_OAUTH_SIGNUP.value:
+            oauth_id_token = token.get("id_token")
+            response.set_cookie(
+                key="oauth_id_token",
+                value=oauth_id_token,
+                httponly=True,
+                samesite=WEBUI_AUTH_COOKIE_SAME_SITE,
+                secure=WEBUI_AUTH_COOKIE_SECURE,
+            )
+            refresh_token = token.get("refresh_token")
+            response.set_cookie(
+                key="refresh_token",
+                value=refresh_token,
+                httponly=True,
+                samesite=WEBUI_AUTH_COOKIE_SAME_SITE,
+                secure=WEBUI_AUTH_COOKIE_SECURE,
+            )
+
+        data = access_token_json
+
+        if data:
+            expires_at = data.get("exp")
+
+            if (expires_at is not None) and int(time.time()) > expires_at:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail=ERROR_MESSAGES.INVALID_TOKEN,
+                )
+
+            # Set the cookie token
+            response.set_cookie(
+                key="token",
+                value=token,
+                expires=(
+                    datetime.datetime.fromtimestamp(expires_at, datetime.timezone.utc)
+                    if expires_at
+                    else None
+                ),
+                httponly=True,  # Ensures the cookie is not accessible via JavaScript
+                samesite=WEBUI_AUTH_COOKIE_SAME_SITE,
+                secure=WEBUI_AUTH_COOKIE_SECURE,
+            )
+
+            user_permissions = get_permissions(
+                user.id, request.app.state.config.USER_PERMISSIONS
+            )
+
+            return {
+                "token": token,
+                "token_type": "Bearer",
+                "expires_at": expires_at,
+                "id": user.id,
+                "email": user.email,
+                "name": user.name,
+                "role": user.role,
+                "profile_image_url": user.profile_image_url,
+                "permissions": user_permissions,
+            }

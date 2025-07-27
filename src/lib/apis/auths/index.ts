@@ -352,6 +352,35 @@ export const userSignOut = async () => {
 	return res;
 };
 
+export const userSignRefreshToken = async () => {
+	let error = null;
+	let url = localStorage.getItem('token_refresh_url');
+	const res = await fetch(`https://oi.k2g.ai/oauth/oidc/callback`, {
+		method: 'GET ',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		credentials: 'include'
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			console.warn('get userSignRefreshToken res:', res)
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+	
+	// sessionStorage.clear();
+	return res;
+};
+
 export const addUser = async (
 	token: string,
 	name: string,
