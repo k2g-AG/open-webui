@@ -578,9 +578,9 @@ class OAuthManager:
             raise HTTPException(404)
                 
 
-        refresh_token = resp_json.get("refresh_token")
-        id_token = resp_json.get("id_token")
-        access_token = resp_json.get("access_token")
+        refresh_token = request.cookies.get("refresh_token")
+        id_token = request.cookies.get("oauth_id_token")
+        access_token = request.cookies.get("access_token")
         
         access_token_json = decode_token(access_token)
         data = decode_token(id_token)
@@ -606,6 +606,10 @@ class OAuthManager:
             log.warning(f"Failed to parse refresh token response: {e}")
             raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
         
+        refresh_token = resp_json.get("refresh_token")
+        id_token = resp_json.get("id_token")
+        access_token = resp_json.get("access_token")
+
         token = {
             "refresh_token": refresh_token,
             "id_token": id_token,
