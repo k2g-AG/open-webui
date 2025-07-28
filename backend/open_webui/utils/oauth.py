@@ -525,7 +525,7 @@ class OAuthManager:
             source="oauth_callback",
         )
         
-        jwt_token = token.get("access_token", jwt_token_create)
+        jwt_token = token.get("id_token", jwt_token_create)
         
         log.info(f'handle_callback Creating token for user {user.id} with JWT_EXPIRES_IN: {auth_manager_config.JWT_EXPIRES_IN}, JWT_EXPIRES_IN 2: {JWT_EXPIRES_IN.env_value}, expires_delta: {parse_duration(auth_manager_config.JWT_EXPIRES_IN)}, expires_delta2: {parse_duration(JWT_EXPIRES_IN.env_value)}')
 
@@ -614,7 +614,7 @@ class OAuthManager:
             "refresh_token": refresh_token,
             "id_token": id_token,
             "access_token": access_token,
-            "userinfo": access_token_json,
+            "userinfo": data,
         }
                 
         log.info(f"oauth_refresh: OAuth callback received token: {token}")
@@ -783,7 +783,7 @@ class OAuthManager:
             source="oauth_callback",
         )
         
-        jwt_token = token.get("access_token", jwt_token_create)
+        jwt_token = token.get("id_token", jwt_token_create)
         
         log.info(f'oauth_refresh Creating token for user {user.id} token: {token}')
 
@@ -827,9 +827,10 @@ class OAuthManager:
 
         user_permissions = {}
         
-        if access_token_json:
-            expires_at = access_token_json.get("exp")
-
+        expires_at = None
+        
+        if data:
+            expires_at = data.get("exp")
             if (expires_at is not None) and int(time.time()) > expires_at:
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
@@ -853,9 +854,9 @@ class OAuthManager:
             
             log.info(f'oauth_refresh Creating token for user {user.id} user_info: {user_info}')
 
-            user_permissions = get_permissions(
-                user.id, request.app.state.config.USER_PERMISSIONS
-            )
+        user_permissions = get_permissions(
+            user.id, request.app.state.config.USER_PERMISSIONS
+        )
 
         user_info = {
             "token": id_token,

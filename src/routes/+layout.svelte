@@ -461,6 +461,7 @@
 		if (now >= exp - TOKEN_EXPIRY_BUFFER) {
 			console.warn('Token is about to expire or has expired, redirecting to auth page');
 			const res = await userSignRefreshToken();
+			console.warn('userSignRefreshToken result:', res);
 			// user.set(null);
 			localStorage.setItem('token', res?.token);
 			await user.set(res);
