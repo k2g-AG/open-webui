@@ -851,8 +851,6 @@ class OAuthManager:
                 samesite=WEBUI_AUTH_COOKIE_SAME_SITE,
                 secure=WEBUI_AUTH_COOKIE_SECURE,
             )
-            
-            log.info(f'oauth_refresh Creating token for user {user.id} user_info: {user_info}')
 
         user_permissions = get_permissions(
             user.id, request.app.state.config.USER_PERMISSIONS
