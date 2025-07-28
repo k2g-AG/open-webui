@@ -595,13 +595,13 @@ class OAuthManager:
         payload = f'client_id={data.get("azp")}&refresh_token={refresh_token}&grant_type=refresh_token'
         headers = {'Content-Type': 'application/x-www-form-urlencoded'}
         try:
-            response = requests.request("POST", url, headers=headers, data=payload)
+            resp = requests.request("POST", url, headers=headers, data=payload)
         except Exception as e:
             log.warning(f"Refresh token error: {e}")
             raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
         
         try:
-            resp_json = response.json()
+            resp_json = resp.json()
         except Exception as e:
             log.warning(f"Failed to parse refresh token response: {e}")
             raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
