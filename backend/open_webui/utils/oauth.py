@@ -371,6 +371,7 @@ class OAuthManager:
             raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
         provider_sub = f"{provider}@{sub}"
         
+        
         # token_provier = token
         
         email_claim = auth_manager_config.OAUTH_EMAIL_CLAIM
@@ -577,6 +578,7 @@ class OAuthManager:
         if provider not in OAUTH_PROVIDERS:
             raise HTTPException(404)
                 
+        log.info(f'oauth_refresh request.state.token.scheme = {request.state.token.scheme}, request.state.token.credentials = {request.state.token.credentials}')
 
         refresh_token = request.cookies.get("refresh_token")
         id_token = request.cookies.get("oauth_id_token")
