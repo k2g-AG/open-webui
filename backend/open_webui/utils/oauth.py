@@ -617,7 +617,7 @@ class OAuthManager:
             "userinfo": access_token_json,
         }
                 
-        log.info(f"handle_login: OAuth callback received token: {token}")
+        log.info(f"oauth_refresh: OAuth callback received token: {token}")
         
         user_data: UserInfo = token.get("userinfo")
         if not user_data or auth_manager_config.OAUTH_EMAIL_CLAIM not in user_data:
@@ -785,7 +785,7 @@ class OAuthManager:
         
         jwt_token = token.get("access_token", jwt_token_create)
         
-        log.info(f'handle_callback Creating token for user {user.id} with JWT_EXPIRES_IN: {auth_manager_config.JWT_EXPIRES_IN}, JWT_EXPIRES_IN 2: {JWT_EXPIRES_IN.env_value}, expires_delta: {parse_duration(auth_manager_config.JWT_EXPIRES_IN)}, expires_delta2: {parse_duration(JWT_EXPIRES_IN.env_value)}')
+        log.info(f'oauth_refresh Creating token for user {user.id} token: {token}')
 
         if auth_manager_config.ENABLE_OAUTH_GROUP_MANAGEMENT and user.role != "admin":
             self.update_user_groups(
@@ -793,6 +793,8 @@ class OAuthManager:
                 user_data=user_data,
                 default_permissions=request.app.state.config.USER_PERMISSIONS,
             )
+
+        log.info(f'oauth_refresh set_cookie for user {user.id} jwt_token: {jwt_token}')
 
         # Set the cookie token
         response.set_cookie(
@@ -805,6 +807,7 @@ class OAuthManager:
 
         if ENABLE_OAUTH_SIGNUP.value:
             oauth_id_token = token.get("id_token")
+            log.info(f'oauth_refresh set_cookie for user {user.id} oauth_id_token: {oauth_id_token}')
             response.set_cookie(
                 key="oauth_id_token",
                 value=oauth_id_token,
@@ -813,6 +816,7 @@ class OAuthManager:
                 secure=WEBUI_AUTH_COOKIE_SECURE,
             )
             refresh_token = token.get("refresh_token")
+            log.info(f'oauth_refresh set_cookie for user {user.id} refresh_token: {refresh_token}')
             response.set_cookie(
                 key="refresh_token",
                 value=refresh_token,
@@ -821,10 +825,10 @@ class OAuthManager:
                 secure=WEBUI_AUTH_COOKIE_SECURE,
             )
 
-        data = access_token_json
-
-        if data:
-            expires_at = data.get("exp")
+        user_permissions = {}
+        
+        if access_token_json:
+            expires_at = access_token_json.get("exp")
 
             if (expires_at is not None) and int(time.time()) > expires_at:
                 raise HTTPException(
@@ -833,9 +837,10 @@ class OAuthManager:
                 )
 
             # Set the cookie token
+            log.info(f'oauth_refresh set_cookie for user {user.id} token: {id_token}')
             response.set_cookie(
                 key="token",
-                value=token,
+                value=id_token,
                 expires=(
                     datetime.datetime.fromtimestamp(expires_at, datetime.timezone.utc)
                     if expires_at
@@ -845,19 +850,26 @@ class OAuthManager:
                 samesite=WEBUI_AUTH_COOKIE_SAME_SITE,
                 secure=WEBUI_AUTH_COOKIE_SECURE,
             )
+            
+            log.info(f'oauth_refresh Creating token for user {user.id} user_info: {user_info}')
 
             user_permissions = get_permissions(
                 user.id, request.app.state.config.USER_PERMISSIONS
             )
 
-            return {
-                "token": token,
-                "token_type": "Bearer",
-                "expires_at": expires_at,
-                "id": user.id,
-                "email": user.email,
-                "name": user.name,
-                "role": user.role,
-                "profile_image_url": user.profile_image_url,
-                "permissions": user_permissions,
-            }
+        user_info = {
+            "token": id_token,
+            "token_type": "Bearer",
+            "expires_at": expires_at,
+            "id": user.id,
+            "email": user.email,
+            "name": user.name,
+            "role": user.role,
+            "profile_image_url": user.profile_image_url,
+            "permissions": user_permissions,
+        }
+        
+        log.info(f'oauth_refresh Creating user info for user {user.id} user_info: {user_info}')
+
+        return user_info
+    
