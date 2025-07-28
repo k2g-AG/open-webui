@@ -349,22 +349,7 @@ class OAuthManager:
     async def handle_callback(self, request, provider, response):
         if provider not in OAUTH_PROVIDERS:
             raise HTTPException(404)
-        client = self.get_client(provider)
-        
-        req_json = {}
-        try:
-            req_json = request.json()
-        except Exception as e:
-            log.warning(f"handle_callback request.json() error: {e}")
-        
-        cookies = {}
-        try:
-            cookies = request.cookies
-        except Exception as e:
-            log.warning(f"handle_callback cookies error: {e}")
-
-        log.info(f'handle_callback provider: {provider}, req_json: {req_json}, cookies: {cookies}')
-        
+        client = self.get_client(provider)        
         try:
             token = await client.authorize_access_token(request)
         except Exception as e:
