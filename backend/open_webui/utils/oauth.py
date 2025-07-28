@@ -582,7 +582,6 @@ class OAuthManager:
         id_token = request.cookies.get("oauth_id_token")
         access_token = request.cookies.get("access_token")
         
-        access_token_json = decode_token(access_token)
         data = decode_token(id_token)
 
         if not refresh_token:
@@ -609,6 +608,8 @@ class OAuthManager:
         refresh_token = resp_json.get("refresh_token")
         id_token = resp_json.get("id_token")
         access_token = resp_json.get("access_token")
+        
+        data = decode_token(id_token)
 
         token = {
             "refresh_token": refresh_token,
