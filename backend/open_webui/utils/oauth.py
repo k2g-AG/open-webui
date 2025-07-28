@@ -577,12 +577,13 @@ class OAuthManager:
         if provider not in OAUTH_PROVIDERS:
             raise HTTPException(404)
                 
-        auth_header = request.headers.get("Authorization")
-        auth_token = get_http_authorization_cred(auth_header)
-        token = auth_token.credentials
-        data = decode_token(token)
+
+        refresh_token = resp_json.get("refresh_token")
+        id_token = resp_json.get("id_token")
+        access_token = resp_json.get("access_token")
         
-        refresh_token = request.cookies.get("refresh_token", '')
+        access_token_json = decode_token(access_token)
+        data = decode_token(id_token)
 
         if not refresh_token:
             raise HTTPException(
@@ -604,12 +605,6 @@ class OAuthManager:
         except Exception as e:
             log.warning(f"Failed to parse refresh token response: {e}")
             raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
-
-        refresh_token = resp_json.get("refresh_token")
-        id_token = resp_json.get("id_token")
-        access_token = resp_json.get("access_token")
-        
-        access_token_json = decode_token(access_token)
         
         token = {
             "refresh_token": refresh_token,
