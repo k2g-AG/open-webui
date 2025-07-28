@@ -350,6 +350,7 @@ class OAuthManager:
         if provider not in OAUTH_PROVIDERS:
             raise HTTPException(404)
         client = self.get_client(provider)
+        log.info(f'handle_callback provider: {provider}, request: {request}')
         try:
             token = await client.authorize_access_token(request)
         except Exception as e:
