@@ -352,13 +352,16 @@ export const userSignOut = async () => {
 	return res;
 };
 
-export const userSignRefreshToken = async () => {
+export const userSignRefreshToken = async (
+	token: string,
+) => {
 	let error = null;
 	// let url = localStorage.getItem('token_refresh_url');
 	const res = await fetch(`/oauth/oidc/refresh`, {
 		method: 'GET',
 		headers: {
-			'Content-Type': 'application/json'
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`
 		},
 		credentials: 'include'
 	})
