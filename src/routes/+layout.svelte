@@ -615,12 +615,12 @@
 					} else {
 						// Redirect Invalid Session User to /auth Page
 						localStorage.removeItem('token');
-						keycloak.logout();
+						// keycloak.logout();
 					}
 				} else {
 					// Don't redirect if we're already on the auth page
 					// Needed because we pass in tokens from OAuth logins via URL fragments
-					keycloak.logout();
+					// keycloak.logout();
 					if ($page.url.pathname !== '/auth') {
 						// location.href = `${WEBUI_BASE_URL}/oauth/oidc/login`;
 					}
