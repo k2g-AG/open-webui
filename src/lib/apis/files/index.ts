@@ -75,7 +75,7 @@ async function uploadFileTUS(token: string, file: File, metadata?: object | null
 	});
 }
 
-export const uploadDirectFile = async (token: string, file: File, metadata?: object | null) => {
+export const uploadDirectFile = async (file: File, metadata?: object | null) => {
 	let error = null;
     console.warn(`URL2: ${WEBUI_BASE_URL}${WEBUI_API_BASE_URL}/files/tus`);
 	
@@ -85,7 +85,7 @@ export const uploadDirectFile = async (token: string, file: File, metadata?: obj
         // const upload = new Upload(file, {
         try {
 			console.warn("File uploaded successfully to:", uploadedUrl);
-			uploadedUrl = await uploadFileTUS(token, file, metadata);
+			uploadedUrl = await uploadFileTUS(localStorage.token, file, metadata);
 		} catch (err) {
 			console.error("Upload failed:", err);
 			error = err;
@@ -114,7 +114,7 @@ export const uploadDirectFile = async (token: string, file: File, metadata?: obj
 		headers: {
 			Accept: 'application/json', 
 			'Content-Type': 'application/json',
-			authorization: `Bearer ${token}`
+			authorization: `Bearer ${localStorage.token}`
 		},
 		body: JSON.stringify(fileMetadata)
 	})

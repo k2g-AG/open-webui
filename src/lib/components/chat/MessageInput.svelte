@@ -749,7 +749,7 @@
 			// If the file is an audio file, provide the language for STT.
 			let metadata = {'uploadType': 'direct'};
 			// During the file upload, file content is automatically extracted.
-			const uploadedFile = await uploadDirectFile(localStorage.token, file, metadata);
+			const uploadedFile = await uploadDirectFile(file, metadata);
 
 			if (uploadedFile) {
 				console.warn('File upload completed:', {
