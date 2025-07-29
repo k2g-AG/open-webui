@@ -191,7 +191,7 @@
 					user.set(null);
 					localStorage.removeItem('token');
 					// console.log({res, WEBUI_BASE_URL})
-					keycloak.logout({ redirectUri: `${WEBUI_BASE_URL}/oauth/oidc/login` });
+					keycloak.logout();
 					// location.href = res?.redirect_url ?? `${WEBUI_BASE_URL}/oauth/oidc/login` ?? '/auth';
 					show = false;
 				}}
