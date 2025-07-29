@@ -15,10 +15,12 @@ from typing import Optional, Union, List, Dict
 
 from opentelemetry import trace
 
+from open_webui.utils.jwt_keycloak_validate import decodeAndValidateToken
 from open_webui.models.users import Users
 
 from open_webui.constants import ERROR_MESSAGES
 from open_webui.env import (
+    KEYCLOAK_ISSUER,
     WEBUI_SECRET_KEY,
     TRUSTED_SIGNATURE_KEY,
     STATIC_DIR,
@@ -137,17 +139,26 @@ def create_token(data: dict, expires_delta: Union[timedelta, None] = None, sourc
     return encoded_jwt
 
 
-def decode_token(token: str) -> Optional[dict]:
-    try:
-        # decoded = jwt.decode(token, SESSION_SECRET, algorithms=[ALGORITHM])
+def decode_token(token: str, issuer: str = '') -> Optional[dict]:
+    if not issuer:
+        issuer = KEYCLOAK_ISSUER
         
-        options = {"verify_signature": False}
-        decoded = jwt.decode(token, options=options)  # works in PyJWT >= v2.0
-
-        log.info(f"decode_token -> Decoded token with payload: {decoded}")
-        return decoded
-    except Exception:
-        return None
+    if issuer:
+        try:
+            decoded = decodeAndValidateToken(token, issuer=issuer)
+            log.info(f"decodeAndValidateToken decode_token -> Decoded token with payload: {decoded}")
+            return decoded
+        except Exception:
+            return None
+    else:
+        try:
+            # decoded = jwt.decode(token, SESSION_SECRET, algorithms=[ALGORITHM])
+            options = {"verify_signature": False}
+            decoded = jwt.decode(token, options=options)  # works in PyJWT >= v2.0
+            log.info(f"decode without validate decode_token -> Decoded token with payload: {decoded}")
+            return decoded
+        except Exception:
+            return None
 
 
 def extract_token_from_auth_header(auth_header: str):
