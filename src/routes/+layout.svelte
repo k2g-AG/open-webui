@@ -59,7 +59,8 @@
 	});
 	let authenticated = false;
 
-	// keycloak.init({ onLoad: 'login-required' }).then((auth) => {
+	
+	// let keycloakPromise = keycloak.init({ onLoad: 'login-required' }).then((auth) => {
 	// 	authenticated = auth;
 	// 	console.log({ authenticated });
 	// 	if (authenticated) {
@@ -67,19 +68,9 @@
 	// 		localStorage.setItem('token', keycloak.token || '');
 	// 		console.warn('Token:', keycloak.token);
 	// 	}
+	// 	return keycloak;
 	// });
 
-	try {
-		const authenticated = await keycloak.init({ onLoad: 'login-required' });
-		console.warn('authenticated:', { authenticated });
-		if (authenticated) {
-			console.warn('Authenticated');
-			localStorage.setItem('token', keycloak.token || '');
-			console.warn('Token:', keycloak.token);
-		}
-	} catch (error) {
-		console.error('Failed to initialize adapter:', error);
-	}
 	
 	setContext('i18n', i18n);
 
@@ -503,6 +494,18 @@
 	};
 
 	onMount(async () => {
+		try {
+			const authenticated = await keycloak.init({ onLoad: 'login-required' });
+			console.warn('authenticated:', { authenticated });
+			if (authenticated) {
+				console.warn('Authenticated');
+				localStorage.setItem('token', keycloak.token || '');
+				console.warn('Token:', keycloak.token);
+			}
+		} catch (error) {
+			console.error('Failed to initialize adapter:', error);
+		}
+
 		if (typeof window !== 'undefined' && window.applyTheme) {
 			window.applyTheme();
 		}
