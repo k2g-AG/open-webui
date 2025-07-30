@@ -580,44 +580,16 @@ class OAuthManager:
             raise HTTPException(404)
                 
         log.info(f'oauth_refresh request.state.token.scheme = {request.state.token.scheme}, request.state.token.credentials = {request.state.token.credentials}')
+        data = decode_token(request.state.token.credentials)
 
-        refresh_token = request.cookies.get("refresh_token")
-        id_token = request.cookies.get("oauth_id_token")
-        access_token = request.cookies.get("access_token")
-        
-        data = decode_token(id_token)
-
-        if not refresh_token:
+        if not data:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail=ERROR_MESSAGES.INVALID_TOKEN,
             )
         
-        url = f'{data.get("iss")}/protocol/openid-connect/token'
-        payload = f'client_id={data.get("azp")}&refresh_token={refresh_token}&grant_type=refresh_token'
-        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-        try:
-            resp = requests.request("POST", url, headers=headers, data=payload)
-        except Exception as e:
-            log.warning(f"Refresh token error: {e}")
-            raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
-        
-        try:
-            resp_json = resp.json()
-        except Exception as e:
-            log.warning(f"Failed to parse refresh token response: {e}")
-            raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
-        
-        refresh_token = resp_json.get("refresh_token")
-        id_token = resp_json.get("id_token")
-        access_token = resp_json.get("access_token")
-        
-        data = decode_token(id_token)
-
         token = {
-            "refresh_token": refresh_token,
-            "id_token": id_token,
-            "access_token": access_token,
+            "access_token": request.state.token.credentials,
             "userinfo": data,
         }
                 
@@ -636,9 +608,7 @@ class OAuthManager:
             log.warning(f"OAuth callback failed, sub is missing: {user_data}")
             raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
         provider_sub = f"{provider}@{sub}"
-        
-        # token_provier = token
-        
+                
         email_claim = auth_manager_config.OAUTH_EMAIL_CLAIM
         email = user_data.get(email_claim, "")
         # We currently mandate that email addresses are provided
@@ -780,17 +750,6 @@ class OAuthManager:
                     status.HTTP_403_FORBIDDEN, detail=ERROR_MESSAGES.ACCESS_PROHIBITED
                 )
         
-        jwt_token_create = create_token(
-            data={"id": user.id, 'keycloak_token': token,},
-            # expires_delta=parse_duration(auth_manager_config.JWT_EXPIRES_IN),
-            expires_delta=parse_duration(JWT_EXPIRES_IN.env_value),
-            source="oauth_callback",
-        )
-        
-        jwt_token = token.get("id_token", jwt_token_create)
-        
-        log.info(f'oauth_refresh Creating token for user {user.id} token: {token}')
-
         if auth_manager_config.ENABLE_OAUTH_GROUP_MANAGEMENT and user.role != "admin":
             self.update_user_groups(
                 user=user,
@@ -803,31 +762,31 @@ class OAuthManager:
         # Set the cookie token
         response.set_cookie(
             key="token",
-            value=jwt_token,
+            value=token['access_token'],
             httponly=True,  # Ensures the cookie is not accessible via JavaScript
             samesite=WEBUI_AUTH_COOKIE_SAME_SITE,
             secure=WEBUI_AUTH_COOKIE_SECURE,
         )
 
-        if ENABLE_OAUTH_SIGNUP.value:
-            oauth_id_token = token.get("id_token")
-            log.info(f'oauth_refresh set_cookie for user {user.id} oauth_id_token: {oauth_id_token}')
-            response.set_cookie(
-                key="oauth_id_token",
-                value=oauth_id_token,
-                httponly=True,
-                samesite=WEBUI_AUTH_COOKIE_SAME_SITE,
-                secure=WEBUI_AUTH_COOKIE_SECURE,
-            )
-            refresh_token = token.get("refresh_token")
-            log.info(f'oauth_refresh set_cookie for user {user.id} refresh_token: {refresh_token}')
-            response.set_cookie(
-                key="refresh_token",
-                value=refresh_token,
-                httponly=True,
-                samesite=WEBUI_AUTH_COOKIE_SAME_SITE,
-                secure=WEBUI_AUTH_COOKIE_SECURE,
-            )
+        # if ENABLE_OAUTH_SIGNUP.value:
+        #     oauth_id_token = token.get("id_token")
+        #     log.info(f'oauth_refresh set_cookie for user {user.id} oauth_id_token: {oauth_id_token}')
+        #     response.set_cookie(
+        #         key="oauth_id_token",
+        #         value=oauth_id_token,
+        #         httponly=True,
+        #         samesite=WEBUI_AUTH_COOKIE_SAME_SITE,
+        #         secure=WEBUI_AUTH_COOKIE_SECURE,
+        #     )
+        #     refresh_token = token.get("refresh_token")
+        #     log.info(f'oauth_refresh set_cookie for user {user.id} refresh_token: {refresh_token}')
+        #     response.set_cookie(
+        #         key="refresh_token",
+        #         value=refresh_token,
+        #         httponly=True,
+        #         samesite=WEBUI_AUTH_COOKIE_SAME_SITE,
+        #         secure=WEBUI_AUTH_COOKIE_SECURE,
+        #     )
 
         user_permissions = {}
         
@@ -842,10 +801,9 @@ class OAuthManager:
                 )
 
             # Set the cookie token
-            log.info(f'oauth_refresh set_cookie for user {user.id} token: {id_token}')
             response.set_cookie(
                 key="token",
-                value=id_token,
+                value=token['access_token'],
                 expires=(
                     datetime.datetime.fromtimestamp(expires_at, datetime.timezone.utc)
                     if expires_at
@@ -861,7 +819,7 @@ class OAuthManager:
         )
 
         user_info = {
-            "token": id_token,
+            "token": token['access_token'],
             "token_type": "Bearer",
             "expires_at": expires_at,
             "id": user.id,

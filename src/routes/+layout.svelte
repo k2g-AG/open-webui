@@ -57,9 +57,8 @@
 			location.href = to.url.href;
 		}
 	});
-	let authenticated = false;
 
-	
+	// let authenticated = false;	
 	// let keycloakPromise = keycloak.init({ onLoad: 'login-required' }).then((auth) => {
 	// 	authenticated = auth;
 	// 	console.log({ authenticated });
@@ -71,7 +70,6 @@
 	// 	return keycloak;
 	// });
 
-	
 	setContext('i18n', i18n);
 
 	const bc = new BroadcastChannel('active-tab-channel');
@@ -478,7 +476,7 @@
 			const res = await userSignRefreshToken(localStorage.token);
 			console.warn('userSignRefreshToken result:', res);
 			// user.set(null);
-			localStorage.setItem('token', res?.token);
+			// localStorage.setItem('token', res?.token);
 			await user.set(res);
 
 			// localStorage.removeItem('token');
@@ -496,14 +494,15 @@
 	onMount(async () => {
 		try {
 			const authenticated = await keycloak.init({ onLoad: 'login-required' });
-			console.warn('authenticated:', { authenticated });
 			if (authenticated) {
-				console.warn('Authenticated');
+				console.info('Authenticated');
 				localStorage.setItem('token', keycloak.token || '');
-				console.warn('Token:', keycloak.token);
+				console.info('Token:', keycloak.token);
 			}
 		} catch (error) {
 			console.error('Failed to initialize adapter:', error);
+			window.location.reload();
+			return;
 		}
 
 		if (typeof window !== 'undefined' && window.applyTheme) {
