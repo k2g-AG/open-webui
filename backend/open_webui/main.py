@@ -10,7 +10,6 @@ import time
 import random
 from uuid import uuid4
 
-
 from contextlib import asynccontextmanager
 from urllib.parse import urlencode, parse_qs, urlparse
 from pydantic import BaseModel
@@ -22,7 +21,6 @@ import aiohttp
 import anyio.to_thread
 import requests
 from redis import Redis
-
 
 from fastapi import (
     Depends,
@@ -43,13 +41,11 @@ from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from starlette_compress import CompressMiddleware
-
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.responses import Response, StreamingResponse
 from starlette.datastructures import Headers
-
 
 from open_webui.utils import logger
 from open_webui.utils.audit import AuditLevel, AuditLoggingMiddleware
@@ -60,6 +56,7 @@ from open_webui.socket.main import (
     get_models_in_use,
     get_active_user_ids,
 )
+
 from open_webui.routers import (
     audio,
     images,
@@ -95,7 +92,6 @@ from open_webui.routers.retrieval import (
 )
 
 from open_webui.internal.db import Session, engine
-
 from open_webui.models.functions import Functions
 from open_webui.models.models import Models
 from open_webui.models.users import UserModel, Users
@@ -432,7 +428,6 @@ from open_webui.env import (
     AIOHTTP_CLIENT_SESSION_SSL,
 )
 
-
 from open_webui.utils.models import (
     get_all_models,
     get_all_base_models,
@@ -593,7 +588,6 @@ app.state.redis = None
 app.state.WEBUI_NAME = WEBUI_NAME
 app.state.LICENSE_METADATA = None
 
-
 ########################################
 #
 # OPENTELEMETRY
@@ -605,13 +599,11 @@ if ENABLE_OTEL:
 
     setup_opentelemetry(app=app, db_engine=engine)
 
-
 ########################################
 #
 # OLLAMA
 #
 ########################################
-
 
 app.state.config.ENABLE_OLLAMA_API = ENABLE_OLLAMA_API
 app.state.config.OLLAMA_BASE_URLS = OLLAMA_BASE_URLS
@@ -679,7 +671,6 @@ app.state.config.JWT_EXPIRES_IN = JWT_EXPIRES_IN
 app.state.config.SHOW_ADMIN_DETAILS = SHOW_ADMIN_DETAILS
 app.state.config.ADMIN_EMAIL = ADMIN_EMAIL
 
-
 app.state.config.DEFAULT_MODELS = DEFAULT_MODELS
 app.state.config.DEFAULT_PROMPT_SUGGESTIONS = DEFAULT_PROMPT_SUGGESTIONS
 app.state.config.DEFAULT_USER_ROLE = DEFAULT_USER_ROLE
@@ -693,7 +684,6 @@ app.state.config.USER_PERMISSIONS = USER_PERMISSIONS
 app.state.config.WEBHOOK_URL = WEBHOOK_URL
 app.state.config.BANNERS = WEBUI_BANNERS
 app.state.config.MODEL_ORDER_LIST = MODEL_ORDER_LIST
-
 
 app.state.config.ENABLE_CHANNELS = ENABLE_CHANNELS
 app.state.config.ENABLE_NOTES = ENABLE_NOTES
@@ -733,7 +723,6 @@ app.state.config.ENABLE_LDAP_GROUP_MANAGEMENT = ENABLE_LDAP_GROUP_MANAGEMENT
 app.state.config.ENABLE_LDAP_GROUP_CREATION = ENABLE_LDAP_GROUP_CREATION
 app.state.config.LDAP_ATTRIBUTE_FOR_GROUPS = LDAP_ATTRIBUTE_FOR_GROUPS
 
-
 app.state.AUTH_TRUSTED_EMAIL_HEADER = WEBUI_AUTH_TRUSTED_EMAIL_HEADER
 app.state.AUTH_TRUSTED_NAME_HEADER = WEBUI_AUTH_TRUSTED_NAME_HEADER
 app.state.WEBUI_AUTH_SIGNOUT_REDIRECT_URL = WEBUI_AUTH_SIGNOUT_REDIRECT_URL
@@ -753,12 +742,10 @@ app.state.FUNCTION_CONTENTS = {}
 #
 ########################################
 
-
 app.state.config.TOP_K = RAG_TOP_K
 app.state.config.TOP_K_RERANKER = RAG_TOP_K_RERANKER
 app.state.config.RELEVANCE_THRESHOLD = RAG_RELEVANCE_THRESHOLD
 app.state.config.HYBRID_BM25_WEIGHT = RAG_HYBRID_BM25_WEIGHT
-
 
 app.state.config.ALLOWED_FILE_EXTENSIONS = RAG_ALLOWED_FILE_EXTENSIONS
 app.state.config.FILE_MAX_SIZE = RAG_FILE_MAX_SIZE
@@ -771,7 +758,6 @@ app.state.config.DIRECT_FILE_MAX_COUNT = DIRECT_FILE_MAX_COUNT
 
 app.state.config.FILE_IMAGE_COMPRESSION_WIDTH = FILE_IMAGE_COMPRESSION_WIDTH
 app.state.config.FILE_IMAGE_COMPRESSION_HEIGHT = FILE_IMAGE_COMPRESSION_HEIGHT
-
 
 app.state.config.RAG_FULL_CONTEXT = RAG_FULL_CONTEXT
 app.state.config.BYPASS_EMBEDDING_AND_RETRIEVAL = BYPASS_EMBEDDING_AND_RETRIEVAL
@@ -836,7 +822,6 @@ app.state.config.PDF_EXTRACT_IMAGES = PDF_EXTRACT_IMAGES
 app.state.config.YOUTUBE_LOADER_LANGUAGE = YOUTUBE_LOADER_LANGUAGE
 app.state.config.YOUTUBE_LOADER_PROXY_URL = YOUTUBE_LOADER_PROXY_URL
 
-
 app.state.config.ENABLE_WEB_SEARCH = ENABLE_WEB_SEARCH
 app.state.config.WEB_SEARCH_ENGINE = WEB_SEARCH_ENGINE
 app.state.config.WEB_SEARCH_DOMAIN_FILTER_LIST = WEB_SEARCH_DOMAIN_FILTER_LIST
@@ -884,7 +869,6 @@ app.state.config.EXTERNAL_WEB_SEARCH_API_KEY = EXTERNAL_WEB_SEARCH_API_KEY
 app.state.config.EXTERNAL_WEB_LOADER_URL = EXTERNAL_WEB_LOADER_URL
 app.state.config.EXTERNAL_WEB_LOADER_API_KEY = EXTERNAL_WEB_LOADER_API_KEY
 
-
 app.state.config.PLAYWRIGHT_WS_URL = PLAYWRIGHT_WS_URL
 app.state.config.PLAYWRIGHT_TIMEOUT = PLAYWRIGHT_TIMEOUT
 app.state.config.FIRECRAWL_API_BASE_URL = FIRECRAWL_API_BASE_URL
@@ -897,7 +881,6 @@ app.state.ef = None
 app.state.rf = None
 
 app.state.YOUTUBE_LOADER_TRANSLATION = None
-
 
 try:
     app.state.ef = get_ef(
@@ -916,7 +899,6 @@ try:
 except Exception as e:
     log.error(f"Error updating models: {e}")
     pass
-
 
 app.state.EMBEDDING_FUNCTION = get_embedding_function(
     app.state.config.RAG_EMBEDDING_ENGINE,
@@ -1015,7 +997,6 @@ app.state.config.COMFYUI_WORKFLOW_NODES = COMFYUI_WORKFLOW_NODES
 app.state.config.IMAGE_SIZE = IMAGE_SIZE
 app.state.config.IMAGE_STEPS = IMAGE_STEPS
 
-
 ########################################
 #
 # AUDIO
@@ -1047,16 +1028,13 @@ app.state.config.TTS_VOICE = AUDIO_TTS_VOICE
 app.state.config.TTS_API_KEY = AUDIO_TTS_API_KEY
 app.state.config.TTS_SPLIT_ON = AUDIO_TTS_SPLIT_ON
 
-
 app.state.config.TTS_AZURE_SPEECH_REGION = AUDIO_TTS_AZURE_SPEECH_REGION
 app.state.config.TTS_AZURE_SPEECH_BASE_URL = AUDIO_TTS_AZURE_SPEECH_BASE_URL
 app.state.config.TTS_AZURE_SPEECH_OUTPUT_FORMAT = AUDIO_TTS_AZURE_SPEECH_OUTPUT_FORMAT
 
-
 app.state.faster_whisper_model = None
 app.state.speech_synthesiser = None
 app.state.speech_speaker_embeddings_dataset = None
-
 
 ########################################
 #
@@ -1064,10 +1042,8 @@ app.state.speech_speaker_embeddings_dataset = None
 #
 ########################################
 
-
 app.state.config.TASK_MODEL = TASK_MODEL
 app.state.config.TASK_MODEL_EXTERNAL = TASK_MODEL_EXTERNAL
-
 
 app.state.config.ENABLE_SEARCH_QUERY_GENERATION = ENABLE_SEARCH_QUERY_GENERATION
 app.state.config.ENABLE_RETRIEVAL_QUERY_GENERATION = ENABLE_RETRIEVAL_QUERY_GENERATION
@@ -1075,7 +1051,6 @@ app.state.config.ENABLE_AUTOCOMPLETE_GENERATION = ENABLE_AUTOCOMPLETE_GENERATION
 app.state.config.ENABLE_TAGS_GENERATION = ENABLE_TAGS_GENERATION
 app.state.config.ENABLE_TITLE_GENERATION = ENABLE_TITLE_GENERATION
 app.state.config.ENABLE_FOLLOW_UP_GENERATION = ENABLE_FOLLOW_UP_GENERATION
-
 
 app.state.config.TITLE_GENERATION_PROMPT_TEMPLATE = TITLE_GENERATION_PROMPT_TEMPLATE
 app.state.config.TAGS_GENERATION_PROMPT_TEMPLATE = TAGS_GENERATION_PROMPT_TEMPLATE
@@ -1096,7 +1071,6 @@ app.state.config.AUTOCOMPLETE_GENERATION_PROMPT_TEMPLATE = (
 app.state.config.AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH = (
     AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH
 )
-
 
 ########################################
 #
@@ -1121,6 +1095,33 @@ class RedirectMiddleware(BaseHTTPMiddleware):
                 encoded_video_id = urlencode({"youtube": video_id})
                 redirect_url = f"/?{encoded_video_id}"
                 return RedirectResponse(url=redirect_url)
+            
+        # if request.method == "POST":
+        #     path = request.url.path
+        #     if path.endswith("/api/v1/files/tus"):
+        #         try:
+        #             token = get_http_authorization_cred(request.headers.get("Authorization"))
+        #             if token:
+        #                 token = decode_token(request.state.token.credentials)
+        #                 if not token:
+        #                     raise HTTPException(
+        #                         status_code=status.HTTP_401_UNAUTHORIZED,
+        #                         detail = f"File is not allowed for direct upload (unauthorized)",
+        #                     )
+        #         except Exception as e:
+        #             log.exception(e)
+        #             raise HTTPException(
+        #                 status_code=status.HTTP_400_BAD_REQUEST,
+        #                 detail="Error uploading file",
+        #             )
+                    
+        if request.method == "DELETE":
+            path = request.url.path
+            if "/api/v1/files/tus" in path:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="You cannont delete uploading file",
+                )
 
         # Proceed with the normal flow of other requests
         response = await call_next(request)
@@ -1196,10 +1197,8 @@ app.add_middleware(
 
 app.mount("/ws", socket_app)
 
-
 app.include_router(ollama.router, prefix="/ollama", tags=["ollama"])
 app.include_router(openai.router, prefix="/openai", tags=["openai"])
-
 
 app.include_router(pipelines.router, prefix="/api/v1/pipelines", tags=["pipelines"])
 app.include_router(tasks.router, prefix="/api/v1/tasks", tags=["tasks"])
@@ -1213,11 +1212,9 @@ app.include_router(configs.router, prefix="/api/v1/configs", tags=["configs"])
 app.include_router(auths.router, prefix="/api/v1/auths", tags=["auths"])
 app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
 
-
 app.include_router(channels.router, prefix="/api/v1/channels", tags=["channels"])
 app.include_router(chats.router, prefix="/api/v1/chats", tags=["chats"])
 app.include_router(notes.router, prefix="/api/v1/notes", tags=["notes"])
-
 
 app.include_router(models.router, prefix="/api/v1/models", tags=["models"])
 app.include_router(knowledge.router, prefix="/api/v1/knowledge", tags=["knowledge"])
@@ -1234,7 +1231,6 @@ app.include_router(
 )
 app.include_router(utils.router, prefix="/api/v1/utils", tags=["utils"])
 
-
 try:
     audit_level = AuditLevel(AUDIT_LOG_LEVEL)
 except ValueError as e:
@@ -1248,6 +1244,7 @@ if audit_level != AuditLevel.NONE:
         excluded_paths=AUDIT_EXCLUDED_PATHS,
         max_body_size=MAX_BODY_LOG_SIZE,
     )
+    
 ##################################
 #
 # Chat Endpoints
@@ -1566,6 +1563,11 @@ async def get_app_config(request: Request):
         #     user = Users.get_user_by_id(data["id"])
         if data is not None and "sub" in data:
             user = Users.get_user_by_id(data["sub"])
+        # if not data:
+        #     raise HTTPException(
+        #         status_code=status.HTTP_401_UNAUTHORIZED,
+        #         detail="Invalid token",
+        #     )            
 
     user_count = Users.get_num_users()
     onboarding = False

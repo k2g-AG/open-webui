@@ -36,14 +36,14 @@ export const uploadFile = async (token: string, file: File, metadata?: object | 
 	return res;
 };
 
-async function uploadFileTUS(token: string, file: File, metadata?: object | null) {
+async function uploadFileTUS(file: File, metadata?: object | null) {
 	return new Promise((resolve, reject) => {
 		let chunkSize = 20 * 1024 * 1024; // 20MB chunk size
 		console.warn("chunkSize:", chunkSize, "%");
 		let percentageView = 0;
 		const upload = new tus.Upload(file, {
 			endpoint: `${WEBUI_BASE_URL}${WEBUI_API_BASE_URL}/files/tus`, // Replace with your tus server URL
-			headers: { Authorization: `Bearer ${token}` },
+			headers: { Authorization: `Bearer ${localStorage.token}` },
 			retryDelays: [0, 3000, 5000, 10000, 20000],
 			chunkSize: chunkSize, // 50MB chunk size
 			metadata: {
@@ -85,7 +85,7 @@ export const uploadDirectFile = async (file: File, metadata?: object | null) => 
         // const upload = new Upload(file, {
         try {
 			console.warn("File uploaded successfully to:", uploadedUrl);
-			uploadedUrl = await uploadFileTUS(localStorage.token, file, metadata);
+			uploadedUrl = await uploadFileTUS(file, metadata);
 		} catch (err) {
 			console.error("Upload failed:", err);
 			error = err;
