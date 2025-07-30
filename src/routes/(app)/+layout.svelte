@@ -47,6 +47,7 @@
 	import AccountPending from '$lib/components/layout/Overlay/AccountPending.svelte';
 	import UpdateInfoToast from '$lib/components/layout/UpdateInfoToast.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
+	import keycloak from '$lib/keycloak';
 
 	const i18n = getContext('i18n');
 
@@ -58,7 +59,7 @@
 
 	onMount(async () => {
 		if ($user === undefined || $user === null) {
-			await goto(`${WEBUI_BASE_URL}/oauth/oidc/login`);
+			keycloak.logout()
 		} else if (['user', 'admin'].includes($user?.role)) {
 			try {
 				// Check if IndexedDB exists

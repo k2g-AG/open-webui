@@ -49,6 +49,7 @@
 
 	import { beforeNavigate } from '$app/navigation';
 	import { updated } from '$app/state';
+	import keycloak from '$lib/keycloak';
 
 	// handle frontend updates (https://svelte.dev/docs/kit/configuration#version)
 	beforeNavigate(({ willUnload, to }) => {
@@ -56,7 +57,17 @@
 			location.href = to.url.href;
 		}
 	});
+	let authenticated = false;
 
+	keycloak.init({ onLoad: 'login-required' }).then((auth) => {
+		authenticated = auth;
+		console.log({ authenticated });
+		if (authenticated) {
+			console.log('Authenticated');
+			localStorage.setItem('token', keycloak.token || '');
+			console.log('Token:', keycloak.token);
+		}
+	});
 	setContext('i18n', i18n);
 
 	const bc = new BroadcastChannel('active-tab-channel');
@@ -460,9 +471,7 @@
 
 		if (now >= exp - TOKEN_EXPIRY_BUFFER) {
 			console.warn('Token is about to expire or has expired, redirecting to auth page');
-			const res = await userSignRefreshToken(
-				localStorage.token,
-			);
+			const res = await userSignRefreshToken(localStorage.token);
 			console.warn('userSignRefreshToken result:', res);
 			// user.set(null);
 			localStorage.setItem('token', res?.token);
@@ -599,20 +608,21 @@
 						toast.error(`${error}`);
 						return null;
 					});
-
+					console.log({sessionUser})
 					if (sessionUser) {
 						await user.set(sessionUser);
 						await config.set(await getBackendConfig());
 					} else {
 						// Redirect Invalid Session User to /auth Page
 						localStorage.removeItem('token');
-						await goto(`/auth?redirect=${encodedUrl}`);
+						// keycloak.logout();
 					}
 				} else {
 					// Don't redirect if we're already on the auth page
 					// Needed because we pass in tokens from OAuth logins via URL fragments
+					// keycloak.logout();
 					if ($page.url.pathname !== '/auth') {
-						location.href = `${WEBUI_BASE_URL}/oauth/oidc/login`;
+						// location.href = `${WEBUI_BASE_URL}/oauth/oidc/login`;
 					}
 				}
 			}
