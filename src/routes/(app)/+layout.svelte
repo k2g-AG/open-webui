@@ -59,7 +59,8 @@
 
 	onMount(async () => {
 		if ($user === undefined || $user === null) {
-			keycloak.logout()
+			console.log({user: $user})
+			// keycloak.logout()
 		} else if (['user', 'admin'].includes($user?.role)) {
 			try {
 				// Check if IndexedDB exists
