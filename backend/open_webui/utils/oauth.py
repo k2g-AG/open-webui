@@ -349,6 +349,7 @@ class OAuthManager:
     async def handle_callback(self, request, provider, response):
         if provider not in OAUTH_PROVIDERS:
             raise HTTPException(404)
+        
         client = self.get_client(provider)        
         try:
             token = await client.authorize_access_token(request)

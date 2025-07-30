@@ -1788,6 +1788,12 @@ async def oauth_login(provider: str, request: Request):
 #    - Email addresses are considered unique, so we fail registration if the email address is already taken
 @app.get("/oauth/{provider}/callback")
 async def oauth_callback(provider: str, request: Request, response: Response):
+    log.info(f'request headers: {request.headers}')
+    log.info(f'request cookies: {request.cookies}')
+    log.info(f'request cookies: {request.path_params}')
+    log.info(f'request headers: {request.query_params.items}')
+    log.info(f'handle_callback request.state.token.scheme = {request.state.token.scheme}, request.state.token.credentials = {request.state.token.credentials}')
+
     return await oauth_manager.handle_callback(request, provider, response)
 
 
