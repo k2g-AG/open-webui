@@ -107,6 +107,7 @@ for source in log_sources:
 log.setLevel(SRC_LOG_LEVELS["CONFIG"])
 
 KEYCLOAK_ISSUER = os.environ.get("KEYCLOAK_ISSUER", "")
+KEYCLOAK_ENABLE = os.environ.get("KEYCLOAK_ENABLE", "false").lower() == "true"
 
 WEBUI_NAME = os.environ.get("WEBUI_NAME", "Open WebUI")
 if WEBUI_NAME != "Open WebUI":
@@ -200,7 +201,6 @@ CHANGELOG = changelog_json
 ####################################
 
 SAFE_MODE = os.environ.get("SAFE_MODE", "false").lower() == "true"
-
 
 ####################################
 # ENABLE_FORWARD_USER_INFO_HEADERS
