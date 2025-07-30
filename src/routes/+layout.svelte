@@ -59,7 +59,7 @@
 	});
 	let authenticated = false;
 
-	keycloak.init({ onLoad: 'login-required' }).then((auth) => {
+	await keycloak.init({ onLoad: 'login-required' }).then((auth) => {
 		authenticated = auth;
 		console.log({ authenticated });
 		if (authenticated) {
