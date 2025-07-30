@@ -59,15 +59,28 @@
 	});
 	let authenticated = false;
 
-	keycloak.init({ onLoad: 'login-required' }).then((auth) => {
-		authenticated = auth;
-		console.log({ authenticated });
+	// keycloak.init({ onLoad: 'login-required' }).then((auth) => {
+	// 	authenticated = auth;
+	// 	console.log({ authenticated });
+	// 	if (authenticated) {
+	// 		console.warn('Authenticated');
+	// 		localStorage.setItem('token', keycloak.token || '');
+	// 		console.warn('Token:', keycloak.token);
+	// 	}
+	// });
+
+	try {
+		const authenticated = await keycloak.init({ onLoad: 'login-required' });
+		console.warn('authenticated:', { authenticated });
 		if (authenticated) {
 			console.warn('Authenticated');
 			localStorage.setItem('token', keycloak.token || '');
 			console.warn('Token:', keycloak.token);
 		}
-	});
+	} catch (error) {
+		console.error('Failed to initialize adapter:', error);
+	}
+	
 	setContext('i18n', i18n);
 
 	const bc = new BroadcastChannel('active-tab-channel');
