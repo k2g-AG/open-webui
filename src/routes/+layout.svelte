@@ -59,13 +59,13 @@
 	});
 	let authenticated = false;
 
-	await keycloak.init({ onLoad: 'login-required' }).then((auth) => {
+	keycloak.init({ onLoad: 'login-required' }).then((auth) => {
 		authenticated = auth;
 		console.log({ authenticated });
 		if (authenticated) {
-			console.log('Authenticated');
+			console.warn('Authenticated');
 			localStorage.setItem('token', keycloak.token || '');
-			console.log('Token:', keycloak.token);
+			console.warn('Token:', keycloak.token);
 		}
 	});
 	setContext('i18n', i18n);
