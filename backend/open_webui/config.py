@@ -1375,7 +1375,7 @@ else:
     # Doing both will result in CORS errors in the browser.
     for origin in CORS_ALLOW_ORIGIN:
         validate_cors_origin(origin)
-
+    log.info(f'CORS_ALLOW_ORIGIN set to: {CORS_ALLOW_ORIGIN}')
 
 class BannerModel(BaseModel):
     id: str
