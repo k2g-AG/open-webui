@@ -251,7 +251,7 @@ def upload_file(
 # TUS Upload File
 ############################
 
-router.include_router(TusRouter(store_dir=f"{UPLOAD_DIR}/tus", location=f"/api/v1/files/tus"), prefix="/tus")
+router.include_router(TusRouter(store_dir=f"{UPLOAD_DIR}/tus", location=f"/api/v1/files/tus"), prefix="/tus", dependencies=[Depends(get_verified_user)])
 
 class FileTUSDone(BaseModel):
     filename: str
