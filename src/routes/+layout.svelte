@@ -472,9 +472,12 @@
 		}
 
 		if (now >= exp - TOKEN_EXPIRY_BUFFER) {
-			console.warn('Token is about to expire or has expired, redirecting to auth page');
+			console.info('Token is about to expire or has expired, redirecting to auth page');
+			let refreshed_token = await keycloak.updateToken(30);
+			console.info({ refreshed_token });
+			localStorage.setItem('token', refreshed_token);
 			const res = await userSignRefreshToken(localStorage.token);
-			console.warn('userSignRefreshToken result:', res);
+			console.info('userSignRefreshToken result:', res);
 			// user.set(null);
 			// localStorage.setItem('token', res?.token);
 			await user.set(res);
