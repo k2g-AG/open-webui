@@ -476,7 +476,7 @@
 
 			let refreshed_token = await keycloak.updateToken(30);
 			console.info('refreshed_token:', { refreshed_token });
-			console.info('keycloak.token:', { keycloak.token });
+			console.info('keycloak.token:', keycloak.token);
 			localStorage.setItem('token', keycloak.token);
 
 			const res = await userSignRefreshToken(localStorage.token);
