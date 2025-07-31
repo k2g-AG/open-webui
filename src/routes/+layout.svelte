@@ -510,6 +510,9 @@
 			return;
 		}
 
+		const res = await userSignRefreshToken(localStorage.token);
+		console.info('onMount userSignRefreshToken result:', res);
+
 		if (typeof window !== 'undefined' && window.applyTheme) {
 			window.applyTheme();
 		}
