@@ -3,6 +3,17 @@
 	import { spring } from 'svelte/motion';
 	import PyodideWorker from '$lib/workers/pyodide.worker?worker';
 
+	// import { WEBUI_BASE_URL } from '$lib/constants';
+	// import {
+	// 	createNewModel,
+	// 	deleteModelById,
+	// 	getModels as getWorkspaceModels,
+	// 	toggleModelById,
+	// 	updateModelById
+	// } from '$lib/apis/models';
+	// import { getModels } from '$lib/apis';
+
+
 	let loadingProgress = spring(0, {
 		stiffness: 0.05
 	});
@@ -15,6 +26,7 @@
 		theme,
 		WEBUI_NAME,
 		mobile,
+		models as _models,
 		socket,
 		chatId,
 		chats,
@@ -31,7 +43,7 @@
 	import { page } from '$app/stores';
 	import { Toaster, toast } from 'svelte-sonner';
 
-	import { executeToolServer, getBackendConfig } from '$lib/apis';
+	import { executeToolServer, getBackendConfig, getModels } from '$lib/apis';
 	import { getSessionUser, userSignOut, userSignRefreshToken } from '$lib/apis/auths';
 
 	import '../tailwind.css';
@@ -486,6 +498,14 @@
 
 				if (res) {
 					await user.set(res);
+					await _models.set(
+						await getModels(
+							localStorage.token,
+							$config?.features?.enable_direct_connections && ($settings?.directConnections ?? null)
+						)
+					);
+					// models = await getWorkspaceModels(localStorage.token);
+					// -------------------------------------------------------
 				} else {
 					user.set(null);
 					localStorage.removeItem('token');

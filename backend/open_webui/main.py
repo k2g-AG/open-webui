@@ -1097,7 +1097,7 @@ class RedirectMiddleware(BaseHTTPMiddleware):
                 return RedirectResponse(url=redirect_url)
             
         # if request.method == "POST":
-        #     path = request.url.path
+        #     path = request.url.path.lower()
         #     if path.endswith("/api/v1/files/tus"):
         #         try:
         #             token = get_http_authorization_cred(request.headers.get("Authorization"))
@@ -1116,7 +1116,7 @@ class RedirectMiddleware(BaseHTTPMiddleware):
         #             )
                     
         if request.method == "DELETE":
-            path = request.url.path
+            path = request.url.path.lower()
             if "/api/v1/files/tus" in path:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,

@@ -143,19 +143,19 @@ def decode_token(token: str, issuer: str = '') -> Optional[dict]:
     if not issuer:
         issuer = KEYCLOAK_ISSUER
         
-    if issuer:
-        try:
-            decoded = decodeAndValidateToken(token, issuer=issuer)
-            log.info(f"decodeAndValidateToken decode_token -> Decoded token with payload: {decoded}")
-            return decoded
-        except Exception:
-            return None
-    else:
+    if issuer == 'decodeonly' or not issuer:
         try:
             # decoded = jwt.decode(token, SESSION_SECRET, algorithms=[ALGORITHM])
             options = {"verify_signature": False}
             decoded = jwt.decode(token, options=options)  # works in PyJWT >= v2.0
             log.info(f"decode without validate decode_token -> Decoded token with payload: {decoded}")
+            return decoded
+        except Exception:
+            return None
+    else:
+        try:
+            decoded = decodeAndValidateToken(token, issuer=issuer)
+            log.info(f"decodeAndValidateToken decode_token -> Decoded token with payload: {decoded}")
             return decoded
         except Exception:
             return None
@@ -235,13 +235,24 @@ def get_current_user(
         return user
 
     # auth by jwt token
-    try:
-        data = decode_token(token)
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token",
-        )
+    method = request.method.upper()
+    url = request.url.path.lower()
+    if method == 'PATCH' and '/api/v1/files/tus/' in url:
+        try:
+            data = decode_token(token, issuer='decodeonly')
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token",
+            )
+    else:    
+        try:
+            data = decode_token(token)
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token",
+            )
 
     # if data is not None and "id" in data:
     #     user = Users.get_user_by_id(data["id"])
