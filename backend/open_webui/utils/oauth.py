@@ -757,7 +757,7 @@ class OAuthManager:
                 default_permissions=request.app.state.config.USER_PERMISSIONS,
             )
 
-        log.info(f'oauth_refresh set_cookie for user {user.id} jwt_token: {jwt_token}')
+        # log.info(f'oauth_refresh set_cookie for user {user.id} jwt_token: {jwt_token}')
 
         # Set the cookie token
         response.set_cookie(
