@@ -474,7 +474,7 @@
 		if (now >= exp - TOKEN_EXPIRY_BUFFER) {
 			console.info('Token is about to expire or has expired, redirecting to auth page');
 
-			let refreshed_token = await keycloak.updateToken(30);
+			let refreshed_token = await keycloak.updateToken(-1);
 			console.info('refreshed_token:', { refreshed_token });
 
 			if (refreshed_token) {
