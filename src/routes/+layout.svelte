@@ -476,31 +476,23 @@
 
 			let refreshed_token = await keycloak.updateToken(30);
 			console.info('refreshed_token:', { refreshed_token });
-			console.info('keycloak.token:', keycloak.token);
-			localStorage.setItem('token', keycloak.token);
 
-			const res = await userSignRefreshToken(localStorage.token);
-			console.info('userSignRefreshToken result:', res);
+			if (refreshed_token) {
+				console.info('keycloak.token:', keycloak.token);
+				localStorage.setItem('token', keycloak.token);
 
-			if (res) {
-				await user.set(res);
-			} else {
-				user.set(null);
-				localStorage.removeItem('token');
-				window.location.reload();
-				return;
+				const res = await userSignRefreshToken(localStorage.token);
+				console.info('userSignRefreshToken result:', res);
+
+				if (res) {
+					await user.set(res);
+				} else {
+					user.set(null);
+					localStorage.removeItem('token');
+					window.location.reload();
+					return;
+				}
 			}
-			// localStorage.setItem('token', res?.token);
-
-			// localStorage.removeItem('token');
-			// console.log({ res });
-			// console.warn({ res });
-			// console.warn( res?.redirect_url );
-			// console.warn( `${WEBUI_BASE_URL}/oauth/oidc/login` );
-			// console.warn( res?.redirect_url ?? `${WEBUI_BASE_URL}/oauth/oidc/login` ?? '/auth' );
-
-			// location.href = res?.redirect_url ?? `${WEBUI_BASE_URL}/oauth/oidc/login` ?? '/auth';
-			// location.href = `${WEBUI_BASE_URL}/oauth/oidc/login` ?? '/auth';
 		}
 	};
 
