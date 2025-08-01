@@ -752,7 +752,7 @@
 			const uploadedFile = await uploadDirectFile(file, metadata);
 
 			if (uploadedFile) {
-				console.warn('File upload completed:', {
+				console.info('File upload completed:', {
 					id: uploadedFile.id,
 					name: fileItem.name,
 					collection: uploadedFile?.meta?.collection_name
@@ -831,7 +831,7 @@
 
 		inputFilesFiltered.forEach(async (file) => {
 			let extension = file.name.split('.').at(-1);
-			console.warn('Processing file:', {
+			console.info('Processing file:', {
 				name: file.name,
 				type: file.type,
 				size: file.size,
@@ -1187,6 +1187,10 @@
 															type="button"
 															aria-label={$i18n.t('Remove file')}
 															on:click={() => {
+																console.info('files:', files);
+																console.info('fileIdx:', fileIdx);
+
+																// deleteFileById();
 																files.splice(fileIdx, 1);
 																files = files;
 															}}

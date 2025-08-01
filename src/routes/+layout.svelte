@@ -75,9 +75,9 @@
 	// 	authenticated = auth;
 	// 	console.log({ authenticated });
 	// 	if (authenticated) {
-	// 		console.warn('Authenticated');
+	// 		console.info('Authenticated');
 	// 		localStorage.setItem('token', keycloak.token || '');
-	// 		console.warn('Token:', keycloak.token);
+	// 		console.info('Token:', keycloak.token);
 	// 	}
 	// 	return keycloak;
 	// });

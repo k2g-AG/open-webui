@@ -39,7 +39,7 @@ export const uploadFile = async (token: string, file: File, metadata?: object | 
 async function uploadFileTUS(file: File, metadata?: object | null) {
 	return new Promise((resolve, reject) => {
 		let chunkSize = 20 * 1024 * 1024; // 20MB chunk size
-		console.warn("chunkSize:", chunkSize, "%");
+		console.info("chunkSize:", chunkSize, "%");
 		let percentageView = 0;
 		const upload = new tus.Upload(file, {
 			endpoint: `${WEBUI_BASE_URL}${WEBUI_API_BASE_URL}/files/tus`, // Replace with your tus server URL
@@ -60,12 +60,12 @@ async function uploadFileTUS(file: File, metadata?: object | null) {
 			onProgress: (bytesSent, bytesTotal) => {
 				if (Math.abs(percentageView - bytesSent / bytesTotal * 100) >= 1) {
 					const percentage = (bytesSent / bytesTotal * 100).toFixed(2);
-					console.warn(bytesSent, bytesTotal, percentage + "%");
+					console.info(bytesSent, bytesTotal, percentage + "%");
 					percentageView = bytesSent / bytesTotal * 100
 				}
 			},
 			onSuccess: () => {
-				console.warn("Upload finished:", upload.url);
+				console.info("Upload finished:", upload.url);
 				resolve(upload.url);
 			}
 		});
@@ -76,6 +76,7 @@ async function uploadFileTUS(file: File, metadata?: object | null) {
 			// Found previous uploads so we select the first one.
 			if (previousUploads.length) {
 				upload.resumeFromPreviousUpload(previousUploads[0]);
+				console.info("Continue upload:", previousUploads[0]);
 			}
 
 			// Start the upload
@@ -86,21 +87,19 @@ async function uploadFileTUS(file: File, metadata?: object | null) {
 }
 
 export const uploadDirectFile = async (file: File, metadata?: object | null) => {
-	let error = null;
-    console.warn(`URL2: ${WEBUI_BASE_URL}${WEBUI_API_BASE_URL}/files/tus`);
-	
+	let error = null;	
 	let uploadedUrl = '';
 
     if (file) {
         // const upload = new Upload(file, {
         try {
-			console.warn("File uploaded successfully to:", uploadedUrl);
+			console.info("File uploaded successfully to:", uploadedUrl);
 			uploadedUrl = await uploadFileTUS(file, metadata);
 		} catch (err) {
 			console.error("Upload failed:", err);
 			error = err;
 		}
-        console.warn('Upload finished 2:', uploadedUrl);
+        console.info('Upload finished 2:', uploadedUrl);
 
     } else {
         console.warn('No file selected.');
@@ -145,7 +144,7 @@ export const uploadDirectFile = async (file: File, metadata?: object | null) => 
 		throw error;
 	}
 
-	console.warn('res: ', res);
+	console.info('res: ', res);
 	return res;
 };
 
