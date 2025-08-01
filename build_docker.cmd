@@ -10,4 +10,5 @@ if %errorlevel% neq 0 (
 docker rm -f open-webui-docker-dev2
 docker rmi -f open-webui-docker-dev2
 docker build -t open-webui-docker-dev2 .
-docker run -d -p 3000:8080 -v E:\Projects\bitbucket\open-webui\pipelines\tmp\mount\open-webui:/app/backend/data -e DATABASE_URL=postgresql://postgres:postgres@192.168.188.232/postgres --name open-webui-docker-dev2 open-webui-docker-dev2
+@REM docker run -d -p 3000:8080 -v E:\Projects\bitbucket\open-webui\pipelines\tmp\mount\open-webui:/app/backend/data -e DATABASE_URL=postgresql://postgres:postgres@192.168.188.232/postgres --name open-webui-docker-dev2 open-webui-docker-dev2
+docker run -d -p 3000:8080 -v E:\Projects\bitbucket\open-webui\pipelines\tmp\mount\open-webui:/app/backend/data -e DATABASE_URL=postgresql://postgres:postgres@host.docker.internal/postgres --name open-webui-docker-dev2 open-webui-docker-dev2

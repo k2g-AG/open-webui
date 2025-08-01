@@ -71,7 +71,17 @@ async function uploadFileTUS(file: File, metadata?: object | null) {
 		});
 
 		// Start the upload
-		upload.start();
+		// upload.start();
+		upload.findPreviousUploads().then((previousUploads) => {
+			// Found previous uploads so we select the first one.
+			if (previousUploads.length) {
+				upload.resumeFromPreviousUpload(previousUploads[0]);
+			}
+
+			// Start the upload
+			upload.start();
+		})
+
 	});
 }
 
