@@ -840,7 +840,7 @@
 				size: file.size,
 				extension: extension
 			});
-			consolele.info('uploadDirectFileHandler direct');
+			console.info('uploadDirectFileHandler direct');
 			uploadDirectFileHandler(file, false);
 		});
 	};
@@ -903,7 +903,7 @@
 				size: file.size,
 				extension: extension
 			});
-			consolele.info('uploadDirectFileHandler direct and synthetic');
+			console.info('uploadDirectFileHandler direct and synthetic');
 			uploadDirectFileHandler(file, true);
 		});
 	};
