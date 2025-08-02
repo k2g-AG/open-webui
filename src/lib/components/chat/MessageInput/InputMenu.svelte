@@ -241,9 +241,9 @@
 
 			<Tooltip
 				content={fileUploadCapableModels.length !== selectedModels.length
-					? $i18n.t('Model(s) do not support file upload')
+					? $i18n.t('Model(s) do not support file direct upload')
 					: !directFileUploadEnabled
-						? $i18n.t('You do not have permission to upload files.')
+						? $i18n.t('You do not have permission to direct upload files.')
 						: ''}
 				className="w-full"
 			>
@@ -272,13 +272,13 @@
 						class="flex gap-2 items-center px-3 py-2 text-sm font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl"
 						on:click={() => {
 							if (directSynteticFileUploadEnabled) {
-								console.log('uploadDirectFilesHandler called..');
+								console.log('uploadSynteticDirectFilesHandler called..');
 								uploadSynteticDirectFilesHandler();
 							}
 						}}
 					>
 						<DocumentArrowUpSolid />
-						<div class="line-clamp-1">{$i18n.t('Direct Upload Files')}</div>
+						<div class="line-clamp-1">{$i18n.t('Direct Syntetic Upload Files')}</div>
 					</DropdownMenu.Item>
 				</Tooltip>
 			{/if}
