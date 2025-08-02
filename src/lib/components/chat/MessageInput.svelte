@@ -385,6 +385,8 @@
 
 	let filesInputElement;
 	let filesDirectInputElement;
+	let filesSynteticDirectInputElement;
+
 	let commandsElement;
 
 	let inputFiles;
@@ -715,7 +717,7 @@
 
 	// ------------- DIRECT File upload ------------------
 
-	const uploadDirectFileHandler = async (file, fullContext: boolean = false) => {
+	const uploadDirectFileHandler = async (file, syntetic: boolean = false, fullContext: boolean = false) => {
 		if ($_user?.role !== 'admin' && !($_user?.permissions?.chat?.file_direct_upload ?? true)) {
 			toast.error($i18n.t('You do not have permission to upload files.'));
 			return null;
@@ -747,7 +749,8 @@
 
 		try {
 			// If the file is an audio file, provide the language for STT.
-			let metadata = {'uploadType': 'direct'};
+			let metadata = syntetic? {'uploadType': 'direct'} : {'uploadType': 'direct', 'synthetic': true};
+				
 			// During the file upload, file content is automatically extracted.
 			const uploadedFile = await uploadDirectFile(file, metadata);
 
@@ -838,6 +841,68 @@
 				extension: extension
 			});
 			uploadDirectFileHandler(file);
+		});
+	};
+
+
+	const inputSynteticDirectFilesHandler = async (inputFiles) => {
+		console.log('Input files handler called with:', inputFiles);
+
+		if (
+			($config?.file?.direct_max_count ?? null) !== null &&
+			files.length + inputFiles.length > $config?.file?.direct_max_count
+		) {
+			toast.error(
+				$i18n.t(`You can only chat with a maximum of {{maxCount}} file(s) at a time.`, {
+					maxCount: $config?.file?.direct_max_count
+				})
+			);
+			return;
+		}
+
+		let allow_direct_file_extensions = $config?.file?.allow_direct_file_extensions;
+		if (typeof $config?.file?.allow_direct_file_extensions === 'string') {
+			allow_direct_file_extensions = $config?.file?.allow_direct_file_extensions
+				.split(',')
+				.map((ext) => ext.trim().toLowerCase());
+		}
+
+		let totalFileSize = 0;
+		let inputFilesFiltered = [];
+		inputFiles.forEach((file) => {
+			let extension = file.name.split('.').at(-1);
+
+			if (allow_direct_file_extensions.includes(extension.toLowerCase())) {
+				totalFileSize += file.size;
+				inputFilesFiltered = [...inputFilesFiltered, file];
+			}
+
+			if (
+				($config?.file?.direct_max_size ?? null) !== null &&
+				totalFileSize > ($config?.file?.direct_max_size ?? 0) * 1024 * 1024
+			) {
+				console.warn('Files total exceeds max size limit:', {
+					totalFileSize: totalFileSize,
+					maxSize: ($config?.file?.direct_max_size ?? 0) * 1024 * 1024
+				});
+				toast.error(
+					$i18n.t(`Files size total should not exceed {{maxSize}} MB.`, {
+						maxSize: $config?.file?.direct_max_size
+					})
+				);
+				return;
+			}
+		});
+
+		inputFilesFiltered.forEach(async (file) => {
+			let extension = file.name.split('.').at(-1);
+			console.info('Processing file:', {
+				name: file.name,
+				type: file.type,
+				size: file.size,
+				extension: extension
+			});
+			uploadDirectFileHandler(file, true);
 		});
 	};
 
@@ -1102,6 +1167,27 @@
 							filesDirectInputElement.value = '';
 						}}
 					/>
+
+					<input
+						bind:this={filesSynteticDirectInputElement}
+						bind:files={inputFiles}
+						type="file"
+						hidden
+						multiple
+						on:change={async () => {
+							console.log('MessageInput direct files :', inputFiles);
+							if (inputFiles && inputFiles.length > 0) {
+								const _inputFiles = Array.from(inputFiles);
+								inputSynteticDirectFilesHandler(_inputFiles);
+							} else {
+								toast.error($i18n.t(`File not found.`));
+							}
+
+							filesSynteticDirectInputElement.value = '';
+						}}
+					/>
+
+					
 
 					{#if recording}
 						<VoiceRecording
@@ -1730,6 +1816,9 @@
 											}}
 											uploadDirectFilesHandler={() => {
 												filesDirectInputElement.click();
+											}}
+											uploadSynteticDirectFilesHandler={() => {
+												filesSynteticDirectInputElement.click();
 											}}
 											uploadGoogleDriveHandler={async () => {
 												try {

@@ -28,6 +28,8 @@
 	export let screenCaptureHandler: Function;
 	export let uploadFilesHandler: Function;
 	export let uploadDirectFilesHandler: Function;
+	export let uploadSynteticDirectFilesHandler: Function;
+	
 	export let inputFilesHandler: Function;
 
 	export let uploadGoogleDriveHandler: Function;
@@ -53,6 +55,9 @@
 		fileUploadCapableModels.length === selectedModels.length &&
 		($user?.role === 'admin' || $user?.permissions?.chat?.file_direct_upload)
 		&& $config?.file?.enable_direct_file_upload;
+
+	let directSynteticFileUploadEnabled = true;
+	$: directSynteticFileUploadEnabled = $user?.role === 'admin';
 
 	const init = async () => {
 		if ($_tools === null) {
@@ -257,6 +262,26 @@
 					<div class="line-clamp-1">{$i18n.t('Direct Upload Files')}</div>
 				</DropdownMenu.Item>
 			</Tooltip>
+
+			{#if directSynteticFileUploadEnabled}
+				<Tooltip
+					content={''}
+					className="w-full"
+				>
+					<DropdownMenu.Item
+						class="flex gap-2 items-center px-3 py-2 text-sm font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl"
+						on:click={() => {
+							if (directSynteticFileUploadEnabled) {
+								console.log('uploadDirectFilesHandler called..');
+								uploadSynteticDirectFilesHandler();
+							}
+						}}
+					>
+						<DocumentArrowUpSolid />
+						<div class="line-clamp-1">{$i18n.t('Direct Upload Files')}</div>
+					</DropdownMenu.Item>
+				</Tooltip>
+			{/if}
 
 			{#if fileUploadEnabled}
 				{#if $config?.features?.enable_google_drive_integration}
