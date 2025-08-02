@@ -749,8 +749,8 @@
 
 		try {
 			// If the file is an audio file, provide the language for STT.
-			let metadata = synthetic? {'uploadType': 'direct'} : {'uploadType': 'direct', 'synthetic': true};
-				
+			let metadata = synthetic ? {'uploadType': 'direct', 'synthetic': true} : {'uploadType': 'direct'};
+			console.info('synthetic:', synthetic, 'metadata:', metadata);
 			// During the file upload, file content is automatically extracted.
 			const uploadedFile = await uploadDirectFile(file, metadata);
 
