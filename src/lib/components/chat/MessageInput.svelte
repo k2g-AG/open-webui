@@ -385,7 +385,7 @@
 
 	let filesInputElement;
 	let filesDirectInputElement;
-	let filesSynteticDirectInputElement;
+	let filesSyntheticDirectInputElement;
 
 	let commandsElement;
 
@@ -717,7 +717,7 @@
 
 	// ------------- DIRECT File upload ------------------
 
-	const uploadDirectFileHandler = async (file, syntetic: boolean = false, fullContext: boolean = false) => {
+	const uploadDirectFileHandler = async (file, synthetic, fullContext: boolean = false) => {
 		if ($_user?.role !== 'admin' && !($_user?.permissions?.chat?.file_direct_upload ?? true)) {
 			toast.error($i18n.t('You do not have permission to upload files.'));
 			return null;
@@ -749,7 +749,7 @@
 
 		try {
 			// If the file is an audio file, provide the language for STT.
-			let metadata = syntetic? {'uploadType': 'direct'} : {'uploadType': 'direct', 'synthetic': true};
+			let metadata = synthetic? {'uploadType': 'direct'} : {'uploadType': 'direct', 'synthetic': true};
 				
 			// During the file upload, file content is automatically extracted.
 			const uploadedFile = await uploadDirectFile(file, metadata);
@@ -840,12 +840,13 @@
 				size: file.size,
 				extension: extension
 			});
-			uploadDirectFileHandler(file);
+			consolele.info('uploadDirectFileHandler direct');
+			uploadDirectFileHandler(file, false);
 		});
 	};
 
 
-	const inputSynteticDirectFilesHandler = async (inputFiles) => {
+	const inputSyntheticDirectFilesHandler = async (inputFiles) => {
 		console.log('Input files handler called with:', inputFiles);
 
 		if (
@@ -902,6 +903,7 @@
 				size: file.size,
 				extension: extension
 			});
+			consolele.info('uploadDirectFileHandler direct and synthetic');
 			uploadDirectFileHandler(file, true);
 		});
 	};
@@ -1169,7 +1171,7 @@
 					/>
 
 					<input
-						bind:this={filesSynteticDirectInputElement}
+						bind:this={filesSyntheticDirectInputElement}
 						bind:files={inputFiles}
 						type="file"
 						hidden
@@ -1178,12 +1180,12 @@
 							console.log('MessageInput direct files :', inputFiles);
 							if (inputFiles && inputFiles.length > 0) {
 								const _inputFiles = Array.from(inputFiles);
-								inputSynteticDirectFilesHandler(_inputFiles);
+								inputSyntheticDirectFilesHandler(_inputFiles);
 							} else {
 								toast.error($i18n.t(`File not found.`));
 							}
 
-							filesSynteticDirectInputElement.value = '';
+							filesSyntheticDirectInputElement.value = '';
 						}}
 					/>
 
@@ -1817,8 +1819,8 @@
 											uploadDirectFilesHandler={() => {
 												filesDirectInputElement.click();
 											}}
-											uploadSynteticDirectFilesHandler={() => {
-												filesSynteticDirectInputElement.click();
+											uploadSyntheticDirectFilesHandler={() => {
+												filesSyntheticDirectInputElement.click();
 											}}
 											uploadGoogleDriveHandler={async () => {
 												try {

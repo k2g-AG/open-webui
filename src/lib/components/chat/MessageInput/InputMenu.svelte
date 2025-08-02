@@ -28,7 +28,7 @@
 	export let screenCaptureHandler: Function;
 	export let uploadFilesHandler: Function;
 	export let uploadDirectFilesHandler: Function;
-	export let uploadSynteticDirectFilesHandler: Function;
+	export let uploadSyntheticDirectFilesHandler: Function;
 	
 	export let inputFilesHandler: Function;
 
@@ -56,8 +56,8 @@
 		($user?.role === 'admin' || $user?.permissions?.chat?.file_direct_upload)
 		&& $config?.file?.enable_direct_file_upload;
 
-	let directSynteticFileUploadEnabled = true;
-	$: directSynteticFileUploadEnabled = $user?.role === 'admin';
+	let directSyntheticFileUploadEnabled = true;
+	$: directSyntheticFileUploadEnabled = $user?.role === 'admin';
 
 	const init = async () => {
 		if ($_tools === null) {
@@ -253,7 +253,7 @@
 						: ''}"
 					on:click={() => {
 						if (directFileUploadEnabled) {
-							console.log('uploadDirectFilesHandler called..');
+							console.info('uploadDirectFilesHandler called..');
 							uploadDirectFilesHandler();
 						}
 					}}
@@ -263,7 +263,7 @@
 				</DropdownMenu.Item>
 			</Tooltip>
 
-			{#if directSynteticFileUploadEnabled}
+			{#if directSyntheticFileUploadEnabled}
 				<Tooltip
 					content={''}
 					className="w-full"
@@ -271,14 +271,14 @@
 					<DropdownMenu.Item
 						class="flex gap-2 items-center px-3 py-2 text-sm font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl"
 						on:click={() => {
-							if (directSynteticFileUploadEnabled) {
-								console.log('uploadSynteticDirectFilesHandler called..');
-								uploadSynteticDirectFilesHandler();
+							if (directSyntheticFileUploadEnabled) {
+								console.info('uploadSyntheticDirectFilesHandler called..');
+								uploadSyntheticDirectFilesHandler();
 							}
 						}}
 					>
 						<DocumentArrowUpSolid />
-						<div class="line-clamp-1">{$i18n.t('Direct Syntetic Upload Files')}</div>
+						<div class="line-clamp-1">{$i18n.t('Direct Synthetic Upload Files')}</div>
 					</DropdownMenu.Item>
 				</Tooltip>
 			{/if}
