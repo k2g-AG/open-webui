@@ -257,7 +257,7 @@ class FileTUSDone(BaseModel):
     filename: str
     filetype: str
     filesize: int
-    uploadType: str
+    data: dict[str, any]
     fileURL: str
 
 
@@ -271,9 +271,9 @@ async def upload_file_tus(
     log.info(f"tusDoneData.filename: {tusDoneData.filename}")
     log.info(f"tusDoneData.filetype: {tusDoneData.filetype}")
     log.info(f"tusDoneData.filesize: {tusDoneData.filesize}")
-    log.info(f"tusDoneData.uploadType: {tusDoneData.uploadType}")
+    log.info(f"tusDoneData.data: {tusDoneData.data}")
     log.info(f"tusDoneData.fileURL: {tusDoneData.fileURL}")
-    direct = tusDoneData.uploadType == "direct"
+    direct = tusDoneData.data.get('uploadType', '') == "direct"
 
     try:
         filename = os.path.basename(tusDoneData.filename)
@@ -348,11 +348,10 @@ async def upload_file_tus(
                 
                 log.info(f"json tusFileInfoData: {tusFileInfoData}")
 
-                tusDoneData.uploadType = tusFileInfoData.get('metadata', {}).get('uploadType', tusDoneData.uploadType)
                 tusDoneData.filetype = tusFileInfoData.get('metadata', {}).get('filetype', tusDoneData.filetype)
                 tusDoneData.filesize = tusFileInfoData.get('metadata', {}).get('filesize', tusDoneData.filesize)
                 tusDoneData.filename = tusFileInfoData.get('metadata', {}).get('filename', tusDoneData.filename)
-                tusDoneData.uploadType = tusFileInfoData.get('metadata', {}).get('uploadType', tusDoneData.uploadType)  
+
             os.remove(tusFileInfo)
         
         if os.path.exists(f'{tus_file_path}.lock'):
@@ -378,7 +377,7 @@ async def upload_file_tus(
                         "name": name,
                         "content_type": tusDoneData.filetype,
                         "size": tusDoneData.filesize,
-                        "data": {'uploadType': tusDoneData.uploadType},
+                        "data": tusDoneData.data,
                     },
                 }
             ),

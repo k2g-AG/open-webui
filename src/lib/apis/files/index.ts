@@ -114,7 +114,7 @@ export const uploadDirectFile = async (file: File, metadata?: object | null) => 
 		'filename': file.name,
 		'filetype': file.type,
 		'filesize': file.size,
-		'uploadType': 'direct',
+		'data': metadata,
 		'fileURL': uploadedUrl
 	};
 
