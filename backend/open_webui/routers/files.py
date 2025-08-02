@@ -257,7 +257,7 @@ class FileTUSDone(BaseModel):
     filename: str
     filetype: str
     filesize: int
-    data: dict[str, any]
+    data: str
     fileURL: str
 
 
@@ -273,7 +273,14 @@ async def upload_file_tus(
     log.info(f"tusDoneData.filesize: {tusDoneData.filesize}")
     log.info(f"tusDoneData.data: {tusDoneData.data}")
     log.info(f"tusDoneData.fileURL: {tusDoneData.fileURL}")
-    direct = tusDoneData.data.get('uploadType', '') == "direct"
+    metadata = {}
+    try:
+        metadata = json.loads(tusDoneData.data)
+    except Exception as e:
+            log.exception(e)
+            log.error("Error parce tusDoneData.data")
+            
+    direct = metadata.get('uploadType', '') == "direct"
 
     try:
         filename = os.path.basename(tusDoneData.filename)
@@ -377,7 +384,7 @@ async def upload_file_tus(
                         "name": name,
                         "content_type": tusDoneData.filetype,
                         "size": tusDoneData.filesize,
-                        "data": tusDoneData.data,
+                        "data": metadata,
                     },
                 }
             ),
