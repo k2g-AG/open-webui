@@ -278,7 +278,7 @@
 						}}
 					>
 						<DocumentArrowUpSolid />
-						<div class="line-clamp-1">{$i18n.t('Direct Synthetic Upload Files')}</div>
+						<div class="line-clamp-1">{$i18n.t('Upload Synthetic Files')}</div>
 					</DropdownMenu.Item>
 				</Tooltip>
 			{/if}
