@@ -137,6 +137,7 @@ class ChatPermissions(BaseModel):
     system_prompt: bool = True
     file_upload: bool = True
     file_direct_upload: bool = True
+    file_synthetic_enable: bool = True
     delete: bool = True
     edit: bool = True
     share: bool = True

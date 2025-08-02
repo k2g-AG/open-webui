@@ -19,6 +19,10 @@
 			label: $i18n.t('File Direct Upload'),
 			description: $i18n.t('Model accepts direct file inputs')
 		},
+		file_synthetic_enable: {
+			label: $i18n.t('Synthetic File Enable'),
+			description: $i18n.t('Accepts synthetic file inputs')
+		},
 		web_search: {
 			label: $i18n.t('Web Search'),
 			description: $i18n.t('Model can search the web for information')
@@ -47,6 +51,7 @@
 		vision?: boolean;
 		file_upload?: boolean;
 		file_direct_upload?: boolean;
+		file_synthetic_enable?: boolean;
 		web_search?: boolean;
 		image_generation?: boolean;
 		code_interpreter?: boolean;

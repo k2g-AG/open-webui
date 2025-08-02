@@ -50,6 +50,7 @@
 			controls: true,
 			file_upload: true,
 			file_direct_upload: true,
+    		file_synthetic_enable: true,
 			delete: true,
 			edit: true,
 			temporary: false

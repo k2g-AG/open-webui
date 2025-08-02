@@ -173,13 +173,19 @@ class FilesTable:
                 .all()
             ]
 
-    def get_files_by_user_id(self, user_id: str) -> list[FileModel]:
+    def get_files_by_user_id(self, user_id: str, synthetic: bool = False) -> list[FileModel]:
         with get_db() as db:
-                # for file in db.query(File).filter_by(user_id=user_id).all()
-            return [
-                FileModel.model_validate(file)
-                for file in db.query(File).filter(or_(File.user_id == user_id, File.meta.op('->')('data').op('->')('synthetic')!=None)).all()
-            ]
+            if synthetic:
+                return [
+                    FileModel.model_validate(file)
+                    for file in db.query(File).filter(or_(File.user_id == user_id, File.meta.op('->')('data').op('->')('synthetic')!=None)).all()
+                ]
+            else:
+                return [
+                    FileModel.model_validate(file)
+                    for file in db.query(File).filter_by(user_id=user_id).all()
+                ]
+
 
     def update_file_hash_by_id(self, id: str, hash: str) -> Optional[FileModel]:
         with get_db() as db:

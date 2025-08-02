@@ -41,6 +41,7 @@ from open_webui.routers.knowledge import get_knowledge, get_knowledge_list
 from open_webui.routers.retrieval import ProcessFileForm, process_file
 from open_webui.routers.audio import transcribe
 from open_webui.storage.provider import Storage
+from open_webui.utils.access_control import get_permissions
 from open_webui.utils.auth import get_admin_user, get_verified_user
 from pydantic import BaseModel
 
@@ -412,11 +413,19 @@ async def upload_file_tus(
 
 
 @router.get("/", response_model=list[FileModelResponse])
-async def list_files(user=Depends(get_verified_user), content: bool = Query(True)):
+async def list_files(
+    request: Request,
+    user=Depends(get_verified_user), 
+    content: bool = Query(True)
+):
     if user.role == "admin":
         files = Files.get_files()
     else:
-        files = Files.get_files_by_user_id(user.id)
+        user_permissions = get_permissions(
+            user.id, request.app.state.config.USER_PERMISSIONS
+        )
+        synthetic = user_permissions.get('chat', {}).get('file_synthetic_enable', False)
+        files = Files.get_files_by_user_id(user.id, synthetic)
 
     if not content:
         for file in files:

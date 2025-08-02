@@ -83,6 +83,7 @@
 		vision: true,
 		file_upload: true,
 		file_direct_upload: true,
+		file_synthetic_enable: true,
 		web_search: true,
 		image_generation: true,
 		code_interpreter: true,

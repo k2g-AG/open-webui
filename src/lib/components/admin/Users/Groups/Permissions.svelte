@@ -23,6 +23,7 @@
 			controls: true,
 			file_upload: false,
 			file_direct_upload: false,
+    		file_synthetic_enable: false,
 			delete: true,
 			edit: true,
 			share: false,
@@ -262,6 +263,14 @@
 			</div>
 
 			<Switch bind:state={permissions.chat.file_direct_upload} />
+		</div>
+
+		<div class="  flex w-full justify-between my-2 pr-2">
+			<div class=" self-center text-xs font-medium">
+				{$i18n.t('Allow Synthetic File')}
+			</div>
+
+			<Switch bind:state={permissions.chat.file_synthetic_enable} />
 		</div>
 
 		<div class="  flex w-full justify-between my-2 pr-2">
