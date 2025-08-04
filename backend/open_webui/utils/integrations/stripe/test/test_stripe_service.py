@@ -1,5 +1,5 @@
 ﻿import uuid
-from backend.open_webui.utils.integrations.stripe.service import StripeService
+from open_webui.utils.integrations.stripe.service import StripeService
 
 def test_get_customer_by_email():
     email = "nonexistent_" + str(uuid.uuid4())[:8] + "@example.com"
