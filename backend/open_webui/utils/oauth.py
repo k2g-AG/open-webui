@@ -55,7 +55,7 @@ from open_webui.utils.webhook import post_webhook
 
 from open_webui.env import SRC_LOG_LEVELS, GLOBAL_LOG_LEVEL
 
-from backend.open_webui.utils.integrations.stripe.service import StripeService
+from open_webui.utils.integrations.stripe.service import StripeService
 
 logging.basicConfig(stream=sys.stdout, level=GLOBAL_LOG_LEVEL)
 log = logging.getLogger(__name__)
