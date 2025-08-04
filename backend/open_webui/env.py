@@ -650,3 +650,12 @@ PIP_PACKAGE_INDEX_OPTIONS = os.getenv("PIP_PACKAGE_INDEX_OPTIONS", "").split()
 ####################################
 
 EXTERNAL_PWA_MANIFEST_URL = os.environ.get("EXTERNAL_PWA_MANIFEST_URL")
+
+
+####################################
+# STRIPE
+####################################
+
+STRIPE_SECRET_KEY=os.environ.get('STRIPE_SECRET_KEY')
+STRIPE_TRIAL_PRICE_ID=os.environ.get('STRIPE_TRIAL_PRICE_ID')
+STRIPE_TRIAL_PERIOD_DAYS=os.environ.get('STRIPE_TRIAL_PERIOD_DAYS')

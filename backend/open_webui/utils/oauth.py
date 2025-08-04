@@ -56,6 +56,8 @@ from open_webui.utils.webhook import post_webhook
 
 from open_webui.env import SRC_LOG_LEVELS, GLOBAL_LOG_LEVEL
 
+from backend.integrations.stripe.service import StripeService
+
 logging.basicConfig(stream=sys.stdout, level=GLOBAL_LOG_LEVEL)
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["OAUTH"])
@@ -722,6 +724,20 @@ class OAuthManager:
 
                 role = self.get_user_role(None, user_data)
 
+                stripe_client = StripeService()
+                stripe_customer = stripe_client.get_customer_by_email(email)
+                if not stripe_customer:
+                    stripe_customer = stripe_client.create_customer(
+                        email=email,
+                        name=name,
+                        metadata={"keycloakId": sub}
+                    )
+                    stripe_customer_id = stripe_customer["id"]
+                    stripe_client.create_trial_subscription(stripe_customer_id)
+                #TODO: Handle case if stripe_customer exist, in this case it means - somehow customer was able to login in a different way,
+                # so same email was not recognized by OWUI as another user and this user already had an trial subscription.
+
+                # We have to make a choice - what to do if stripe customer or subscription was not made
                 user = Auths.insert_new_auth(
                     email=email,
                     password=get_password_hash(
