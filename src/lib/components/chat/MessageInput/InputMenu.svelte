@@ -29,7 +29,7 @@
 	export let uploadFilesHandler: Function;
 	export let uploadDirectFilesHandler: Function;
 	export let uploadSyntheticDirectFilesHandler: Function;
-	
+
 	export let inputFilesHandler: Function;
 	export let getFilesHandler: Function;
 
@@ -252,6 +252,7 @@
 						? 'opacity-50'
 						: ''}"
 					on:click={() => {
+						console.log('Files handler', getFilesHandler);
 						getFilesHandler();
 					}}
 				>
@@ -285,10 +286,7 @@
 			</Tooltip>
 
 			{#if directSyntheticFileUploadEnabled}
-				<Tooltip
-					content={''}
-					className="w-full"
-				>
+				<Tooltip content={''} className="w-full">
 					<DropdownMenu.Item
 						class="flex gap-2 items-center px-3 py-2 text-sm font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl"
 						on:click={() => {

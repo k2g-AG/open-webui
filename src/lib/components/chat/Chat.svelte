@@ -473,7 +473,11 @@
 				initNewChat();
 			}
 		});
-
+		try {
+			const res = await getFiles(localStorage.token);
+			console.log({ res });
+			allFiles = res;
+		} catch (error) {}
 		const storageChatInput = sessionStorage.getItem(
 			`chat-input${chatIdProp ? `-${chatIdProp}` : ''}`
 		);
@@ -533,11 +537,6 @@
 		chatInput?.focus();
 
 		chats.subscribe(() => {});
-		try {
-			const res = await getFiles(localStorage.token);
-			console.log({ res });
-			allFiles = res;
-		} catch (error) {}
 	});
 
 	onDestroy(() => {
@@ -2250,6 +2249,7 @@
 									transparentBackground={$settings?.backgroundImageUrl ??
 										$config?.license_metadata?.background_image_url ??
 										false}
+									{getFilesHandler}
 									toolServers={$toolServers}
 									{stopResponse}
 									{createMessagePair}

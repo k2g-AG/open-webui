@@ -40,7 +40,7 @@
 	export let selectedModels: [''];
 
 	export let history;
-
+	export let getFilesHandler: Function;
 	export let prompt = '';
 	export let files = [];
 	export let messageInput = null;
@@ -207,6 +207,7 @@
 				<MessageInput
 					bind:this={messageInput}
 					{history}
+					{getFilesHandler}
 					{selectedModels}
 					bind:files
 					bind:prompt
