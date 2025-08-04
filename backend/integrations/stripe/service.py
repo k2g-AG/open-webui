@@ -1,13 +1,8 @@
-﻿from dotenv import load_dotenv
-load_dotenv()
+﻿import logging
 
 import stripe
-import logging
-import os
 
-STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "")
-STRIPE_TRIAL_PRICE_ID = os.getenv("STRIPE_TRIAL_PRICE_ID", "")
-STRIPE_TRIAL_PERIOD_DAYS = os.getenv("STRIPE_TRIAL_PERIOD_DAYS", "")
+from backend.open_webui.env import STRIPE_SECRET_KEY, STRIPE_TRIAL_PRICE_ID, STRIPE_TRIAL_PERIOD_DAYS
 
 stripe.api_key = STRIPE_SECRET_KEY
 
