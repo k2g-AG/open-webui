@@ -88,9 +88,13 @@
 	import NotificationToast from '../NotificationToast.svelte';
 	import Spinner from '../common/Spinner.svelte';
 	import { fade } from 'svelte/transition';
+	import Table from '../common/FilesTable.svelte';
+	import Modal from '../common/Modal.svelte';
+	import { getFiles } from '$lib/apis/files';
 
 	export let chatIdProp = '';
 
+	let show = false;
 	let loading = true;
 
 	const eventTarget = new EventTarget();
@@ -143,6 +147,7 @@
 	let chatFiles = [];
 	let files = [];
 	let params = {};
+	let allFiles = [];
 
 	$: if (chatIdProp) {
 		navigateHandler();
@@ -193,7 +198,7 @@
 			await goto('/');
 		}
 	};
-
+	console.log({ files });
 	const onSelect = async (e) => {
 		const { type, data } = e;
 
@@ -225,6 +230,9 @@
 			resetInput();
 		}
 		oldSelectedModelIds = selectedModelIds;
+	};
+	const getFilesHandler = () => {
+		show = true;
 	};
 
 	const resetInput = () => {
@@ -525,6 +533,11 @@
 		chatInput?.focus();
 
 		chats.subscribe(() => {});
+		try {
+			const res = await getFiles(localStorage.token);
+			console.log({ res });
+			allFiles = res;
+		} catch (error) {}
 	});
 
 	onDestroy(() => {
@@ -2167,6 +2180,10 @@
 									bind:webSearchEnabled
 									bind:atSelectedModel
 									bind:showCommands
+									{getFilesHandler}
+									openFilesTable={() => {
+										show = true;
+									}}
 									toolServers={$toolServers}
 									transparentBackground={$settings?.backgroundImageUrl ??
 										$config?.license_metadata?.background_image_url ??
@@ -2260,6 +2277,18 @@
 							</div>
 						{/if}
 					</div>
+					<Modal size="2xl" bind:show
+						><Table
+							handleClose={() => {
+								show = false;
+							}}
+							setFile={(file) => {
+								files = [...files, file];
+								show = false;
+							}}
+							bind:allFiles
+						/></Modal
+					>
 				</Pane>
 
 				<ChatControls

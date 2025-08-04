@@ -79,6 +79,8 @@
 	export let onChange: Function = () => {};
 	export let createMessagePair: Function;
 	export let stopResponse: Function;
+	export let openFilesTable: Function;
+	export let getFilesHandler: Function;
 
 	export let autoScroll = false;
 
@@ -722,7 +724,7 @@
 			toast.error($i18n.t('You do not have permission to upload files.'));
 			return null;
 		}
-		
+
 		let extension = file.name.split('.').at(-1);
 
 		const tempItemId = uuidv4();
@@ -749,7 +751,9 @@
 
 		try {
 			// If the file is an audio file, provide the language for STT.
-			let metadata = synthetic ? {'uploadType': 'direct', 'synthetic': true} : {'uploadType': 'direct'};
+			let metadata = synthetic
+				? { uploadType: 'direct', synthetic: true }
+				: { uploadType: 'direct' };
 			console.info('synthetic:', synthetic, 'metadata:', metadata);
 			// During the file upload, file content is automatically extracted.
 			const uploadedFile = await uploadDirectFile(file, metadata);
@@ -769,7 +773,8 @@
 				fileItem.status = 'uploaded';
 				fileItem.file = uploadedFile;
 				fileItem.id = uploadedFile.id;
-				fileItem.collection_name = uploadedFile?.meta?.collection_name || uploadedFile?.collection_name;
+				fileItem.collection_name =
+					uploadedFile?.meta?.collection_name || uploadedFile?.collection_name;
 				fileItem.url = `${WEBUI_API_BASE_URL}/files/${uploadedFile.id}`;
 
 				files = files;
@@ -780,7 +785,6 @@
 			toast.error(`${e}`);
 			files = files.filter((item) => item?.itemId !== tempItemId);
 		}
-
 	};
 
 	const inputDirectFilesHandler = async (inputFiles) => {
@@ -844,7 +848,6 @@
 			uploadDirectFileHandler(file, false);
 		});
 	};
-
 
 	const inputSyntheticDirectFilesHandler = async (inputFiles) => {
 		console.log('Input files handler called with:', inputFiles);
@@ -1002,6 +1005,7 @@
 			dropzoneElement?.removeEventListener('dragleave', onDragLeave);
 		}
 	});
+	console.log('in', { files });
 </script>
 
 <FilesOverlay show={dragged} />
@@ -1188,8 +1192,6 @@
 							filesSyntheticDirectInputElement.value = '';
 						}}
 					/>
-
-					
 
 					{#if recording}
 						<VoiceRecording
@@ -1813,6 +1815,7 @@
 											{screenCaptureHandler}
 											{inputFilesHandler}
 											{inputDirectFilesHandler}
+											{getFilesHandler}
 											uploadFilesHandler={() => {
 												filesInputElement.click();
 											}}
