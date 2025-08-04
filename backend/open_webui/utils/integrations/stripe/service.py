@@ -2,7 +2,7 @@
 
 import stripe
 
-from backend.open_webui.env import STRIPE_SECRET_KEY, STRIPE_TRIAL_PRICE_ID, STRIPE_TRIAL_PERIOD_DAYS
+from open_webui.env import STRIPE_SECRET_KEY, STRIPE_TRIAL_PRICE_ID, STRIPE_TRIAL_PERIOD_DAYS
 
 stripe.api_key = STRIPE_SECRET_KEY
 
