@@ -81,6 +81,7 @@
 	export let stopResponse: Function;
 	export let openFilesTable: Function;
 	export let getFilesHandler: Function;
+	export let handleSynthetic: Function;
 
 	export let autoScroll = false;
 
@@ -1302,9 +1303,9 @@
 											{:else}
 												<FileItem
 													item={file}
-													name={file.name}
-													type={file.type}
-													size={file?.size}
+													name={file.name || file?.filename}
+													type={file.type || file?.meta?.content_type}
+													size={file?.size || file?.meta?.size}
 													loading={file.status === 'uploading'}
 													dismissible={true}
 													edit={true}
@@ -1816,6 +1817,7 @@
 											{inputFilesHandler}
 											{inputDirectFilesHandler}
 											{getFilesHandler}
+											{handleSynthetic}
 											uploadFilesHandler={() => {
 												filesInputElement.click();
 											}}

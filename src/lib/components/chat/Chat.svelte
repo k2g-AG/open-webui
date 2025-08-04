@@ -148,6 +148,8 @@
 	let files = [];
 	let params = {};
 	let allFiles = [];
+	let syntheticFiles = [];
+	let syntheticShow = false;
 
 	$: if (chatIdProp) {
 		navigateHandler();
@@ -476,6 +478,9 @@
 		try {
 			const res = await getFiles(localStorage.token);
 			console.log({ res });
+			syntheticFiles = res.filter((item) => {
+				return !!item.meta.data.synthetic;
+			});
 			allFiles = res;
 		} catch (error) {}
 		const storageChatInput = sessionStorage.getItem(
@@ -1803,6 +1808,9 @@
 		await tick();
 		scrollToBottom();
 	};
+	const handleSynthetic = () => {
+		syntheticShow = true;
+	};
 
 	const handleOpenAIError = async (error, responseMessage) => {
 		let errorMessage = '';
@@ -2179,6 +2187,7 @@
 									bind:webSearchEnabled
 									bind:atSelectedModel
 									bind:showCommands
+									{handleSynthetic}
 									{getFilesHandler}
 									openFilesTable={() => {
 										show = true;
@@ -2249,6 +2258,7 @@
 									transparentBackground={$settings?.backgroundImageUrl ??
 										$config?.license_metadata?.background_image_url ??
 										false}
+									{handleSynthetic}
 									{getFilesHandler}
 									toolServers={$toolServers}
 									{stopResponse}
@@ -2287,6 +2297,18 @@
 								show = false;
 							}}
 							bind:allFiles
+						/></Modal
+					>
+					<Modal size="2xl" bind:show={syntheticShow}
+						><Table
+							handleClose={() => {
+								syntheticShow = false;
+							}}
+							setFile={(file) => {
+								files = [...files, file];
+								syntheticShow = false;
+							}}
+							bind:allFiles={syntheticFiles}
 						/></Modal
 					>
 				</Pane>

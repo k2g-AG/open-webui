@@ -53,6 +53,7 @@
 	export let imageGenerationEnabled = false;
 	export let codeInterpreterEnabled = false;
 	export let webSearchEnabled = false;
+	export let handleSynthetic: Function;
 
 	export let onSelect = (e) => {};
 
@@ -209,6 +210,7 @@
 					{history}
 					{getFilesHandler}
 					{selectedModels}
+					{handleSynthetic}
 					bind:files
 					bind:prompt
 					bind:autoScroll

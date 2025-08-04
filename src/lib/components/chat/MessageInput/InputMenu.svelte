@@ -17,6 +17,7 @@
 	import CameraSolid from '$lib/components/icons/CameraSolid.svelte';
 	import PhotoSolid from '$lib/components/icons/PhotoSolid.svelte';
 	import CommandLineSolid from '$lib/components/icons/CommandLineSolid.svelte';
+	import SyntheticDataset from '$lib/components/icons/SyntheticDataset.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -32,6 +33,7 @@
 
 	export let inputFilesHandler: Function;
 	export let getFilesHandler: Function;
+	export let handleSynthetic: Function;
 
 	export let uploadGoogleDriveHandler: Function;
 	export let uploadOneDriveHandler: Function;
@@ -258,6 +260,27 @@
 				>
 					<DocumentArrowUpSolid />
 					<div class="line-clamp-1">Uploaded datasets</div>
+				</DropdownMenu.Item>
+			</Tooltip>
+			<Tooltip
+				content={fileUploadCapableModels.length !== selectedModels.length
+					? $i18n.t('Model(s) do not support file upload')
+					: !fileUploadEnabled
+						? $i18n.t('You do not have permission to upload files.')
+						: ''}
+				className="w-full"
+			>
+				<DropdownMenu.Item
+					class="flex gap-2 items-center px-3 py-2 text-sm font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl {!fileUploadEnabled
+						? 'opacity-50'
+						: ''}"
+					on:click={() => {
+						console.log('Files handler', getFilesHandler);
+						handleSynthetic();
+					}}
+				>
+					<SyntheticDataset />
+					<div class="line-clamp-1">Synthetic dataset</div>
 				</DropdownMenu.Item>
 			</Tooltip>
 
