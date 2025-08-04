@@ -149,7 +149,7 @@
 	}
 
 	.footer {
-		margin-top: 1.5rem;
+		padding: 1rem;
 		text-align: right;
 	}
 
