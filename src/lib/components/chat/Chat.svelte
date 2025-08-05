@@ -1446,16 +1446,16 @@
 			return;
 		}
 
-		filesAndChatFilesTotalSize = 0;
-		_chatFiles = [];
+		let filesAndChatFilesTotalSize = 0;
+		let _chatFiles = [];
 
 		_chatFiles.push(...chatFiles.filter((item) => ['file'].includes(item.type)));
-		const _files = JSON.parse(JSON.stringify(files));
-		_chatFiles.push(..._files.filter((item) => ['file'].includes(item.type)));
+		const _files_tmp = JSON.parse(JSON.stringify(files));
+		_chatFiles.push(..._files_tmp.filter((item) => ['file'].includes(item.type)));
 		
 		console.info('== _chatFiles:', {_chatFiles});
 
-		_chatFiles.forEach((itemfile) => {filesAndChatFilesTotalSize = filesAndChatFilesTotalSize + itemfile.size;});
+		_chatFiles.forEach((itemFile) => {filesAndChatFilesTotalSize = filesAndChatFilesTotalSize + itemFile.size;});
 
 		if (
 			($config?.file?.max_size ?? null) !== null &&
