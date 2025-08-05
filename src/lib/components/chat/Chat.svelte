@@ -200,7 +200,7 @@
 			await goto('/');
 		}
 	};
-	console.log({ files });
+	console.info({ files });
 	const onSelect = async (e) => {
 		const { type, data } = e;
 
@@ -219,7 +219,7 @@
 			return;
 		}
 		sessionStorage.selectedModels = JSON.stringify(selectedModels);
-		console.log('saveSessionSelectedModels', selectedModels, sessionStorage.selectedModels);
+		console.info('saveSessionSelectedModels', selectedModels, sessionStorage.selectedModels);
 	};
 
 	let oldSelectedModelIds = [''];
@@ -306,7 +306,7 @@
 	};
 
 	const chatEventHandler = async (event, cb) => {
-		console.log(event);
+		console.info(event);
 
 		if (event.chat_id === $chatId) {
 			await tick();
@@ -415,7 +415,7 @@
 					eventConfirmationInputPlaceholder = data.placeholder;
 					eventConfirmationInputValue = data?.value ?? '';
 				} else {
-					console.log('Unknown message type', data);
+					console.info('Unknown message type', data);
 				}
 
 				history.messages[event.message_id] = message;
@@ -465,7 +465,7 @@
 	let pageSubscribe = null;
 	onMount(async () => {
 		loading = true;
-		console.log('mounted');
+		console.info('mounted');
 		window.addEventListener('message', onMessageHandler);
 		$socket?.on('chat-events', chatEventHandler);
 
@@ -477,10 +477,11 @@
 		});
 		try {
 			const res = await getFiles(localStorage.token);
-			console.log({ res });
+			console.info('getFiles:', { res });
 			syntheticFiles = res.filter((item) => {
 				return !!item.meta.data.synthetic;
 			});
+			console.info('syntheticFiles:', { res });
 			allFiles = res;
 		} catch (error) {}
 		const storageChatInput = sessionStorage.getItem(
@@ -554,7 +555,7 @@
 	// File upload functions
 
 	const uploadGoogleDriveFile = async (fileData) => {
-		console.log('Starting uploadGoogleDriveFile with:', {
+		console.info('Starting uploadGoogleDriveFile with:', {
 			id: fileData.id,
 			name: fileData.name,
 			url: fileData.url,
@@ -584,7 +585,7 @@
 
 		try {
 			files = [...files, fileItem];
-			console.log('Processing web file with URL:', fileData.url);
+			console.info('Processing web file with URL:', fileData.url);
 
 			// Configure fetch options with proper headers
 			const fetchOptions = {
@@ -596,7 +597,7 @@
 			};
 
 			// Attempt to fetch the file
-			console.log('Fetching file content from Google Drive...');
+			console.info('Fetching file content from Google Drive...');
 			const fileResponse = await fetch(fileData.url, fetchOptions);
 
 			if (!fileResponse.ok) {
@@ -606,17 +607,17 @@
 
 			// Get content type from response
 			const contentType = fileResponse.headers.get('content-type') || 'application/octet-stream';
-			console.log('Response received with content-type:', contentType);
+			console.info('Response received with content-type:', contentType);
 
 			// Convert response to blob
-			console.log('Converting response to blob...');
+			console.info('Converting response to blob...');
 			const fileBlob = await fileResponse.blob();
 
 			if (fileBlob.size === 0) {
 				throw new Error('Retrieved file is empty');
 			}
 
-			console.log('Blob created:', {
+			console.info('Blob created:', {
 				size: fileBlob.size,
 				type: fileBlob.type || contentType
 			});
@@ -626,7 +627,7 @@
 				type: fileBlob.type || contentType
 			});
 
-			console.log('File object created:', {
+			console.info('File object created:', {
 				name: file.name,
 				size: file.size,
 				type: file.type
@@ -648,14 +649,14 @@
 			}
 
 			// Upload file to server
-			console.log('Uploading file to server...');
+			console.info('Uploading file to server...');
 			const uploadedFile = await uploadFile(localStorage.token, file, metadata);
 
 			if (!uploadedFile) {
 				throw new Error('Server returned null response for file upload');
 			}
 
-			console.log('File uploaded successfully:', uploadedFile);
+			console.info('File uploaded successfully:', uploadedFile);
 
 			// Update file item with upload results
 			fileItem.status = 'uploaded';
@@ -679,7 +680,7 @@
 	};
 
 	const uploadWeb = async (url) => {
-		console.log(url);
+		console.info(url);
 
 		const fileItem = {
 			type: 'doc',
@@ -712,7 +713,7 @@
 	};
 
 	const uploadYoutubeTranscription = async (url) => {
-		console.log(url);
+		console.info(url);
 
 		const fileItem = {
 			type: 'doc',
@@ -797,7 +798,7 @@
 				if ($settings?.models) {
 					selectedModels = $settings?.models;
 				} else if ($config?.default_models) {
-					console.log($config?.default_models.split(',') ?? '');
+					console.info($config?.default_models.split(',') ?? '');
 					selectedModels = $config?.default_models.split(',');
 				}
 			}
@@ -924,7 +925,7 @@
 			const chatContent = chat.chat;
 
 			if (chatContent) {
-				console.log(chatContent);
+				console.info(chatContent);
 
 				selectedModels =
 					(chatContent?.models ?? undefined) !== undefined
@@ -1257,7 +1258,7 @@
 				// Stream response
 				let value = choices[0]?.delta?.content ?? '';
 				if (message.content == '' && value == '\n') {
-					console.log('Empty response');
+					console.info('Empty response');
 				} else {
 					message.content += value;
 
@@ -1383,7 +1384,7 @@
 			);
 		}
 
-		console.log(data);
+		console.info(data);
 		await tick();
 
 		if (autoScroll) {
@@ -1396,7 +1397,7 @@
 	//////////////////////////
 
 	const submitPrompt = async (userPrompt, { _raw = false } = {}) => {
-		console.log('submitPrompt', userPrompt, $chatId);
+		console.info('submitPrompt', userPrompt, $chatId);
 
 		const messages = createMessagesList(history, history.currentId);
 		const _selectedModels = selectedModels.map((modelId) =>
@@ -1569,7 +1570,7 @@
 
 		await Promise.all(
 			selectedModelIds.map(async (modelId, _modelIdx) => {
-				console.log('modelId', modelId);
+				console.info('modelId', modelId);
 				const model = $models.filter((m) => m.id === modelId).at(0);
 
 				if (model) {
@@ -1913,7 +1914,7 @@
 	};
 
 	const regenerateResponse = async (message) => {
-		console.log('regenerateResponse');
+		console.info('regenerateResponse');
 
 		if (history.currentId) {
 			let userMessage = history.messages[message.parentId];
@@ -1938,7 +1939,7 @@
 	};
 
 	const continueResponse = async () => {
-		console.log('continueResponse');
+		console.info('continueResponse');
 		const _chatId = JSON.parse(JSON.stringify($chatId));
 
 		if (history.currentId && history.messages[history.currentId].done == true) {
@@ -1957,7 +1958,7 @@
 	};
 
 	const mergeResponses = async (messageId, responses, _chatId) => {
-		console.log('mergeResponses', messageId, responses);
+		console.info('mergeResponses', messageId, responses);
 		const message = history.messages[messageId];
 		const mergedResponse = {
 			status: true,
@@ -2307,6 +2308,7 @@
 							setFile={(file) => {
 								files = [...files, file];
 								syntheticShow = false;
+								console.info('selected file added:', { files });
 							}}
 							bind:allFiles={syntheticFiles}
 						/></Modal
