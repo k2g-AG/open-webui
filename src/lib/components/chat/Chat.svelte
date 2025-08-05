@@ -1441,8 +1441,8 @@
 
 		if (
 			($config?.file?.direct_max_count ?? null) !== null &&
-			(files.filter((item) => ['direct'].includes(item.file.meta.data.get('uploadType')) && not item.file.meta.data.get('synthetic', false))).length + 
-			(chatFiles.filter((item) => ['direct'].includes(item.file.meta.data.get('uploadType')) && not item.file.meta.data.get('synthetic', false))).length > $config?.file?.direct_max_count
+			(files.filter((item) => (item.file.meta.data.get('uploadType', '') == 'direct') && (not item.file.meta.data.get('synthetic', false)))).length + 
+			(chatFiles.filter((item) => (item.file.meta.data.get('uploadType', '') == 'direct') && (not item.file.meta.data.get('synthetic', false)))).length > $config?.file?.direct_max_count
 		) {
 			toast.error(
 				$i18n.t(`You can only chat with a maximum of {{maxCount}} file(s) at a time.`, {
