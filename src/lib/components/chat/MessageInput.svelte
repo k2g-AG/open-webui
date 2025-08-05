@@ -219,7 +219,7 @@
 	};
 
 	const replaceVariables = (variables: Record<string, any>) => {
-		console.log('Replacing variables:', variables);
+		console.info('Replacing variables:', variables);
 
 		const chatInput = document.getElementById('chat-input');
 
@@ -555,7 +555,7 @@
 				const uploadedFile = await uploadFile(localStorage.token, file, metadata);
 
 				if (uploadedFile) {
-					console.log('File upload completed:', {
+					console.info('File upload completed:', {
 						id: uploadedFile.id,
 						name: fileItem.name,
 						collection: uploadedFile?.meta?.collection_name
@@ -596,7 +596,7 @@
 				files = files.filter((item) => item?.itemId !== tempItemId);
 				return null;
 			} else {
-				console.log('Extracted content from file:', {
+				console.info('Extracted content from file:', {
 					name: file.name,
 					size: file.size,
 					content: content
@@ -613,7 +613,7 @@
 	};
 
 	const inputFilesHandler = async (inputFiles) => {
-		console.log('Input files handler called with:', inputFiles);
+		console.info('Input files handler called with:', inputFiles);
 
 		if (
 			($config?.file?.max_count ?? null) !== null &&
@@ -628,7 +628,7 @@
 		}
 
 		inputFiles.forEach(async (file) => {
-			console.log('Processing file:', {
+			console.info('Processing file:', {
 				name: file.name,
 				type: file.type,
 				size: file.size,
@@ -639,7 +639,7 @@
 				($config?.file?.max_size ?? null) !== null &&
 				file.size > ($config?.file?.max_size ?? 0) * 1024 * 1024
 			) {
-				console.log('File exceeds max size limit:', {
+				console.info('File exceeds max size limit:', {
 					fileSize: file.size,
 					maxSize: ($config?.file?.max_size ?? 0) * 1024 * 1024
 				});
@@ -789,7 +789,7 @@
 	};
 
 	const inputDirectFilesHandler = async (inputFiles) => {
-		console.log('Input files handler called with:', inputFiles);
+		console.info('Input files handler called with:', inputFiles);
 
 		if (
 			($config?.file?.direct_max_count ?? null) !== null &&
@@ -812,6 +812,32 @@
 
 		let totalFileSize = 0;
 		let inputFilesFiltered = [];
+
+		files.forEach((file) => {
+			let extension = file.name.split('.').at(-1);
+
+			if (allow_direct_file_extensions.includes(extension.toLowerCase())) {
+				totalFileSize += file.size;
+			}
+
+			if (
+				($config?.file?.direct_max_size ?? null) !== null &&
+				totalFileSize > ($config?.file?.direct_max_size ?? 0) * 1024 * 1024
+			) {
+				console.warn('Files total exceeds max size limit:', {
+					totalFileSize: totalFileSize,
+					maxSize: ($config?.file?.direct_max_size ?? 0) * 1024 * 1024
+				});
+				toast.error(
+					$i18n.t(`Files size total should not exceed {{maxSize}} MB.`, {
+						maxSize: $config?.file?.direct_max_size
+					})
+				);
+				inputFilesFiltered = [];
+				return;
+			}
+		});
+
 		inputFiles.forEach((file) => {
 			let extension = file.name.split('.').at(-1);
 
@@ -833,6 +859,7 @@
 						maxSize: $config?.file?.direct_max_size
 					})
 				);
+				inputFilesFiltered = [];
 				return;
 			}
 		});
@@ -851,7 +878,7 @@
 	};
 
 	const inputSyntheticDirectFilesHandler = async (inputFiles) => {
-		console.log('Input files handler called with:', inputFiles);
+		console.info('Input files handler called with:', inputFiles);
 
 		if (
 			($config?.file?.direct_max_count ?? null) !== null &&
@@ -931,12 +958,12 @@
 
 	const onDrop = async (e) => {
 		e.preventDefault();
-		console.log(e);
+		console.info(e);
 
 		if (e.dataTransfer?.files) {
 			const inputFiles = Array.from(e.dataTransfer?.files);
 			if (inputFiles && inputFiles.length > 0) {
-				console.log(inputFiles);
+				console.info(inputFiles);
 				inputFilesHandler(inputFiles);
 			}
 		}
@@ -950,7 +977,7 @@
 		}
 
 		if (e.key === 'Escape') {
-			console.log('Escape');
+			console.info('Escape');
 			dragged = false;
 		}
 	};
@@ -991,7 +1018,7 @@
 	});
 
 	onDestroy(() => {
-		console.log('destroy');
+		console.info('destroy');
 		window.removeEventListener('keydown', onKeyDown);
 		window.removeEventListener('keyup', onKeyUp);
 
@@ -1006,7 +1033,7 @@
 			dropzoneElement?.removeEventListener('dragleave', onDragLeave);
 		}
 	});
-	console.log('in', { files });
+	console.info('in', { files });
 </script>
 
 <FilesOverlay show={dragged} />
@@ -1144,7 +1171,7 @@
 						hidden
 						multiple
 						on:change={async () => {
-							console.log('MessageInput files :', inputFiles);
+							console.info('MessageInput files :', inputFiles);
 							if (inputFiles && inputFiles.length > 0) {
 								const _inputFiles = Array.from(inputFiles);
 								inputFilesHandler(_inputFiles);
@@ -1163,7 +1190,7 @@
 						hidden
 						multiple
 						on:change={async () => {
-							console.log('MessageInput direct files :', inputFiles);
+							console.info('MessageInput direct files :', inputFiles);
 							if (inputFiles && inputFiles.length > 0) {
 								const _inputFiles = Array.from(inputFiles);
 								inputDirectFilesHandler(_inputFiles);
@@ -1182,7 +1209,7 @@
 						hidden
 						multiple
 						on:change={async () => {
-							console.log('MessageInput direct files :', inputFiles);
+							console.info('MessageInput direct files :', inputFiles);
 							if (inputFiles && inputFiles.length > 0) {
 								const _inputFiles = Array.from(inputFiles);
 								inputSyntheticDirectFilesHandler(_inputFiles);
@@ -1316,7 +1343,7 @@
 														files = files;
 													}}
 													on:click={() => {
-														console.log(file);
+														console.info(file);
 													}}
 												/>
 											{/if}
@@ -1365,12 +1392,12 @@
 															? createMessagesList(history, history.currentId)
 															: null
 													).catch((error) => {
-														console.log(error);
+														console.info(error);
 
 														return null;
 													});
 
-													console.log(res);
+													console.info(res);
 													return res;
 												}}
 												oncompositionstart={() => (isComposing = true)}
@@ -1395,7 +1422,7 @@
 													// Check if Ctrl + R is pressed
 													if (prompt === '' && isCtrlPressed && e.key.toLowerCase() === 'r') {
 														e.preventDefault();
-														console.log('regenerate');
+														console.info('regenerate');
 
 														const regenerateButton = [
 															...document.getElementsByClassName('regenerate-response-button')
@@ -1497,7 +1524,7 @@
 													}
 
 													if (e.key === 'Escape') {
-														console.log('Escape');
+														console.info('Escape');
 														atSelectedModel = undefined;
 														selectedToolIds = [];
 														selectedFilterIds = [];
@@ -1509,7 +1536,7 @@
 												}}
 												on:paste={async (e) => {
 													e = e.detail.event;
-													console.log(e);
+													console.info(e);
 
 													const clipboardData = e.clipboardData || window.clipboardData;
 
@@ -1592,7 +1619,7 @@
 												// Check if Ctrl + R is pressed
 												if (prompt === '' && isCtrlPressed && e.key.toLowerCase() === 'r') {
 													e.preventDefault();
-													console.log('regenerate');
+													console.info('regenerate');
 
 													const regenerateButton = [
 														...document.getElementsByClassName('regenerate-response-button')
@@ -1612,7 +1639,7 @@
 														...document.getElementsByClassName('edit-user-message-button')
 													]?.at(-1);
 
-													console.log(userMessageElement);
+													console.info(userMessageElement);
 
 													userMessageElement?.scrollIntoView({ block: 'center' });
 													editButton?.click();
@@ -1739,7 +1766,7 @@
 												}
 
 												if (e.key === 'Escape') {
-													console.log('Escape');
+													console.info('Escape');
 													atSelectedModel = undefined;
 													selectedToolIds = [];
 													selectedFilterIds = [];
@@ -1762,7 +1789,7 @@
 
 												if (clipboardData && clipboardData.items) {
 													for (const item of clipboardData.items) {
-														console.log(item);
+														console.info(item);
 														if (item.type.indexOf('image') !== -1) {
 															const blob = item.getAsFile();
 															const reader = new FileReader();
@@ -1836,7 +1863,7 @@
 														});
 														await uploadFileHandler(file);
 													} else {
-														console.log('No file was selected from Google Drive');
+														console.info('No file was selected from Google Drive');
 													}
 												} catch (error) {
 													console.error('Google Drive Error:', error);
@@ -1856,7 +1883,7 @@
 														});
 														await uploadFileHandler(file);
 													} else {
-														console.log('No file was selected from OneDrive');
+														console.info('No file was selected from OneDrive');
 													}
 												} catch (error) {
 													console.error('OneDrive Error:', error);
