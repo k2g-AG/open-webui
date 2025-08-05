@@ -2293,7 +2293,17 @@
 								show = false;
 							}}
 							setFile={(file) => {
-								files = [...files, file];
+								const formattedFile = {
+									name: file?.filename,
+									size: file?.meta?.size,
+									type: 'file',
+									url: `/api/v1/files/${file?.id}`,
+									id: file?.id,
+									status: 'uploaded',
+									error: '',
+									file: { ...file }
+								};
+								files = [...files, formattedFile];
 								show = false;
 							}}
 							bind:allFiles
@@ -2305,7 +2315,17 @@
 								syntheticShow = false;
 							}}
 							setFile={(file) => {
-								files = [...files, file];
+								const formattedFile = {
+									name: file?.filename,
+									size: file?.meta?.size,
+									type: 'file',
+									url: `/api/v1/files/${file?.id}`,
+									id: file?.id,
+									status: 'uploaded',
+									error: '',
+									file: { ...file }
+								};
+								files = [...files, formattedFile];
 								syntheticShow = false;
 							}}
 							bind:allFiles={syntheticFiles}
