@@ -37,12 +37,13 @@ class StripeService:
             return None
 
     @staticmethod
-    def create_trial_subscription(customer_id: str) -> dict | None:
+    def create_trial_subscription(customer_id: str, metadata: dict) -> dict | None:
         try:
             return stripe.Subscription.create(
                 customer=customer_id,
                 items=[{"price": STRIPE_TRIAL_PRICE_ID}],
-                trial_period_days= STRIPE_TRIAL_PERIOD_DAYS
+                trial_period_days= STRIPE_TRIAL_PERIOD_DAYS,
+                metadata = metadata
             )
         except Exception as e:
             log.error(f"Error creating trial subscription for customer {customer_id}: {e}")
