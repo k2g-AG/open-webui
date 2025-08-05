@@ -1437,7 +1437,7 @@
 		
 		console.info('== files:', {files});
 		console.info('== chatFiles:', {chatFiles});
-		console.info('== $config?.file?.direct_max_count:', {$config?.file?.direct_max_count});
+		console.info('== $config?.file?.direct_max_count:', $config?.file?.direct_max_count);
 
 		if (
 			($config?.file?.direct_max_count ?? null) !== null &&
