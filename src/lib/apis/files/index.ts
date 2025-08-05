@@ -39,7 +39,7 @@ export const uploadFile = async (token: string, file: File, metadata?: object | 
 async function uploadFileTUS(file: File, metadata?: object | null) {
 	return new Promise((resolve, reject) => {
 		let chunkSize = 20 * 1024 * 1024; // 20MB chunk size
-		console.info("chunkSize:", chunkSize, "%");
+		console.info("chunkSize:", chunkSize, "bytes");
 		let percentageView = 0;
 		const upload = new tus.Upload(file, {
 			endpoint: `${WEBUI_BASE_URL}${WEBUI_API_BASE_URL}/files/tus`, // Replace with your tus server URL
