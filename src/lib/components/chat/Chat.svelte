@@ -1468,11 +1468,12 @@
 
 		if (
 			($config?.file?.max_size ?? null) !== null &&
-			filesAndChatFilesTotalSize > $config?.file?.max_size
+			filesAndChatFilesTotalSize > $config?.file?.direct_max_size
 		) {
 			toast.error(
-				$i18n.t(`You can only chat with a maximum of {{max_size}} file(s) size at a time.`, {
-					max_size: $config?.file?.max_size
+				$i18n.t(`You can only chat with a maximum of file(s) size - {{max_size}} with current file(s) size - {{current_total_size}} at a time.`, {
+					max_size: $config?.file?.direct_max_size,
+					current_total_size: filesAndChatFilesTotalSize
 				})
 			);
 			return;
