@@ -1440,9 +1440,9 @@
 		console.info('== $config?.file?.direct_max_count:', $config?.file?.direct_max_count);
 
 		let direct_files = [];
-		direct_files.push(...files.filter((item) => ((item.file.meta.data.uploadType? === 'direct') && (item.file.meta.data.synthetic? === false))));
+		direct_files.push(...files.filter((item) => ((item.file.meta.data.uploadType === 'direct') && (item.file.meta.data.synthetic === false))));
 		let direct_chatFiles = [];
-		direct_chatFiles.push(...chatFiles.filter((item) => ((item.file.meta.data.uploadType? === 'direct') && (item.file.meta.data.synthetic? === false))));
+		direct_chatFiles.push(...chatFiles.filter((item) => ((item.file.meta.data.uploadType === 'direct') && (item.file.meta.data.synthetic === false))));
 		if (
 			($config?.file?.direct_max_count ?? null) !== null &&
 			direct_files.length + direct_chatFiles.length > $config?.file?.direct_max_count
