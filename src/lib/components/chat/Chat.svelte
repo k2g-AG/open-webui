@@ -1439,10 +1439,13 @@
 		console.info('== chatFiles:', {chatFiles});
 		console.info('== $config?.file?.direct_max_count:', $config?.file?.direct_max_count);
 
+		let direct_files = [];
+		direct_files.push(...files.filter((item) => (item.file.meta.data.get('uploadType', '') == 'direct') && (not item.file.meta.data.get('synthetic', false))));
+		let direct_chatFiles = [];
+		direct_chatFiles.push(...chatFiles.filter((item) => (item.file.meta.data.get('uploadType', '') == 'direct') && (not item.file.meta.data.get('synthetic', false))));
 		if (
 			($config?.file?.direct_max_count ?? null) !== null &&
-			(files.filter((item) => (item.file.meta.data.get('uploadType', '') == 'direct') && (not item.file.meta.data.get('synthetic', false)))).length + 
-			(chatFiles.filter((item) => (item.file.meta.data.get('uploadType', '') == 'direct') && (not item.file.meta.data.get('synthetic', false)))).length > $config?.file?.direct_max_count
+			direct_files.length + direct_chatFiles.length > $config?.file?.direct_max_count
 		) {
 			toast.error(
 				$i18n.t(`You can only chat with a maximum of {{maxCount}} file(s) at a time.`, {
