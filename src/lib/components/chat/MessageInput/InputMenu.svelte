@@ -61,6 +61,9 @@
 
 	let directSyntheticFileUploadEnabled = true;
 	$: directSyntheticFileUploadEnabled = $user?.role === 'admin';
+	let syntheticFilesEnabled = true;
+	$: syntheticFilesEnabled =
+		$user?.permissions?.chat?.file_synthetic_enable && $config?.file?.file_synthetic_enable;
 
 	const init = async () => {
 		if ($_tools === null) {
@@ -262,28 +265,29 @@
 					<div class="line-clamp-1">Uploaded datasets</div>
 				</DropdownMenu.Item>
 			</Tooltip>
-			<Tooltip
-				content={fileUploadCapableModels.length !== selectedModels.length
-					? $i18n.t('Model(s) do not support file upload')
-					: !fileUploadEnabled
-						? $i18n.t('You do not have permission to upload files.')
-						: ''}
-				className="w-full"
-			>
-				<DropdownMenu.Item
-					class="flex gap-2 items-center px-3 py-2 text-sm font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl {!fileUploadEnabled
-						? 'opacity-50'
-						: ''}"
-					on:click={() => {
-						console.log('Files handler', getFilesHandler);
-						handleSynthetic();
-					}}
+			{#if directSyntheticFileUploadEnabled}
+				<Tooltip
+					content={fileUploadCapableModels.length !== selectedModels.length
+						? $i18n.t('Model(s) do not support file upload')
+						: !fileUploadEnabled
+							? $i18n.t('You do not have permission to upload files.')
+							: ''}
+					className="w-full"
 				>
-					<SyntheticDataset />
-					<div class="line-clamp-1">Synthetic dataset</div>
-				</DropdownMenu.Item>
-			</Tooltip>
-
+					<DropdownMenu.Item
+						class="flex gap-2 items-center px-3 py-2 text-sm font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl {!fileUploadEnabled
+							? 'opacity-50'
+							: ''}"
+						on:click={() => {
+							console.log('Files handler', getFilesHandler);
+							handleSynthetic();
+						}}
+					>
+						<SyntheticDataset />
+						<div class="line-clamp-1">Synthetic dataset</div>
+					</DropdownMenu.Item>
+				</Tooltip>
+			{/if}
 			<Tooltip
 				content={fileUploadCapableModels.length !== selectedModels.length
 					? $i18n.t('Model(s) do not support file direct upload')
