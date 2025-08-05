@@ -812,6 +812,32 @@
 
 		let totalFileSize = 0;
 		let inputFilesFiltered = [];
+
+		files.forEach((file) => {
+			let extension = file.name.split('.').at(-1);
+
+			if (allow_direct_file_extensions.includes(extension.toLowerCase())) {
+				totalFileSize += file.size;
+			}
+
+			if (
+				($config?.file?.direct_max_size ?? null) !== null &&
+				totalFileSize > ($config?.file?.direct_max_size ?? 0) * 1024 * 1024
+			) {
+				console.warn('Files total exceeds max size limit:', {
+					totalFileSize: totalFileSize,
+					maxSize: ($config?.file?.direct_max_size ?? 0) * 1024 * 1024
+				});
+				toast.error(
+					$i18n.t(`Files size total should not exceed {{maxSize}} MB.`, {
+						maxSize: $config?.file?.direct_max_size
+					})
+				);
+				inputFilesFiltered = [];
+				return;
+			}
+		});
+
 		inputFiles.forEach((file) => {
 			let extension = file.name.split('.').at(-1);
 
@@ -833,6 +859,7 @@
 						maxSize: $config?.file?.direct_max_size
 					})
 				);
+				inputFilesFiltered = [];
 				return;
 			}
 		});
