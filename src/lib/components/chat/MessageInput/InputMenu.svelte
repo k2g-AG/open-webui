@@ -17,7 +17,8 @@
 	import CameraSolid from '$lib/components/icons/CameraSolid.svelte';
 	import PhotoSolid from '$lib/components/icons/PhotoSolid.svelte';
 	import CommandLineSolid from '$lib/components/icons/CommandLineSolid.svelte';
-	
+	import SyntheticDataset from '$lib/components/icons/SyntheticDataset.svelte';
+
 	const i18n = getContext('i18n');
 
 	export let selectedToolIds: string[] = [];
@@ -29,8 +30,10 @@
 	export let uploadFilesHandler: Function;
 	export let uploadDirectFilesHandler: Function;
 	export let uploadSyntheticDirectFilesHandler: Function;
-	
+
 	export let inputFilesHandler: Function;
+	export let getFilesHandler: Function;
+	export let handleSynthetic: Function;
 
 	export let uploadGoogleDriveHandler: Function;
 	export let uploadOneDriveHandler: Function;
@@ -53,8 +56,8 @@
 	let directFileUploadEnabled = true;
 	$: directFileUploadEnabled =
 		fileUploadCapableModels.length === selectedModels.length &&
-		($user?.role === 'admin' || $user?.permissions?.chat?.file_direct_upload)
-		&& $config?.file?.enable_direct_file_upload;
+		($user?.role === 'admin' || $user?.permissions?.chat?.file_direct_upload) &&
+		$config?.file?.enable_direct_file_upload;
 
 	let directSyntheticFileUploadEnabled = true;
 	$: directSyntheticFileUploadEnabled = $user?.role === 'admin';
@@ -238,6 +241,48 @@
 					<div class="line-clamp-1">{$i18n.t('Upload Files')}</div>
 				</DropdownMenu.Item>
 			</Tooltip>
+			<Tooltip
+				content={fileUploadCapableModels.length !== selectedModels.length
+					? $i18n.t('Model(s) do not support file upload')
+					: !fileUploadEnabled
+						? $i18n.t('You do not have permission to upload files.')
+						: ''}
+				className="w-full"
+			>
+				<DropdownMenu.Item
+					class="flex gap-2 items-center px-3 py-2 text-sm font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl {!fileUploadEnabled
+						? 'opacity-50'
+						: ''}"
+					on:click={() => {
+						console.log('Files handler', getFilesHandler);
+						getFilesHandler();
+					}}
+				>
+					<DocumentArrowUpSolid />
+					<div class="line-clamp-1">Uploaded datasets</div>
+				</DropdownMenu.Item>
+			</Tooltip>
+			<Tooltip
+				content={fileUploadCapableModels.length !== selectedModels.length
+					? $i18n.t('Model(s) do not support file upload')
+					: !fileUploadEnabled
+						? $i18n.t('You do not have permission to upload files.')
+						: ''}
+				className="w-full"
+			>
+				<DropdownMenu.Item
+					class="flex gap-2 items-center px-3 py-2 text-sm font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl {!fileUploadEnabled
+						? 'opacity-50'
+						: ''}"
+					on:click={() => {
+						console.log('Files handler', getFilesHandler);
+						handleSynthetic();
+					}}
+				>
+					<SyntheticDataset />
+					<div class="line-clamp-1">Synthetic dataset</div>
+				</DropdownMenu.Item>
+			</Tooltip>
 
 			<Tooltip
 				content={fileUploadCapableModels.length !== selectedModels.length
@@ -264,10 +309,7 @@
 			</Tooltip>
 
 			{#if directSyntheticFileUploadEnabled}
-				<Tooltip
-					content={''}
-					className="w-full"
-				>
+				<Tooltip content={''} className="w-full">
 					<DropdownMenu.Item
 						class="flex gap-2 items-center px-3 py-2 text-sm font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl"
 						on:click={() => {

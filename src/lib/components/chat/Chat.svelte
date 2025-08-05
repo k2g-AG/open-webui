@@ -88,9 +88,13 @@
 	import NotificationToast from '../NotificationToast.svelte';
 	import Spinner from '../common/Spinner.svelte';
 	import { fade } from 'svelte/transition';
+	import Table from '../common/FilesTable.svelte';
+	import Modal from '../common/Modal.svelte';
+	import { getFiles } from '$lib/apis/files';
 
 	export let chatIdProp = '';
 
+	let show = false;
 	let loading = true;
 
 	const eventTarget = new EventTarget();
@@ -143,6 +147,9 @@
 	let chatFiles = [];
 	let files = [];
 	let params = {};
+	let allFiles = [];
+	let syntheticFiles = [];
+	let syntheticShow = false;
 
 	$: if (chatIdProp) {
 		navigateHandler();
@@ -193,7 +200,7 @@
 			await goto('/');
 		}
 	};
-
+	console.info({ files });
 	const onSelect = async (e) => {
 		const { type, data } = e;
 
@@ -212,7 +219,7 @@
 			return;
 		}
 		sessionStorage.selectedModels = JSON.stringify(selectedModels);
-		console.log('saveSessionSelectedModels', selectedModels, sessionStorage.selectedModels);
+		console.info('saveSessionSelectedModels', selectedModels, sessionStorage.selectedModels);
 	};
 
 	let oldSelectedModelIds = [''];
@@ -225,6 +232,9 @@
 			resetInput();
 		}
 		oldSelectedModelIds = selectedModelIds;
+	};
+	const getFilesHandler = () => {
+		show = true;
 	};
 
 	const resetInput = () => {
@@ -296,7 +306,7 @@
 	};
 
 	const chatEventHandler = async (event, cb) => {
-		console.log(event);
+		console.info(event);
 
 		if (event.chat_id === $chatId) {
 			await tick();
@@ -405,7 +415,7 @@
 					eventConfirmationInputPlaceholder = data.placeholder;
 					eventConfirmationInputValue = data?.value ?? '';
 				} else {
-					console.log('Unknown message type', data);
+					console.info('Unknown message type', data);
 				}
 
 				history.messages[event.message_id] = message;
@@ -455,7 +465,7 @@
 	let pageSubscribe = null;
 	onMount(async () => {
 		loading = true;
-		console.log('mounted');
+		console.info('mounted');
 		window.addEventListener('message', onMessageHandler);
 		$socket?.on('chat-events', chatEventHandler);
 
@@ -465,7 +475,15 @@
 				initNewChat();
 			}
 		});
-
+		try {
+			const res = await getFiles(localStorage.token);
+			console.info('getFiles:', { res });
+			syntheticFiles = res.filter((item) => {
+				return !!item.meta.data.synthetic;
+			});
+			console.info('syntheticFiles:', { res });
+			allFiles = res;
+		} catch (error) {}
 		const storageChatInput = sessionStorage.getItem(
 			`chat-input${chatIdProp ? `-${chatIdProp}` : ''}`
 		);
@@ -537,7 +555,7 @@
 	// File upload functions
 
 	const uploadGoogleDriveFile = async (fileData) => {
-		console.log('Starting uploadGoogleDriveFile with:', {
+		console.info('Starting uploadGoogleDriveFile with:', {
 			id: fileData.id,
 			name: fileData.name,
 			url: fileData.url,
@@ -567,7 +585,7 @@
 
 		try {
 			files = [...files, fileItem];
-			console.log('Processing web file with URL:', fileData.url);
+			console.info('Processing web file with URL:', fileData.url);
 
 			// Configure fetch options with proper headers
 			const fetchOptions = {
@@ -579,7 +597,7 @@
 			};
 
 			// Attempt to fetch the file
-			console.log('Fetching file content from Google Drive...');
+			console.info('Fetching file content from Google Drive...');
 			const fileResponse = await fetch(fileData.url, fetchOptions);
 
 			if (!fileResponse.ok) {
@@ -589,17 +607,17 @@
 
 			// Get content type from response
 			const contentType = fileResponse.headers.get('content-type') || 'application/octet-stream';
-			console.log('Response received with content-type:', contentType);
+			console.info('Response received with content-type:', contentType);
 
 			// Convert response to blob
-			console.log('Converting response to blob...');
+			console.info('Converting response to blob...');
 			const fileBlob = await fileResponse.blob();
 
 			if (fileBlob.size === 0) {
 				throw new Error('Retrieved file is empty');
 			}
 
-			console.log('Blob created:', {
+			console.info('Blob created:', {
 				size: fileBlob.size,
 				type: fileBlob.type || contentType
 			});
@@ -609,7 +627,7 @@
 				type: fileBlob.type || contentType
 			});
 
-			console.log('File object created:', {
+			console.info('File object created:', {
 				name: file.name,
 				size: file.size,
 				type: file.type
@@ -631,14 +649,14 @@
 			}
 
 			// Upload file to server
-			console.log('Uploading file to server...');
+			console.info('Uploading file to server...');
 			const uploadedFile = await uploadFile(localStorage.token, file, metadata);
 
 			if (!uploadedFile) {
 				throw new Error('Server returned null response for file upload');
 			}
 
-			console.log('File uploaded successfully:', uploadedFile);
+			console.info('File uploaded successfully:', uploadedFile);
 
 			// Update file item with upload results
 			fileItem.status = 'uploaded';
@@ -662,7 +680,7 @@
 	};
 
 	const uploadWeb = async (url) => {
-		console.log(url);
+		console.info(url);
 
 		const fileItem = {
 			type: 'doc',
@@ -695,7 +713,7 @@
 	};
 
 	const uploadYoutubeTranscription = async (url) => {
-		console.log(url);
+		console.info(url);
 
 		const fileItem = {
 			type: 'doc',
@@ -780,7 +798,7 @@
 				if ($settings?.models) {
 					selectedModels = $settings?.models;
 				} else if ($config?.default_models) {
-					console.log($config?.default_models.split(',') ?? '');
+					console.info($config?.default_models.split(',') ?? '');
 					selectedModels = $config?.default_models.split(',');
 				}
 			}
@@ -907,7 +925,7 @@
 			const chatContent = chat.chat;
 
 			if (chatContent) {
-				console.log(chatContent);
+				console.info(chatContent);
 
 				selectedModels =
 					(chatContent?.models ?? undefined) !== undefined
@@ -1240,7 +1258,7 @@
 				// Stream response
 				let value = choices[0]?.delta?.content ?? '';
 				if (message.content == '' && value == '\n') {
-					console.log('Empty response');
+					console.info('Empty response');
 				} else {
 					message.content += value;
 
@@ -1366,7 +1384,7 @@
 			);
 		}
 
-		console.log(data);
+		console.info(data);
 		await tick();
 
 		if (autoScroll) {
@@ -1379,7 +1397,7 @@
 	//////////////////////////
 
 	const submitPrompt = async (userPrompt, { _raw = false } = {}) => {
-		console.log('submitPrompt', userPrompt, $chatId);
+		console.info('submitPrompt', userPrompt, $chatId);
 
 		const messages = createMessagesList(history, history.currentId);
 		const _selectedModels = selectedModels.map((modelId) =>
@@ -1428,6 +1446,29 @@
 			return;
 		}
 
+		filesAndChatFilesTotalSize = 0;
+		_chatFiles = [];
+
+		_chatFiles.push(...chatFiles.filter((item) => ['file'].includes(item.type)));
+		const _files = JSON.parse(JSON.stringify(files));
+		_chatFiles.push(..._files.filter((item) => ['file'].includes(item.type)));
+		
+		console.info('== _chatFiles:', {_chatFiles});
+
+		_chatFiles.forEach((itemfile) => {filesAndChatFilesTotalSize = filesAndChatFilesTotalSize + itemfile.size;});
+
+		if (
+			($config?.file?.max_size ?? null) !== null &&
+			filesAndChatFilesTotalSize > $config?.file?.max_size
+		) {
+			toast.error(
+				$i18n.t(`You can only chat with a maximum of {{maxCount}} file(s) at a time.`, {
+					maxCount: $config?.file?.max_count
+				})
+			);
+			return;
+		}
+
 		messageInput?.setText('');
 
 		// Reset chat input textarea
@@ -1440,8 +1481,13 @@
 			}
 		}
 
+		console.info('== files:', {files});
+
 		const _files = JSON.parse(JSON.stringify(files));
 		chatFiles.push(..._files.filter((item) => ['doc', 'file', 'collection'].includes(item.type)));
+
+		console.info('== chatFiles:', {chatFiles});
+
 		chatFiles = chatFiles.filter(
 			// Remove duplicates
 			(item, index, array) =>
@@ -1463,6 +1509,8 @@
 			timestamp: Math.floor(Date.now() / 1000), // Unix epoch
 			models: selectedModels
 		};
+
+		console.info('== _files:', {_files});
 
 		// Add message to history and Set currentId to messageId
 		history.messages[userMessageId] = userMessage;
@@ -1552,7 +1600,7 @@
 
 		await Promise.all(
 			selectedModelIds.map(async (modelId, _modelIdx) => {
-				console.log('modelId', modelId);
+				console.info('modelId', modelId);
 				const model = $models.filter((m) => m.id === modelId).at(0);
 
 				if (model) {
@@ -1597,23 +1645,32 @@
 			.filter((message) => message.files)
 			.flatMap((message) => message.files);
 
+		console.info('-- chatMessageFiles:', {chatMessageFiles});
+
 		// Filter chatFiles to only include files that are in the chatMessageFiles
 		chatFiles = chatFiles.filter((item) => {
 			const fileExists = chatMessageFiles.some((messageFile) => messageFile.id === item.id);
 			return fileExists;
 		});
 
+		console.info('-- chatFiles:', {chatFiles});
+		
 		let files = JSON.parse(JSON.stringify(chatFiles));
 		files.push(
 			...(userMessage?.files ?? []).filter((item) =>
 				['doc', 'text', 'file', 'note', 'collection'].includes(item.type)
 			)
 		);
+
+		console.info('-- files:', {files});
+
 		// Remove duplicates
 		files = files.filter(
 			(item, index, array) =>
 				array.findIndex((i) => JSON.stringify(i) === JSON.stringify(item)) === index
 		);
+
+		console.info('-- files fin:', {files});
 
 		scrollToBottom();
 		eventTarget.dispatchEvent(
@@ -1791,6 +1848,9 @@
 		await tick();
 		scrollToBottom();
 	};
+	const handleSynthetic = () => {
+		syntheticShow = true;
+	};
 
 	const handleOpenAIError = async (error, responseMessage) => {
 		let errorMessage = '';
@@ -1893,7 +1953,7 @@
 	};
 
 	const regenerateResponse = async (message) => {
-		console.log('regenerateResponse');
+		console.info('regenerateResponse');
 
 		if (history.currentId) {
 			let userMessage = history.messages[message.parentId];
@@ -1918,7 +1978,7 @@
 	};
 
 	const continueResponse = async () => {
-		console.log('continueResponse');
+		console.info('continueResponse');
 		const _chatId = JSON.parse(JSON.stringify($chatId));
 
 		if (history.currentId && history.messages[history.currentId].done == true) {
@@ -1937,7 +1997,7 @@
 	};
 
 	const mergeResponses = async (messageId, responses, _chatId) => {
-		console.log('mergeResponses', messageId, responses);
+		console.info('mergeResponses', messageId, responses);
 		const message = history.messages[messageId];
 		const mergedResponse = {
 			status: true,
@@ -2167,6 +2227,11 @@
 									bind:webSearchEnabled
 									bind:atSelectedModel
 									bind:showCommands
+									{handleSynthetic}
+									{getFilesHandler}
+									openFilesTable={() => {
+										show = true;
+									}}
 									toolServers={$toolServers}
 									transparentBackground={$settings?.backgroundImageUrl ??
 										$config?.license_metadata?.background_image_url ??
@@ -2233,6 +2298,8 @@
 									transparentBackground={$settings?.backgroundImageUrl ??
 										$config?.license_metadata?.background_image_url ??
 										false}
+									{handleSynthetic}
+									{getFilesHandler}
 									toolServers={$toolServers}
 									{stopResponse}
 									{createMessagePair}
@@ -2260,6 +2327,31 @@
 							</div>
 						{/if}
 					</div>
+					<Modal size="2xl" bind:show
+						><Table
+							handleClose={() => {
+								show = false;
+							}}
+							setFile={(file) => {
+								files = [...files, file];
+								show = false;
+							}}
+							bind:allFiles
+						/></Modal
+					>
+					<Modal size="2xl" bind:show={syntheticShow}
+						><Table
+							handleClose={() => {
+								syntheticShow = false;
+							}}
+							setFile={(file) => {
+								files = [...files, file];
+								syntheticShow = false;
+								console.info('selected file added:', { files });
+							}}
+							bind:allFiles={syntheticFiles}
+						/></Modal
+					>
 				</Pane>
 
 				<ChatControls

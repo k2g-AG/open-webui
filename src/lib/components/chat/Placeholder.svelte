@@ -40,7 +40,7 @@
 	export let selectedModels: [''];
 
 	export let history;
-
+	export let getFilesHandler: Function;
 	export let prompt = '';
 	export let files = [];
 	export let messageInput = null;
@@ -53,6 +53,7 @@
 	export let imageGenerationEnabled = false;
 	export let codeInterpreterEnabled = false;
 	export let webSearchEnabled = false;
+	export let handleSynthetic: Function;
 
 	export let onSelect = (e) => {};
 
@@ -207,7 +208,9 @@
 				<MessageInput
 					bind:this={messageInput}
 					{history}
+					{getFilesHandler}
 					{selectedModels}
+					{handleSynthetic}
 					bind:files
 					bind:prompt
 					bind:autoScroll
