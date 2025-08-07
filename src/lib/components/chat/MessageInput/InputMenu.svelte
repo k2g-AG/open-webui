@@ -68,7 +68,10 @@
 	console.info('====>> selected_models:', { selected_models });
 	$: fse_array = selected_models.map((selected_model) => selected_model.info?.meta?.capabilities?.file_synthetic_enable);
 	console.info('====>> fse_array:', { fse_array });
-	$: fse_array.forEach((fse) => file_synthetic_models_enable = file_synthetic_models_enable || fse );
+	$: fse_array.forEach((fse) => {
+		file_synthetic_models_enable = file_synthetic_models_enable || fse;
+		console.info('====>> fse:', { fse });
+	});
 
 	let syntheticFilesEnabled = true;
 	$: syntheticFilesEnabled =
