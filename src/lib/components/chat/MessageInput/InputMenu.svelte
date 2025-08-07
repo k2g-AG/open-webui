@@ -63,7 +63,9 @@
 	$: directSyntheticFileUploadEnabled = $user?.role === 'admin';
 
 	let file_synthetic_models_enable = false;
-	$: fse_array = $models.filter((m) => selectedModels.includes(m.id)).map((selected_model) => selected_model.info?.meta?.capabilities?.file_synthetic_enable);
+	$: selected_models = $models.filter((m) => selectedModels.includes(m.id));
+	console.info('====>> selected_models:', { selected_models });
+	$: fse_array = selected_models.map((selected_model) => selected_model.info?.meta?.capabilities?.file_synthetic_enable);
 	console.info('====>> fse_array:', { fse_array });
 	$: fse_array.forEach((fse) => file_synthetic_models_enable = file_synthetic_models_enable || fse );
 
