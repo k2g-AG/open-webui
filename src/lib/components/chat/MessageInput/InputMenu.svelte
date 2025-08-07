@@ -63,6 +63,7 @@
 	$: directSyntheticFileUploadEnabled = $user?.role === 'admin';
 
 	let file_synthetic_models_enable = false;
+	console.info('====>> $models:', $models );
 	$: selected_models = $models.filter((m) => selectedModels.includes(m.id));
 	console.info('====>> selected_models:', { selected_models });
 	$: fse_array = selected_models.map((selected_model) => selected_model.info?.meta?.capabilities?.file_synthetic_enable);
