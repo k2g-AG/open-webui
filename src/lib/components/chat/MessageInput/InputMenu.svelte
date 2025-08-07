@@ -3,7 +3,7 @@
 	import { flyAndScale } from '$lib/utils/transitions';
 	import { getContext, onMount, tick } from 'svelte';
 
-	import { config, user, tools as _tools, mobile } from '$lib/stores';
+	import { config, user, tools as _tools, mobile, models } from '$lib/stores';
 	import { createPicker } from '$lib/utils/google-drive-picker';
 
 	import { getTools } from '$lib/apis/tools';
@@ -62,9 +62,14 @@
 	let directSyntheticFileUploadEnabled = true;
 	$: directSyntheticFileUploadEnabled = $user?.role === 'admin';
 
+	let file_synthetic_models_enable = false;
+	$: fse_array = $models.filter((m) => selectedModels.includes(m.id)).map((selected_model) => selected_model.info?.meta?.capabilities?.file_synthetic_enable);
+	console.info('====>> fse_array:', { fse_array });
+	$: fse_array.forEach((fse) => file_synthetic_models_enable = file_synthetic_models_enable || fse );
+
 	let syntheticFilesEnabled = true;
 	$: syntheticFilesEnabled =
-		$user?.permissions?.chat?.file_synthetic_enable && $config?.file?.file_synthetic_enable;
+		$user?.permissions?.chat?.file_synthetic_enable && file_synthetic_models_enable;
 
 	console.info('====>> $user?.permissions?.chat:', $user?.permissions?.chat );
 	console.info('====>> $config?.file:', $config?.file );
