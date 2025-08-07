@@ -262,7 +262,10 @@
 							: ''}"
 					on:click={() => {
 						console.log('Files handler', getFilesHandler);
-						getFilesHandler();
+						console.log('syntheticFilesEnabled:', syntheticFilesEnabled);
+						if (syntheticFilesEnabled){
+							getFilesHandler();
+						}
 					}}
 				>
 					<DocumentArrowUpSolid />
@@ -284,7 +287,10 @@
 							: ''}"
 						on:click={() => {
 							console.log('Files handler', getFilesHandler);
-							handleSynthetic();
+							console.log('syntheticFilesEnabled:', syntheticFilesEnabled);
+							if (syntheticFilesEnabled){
+								handleSynthetic();
+							}
 						}}
 					>
 						<SyntheticDataset />
