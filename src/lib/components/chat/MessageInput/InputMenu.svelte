@@ -61,6 +61,7 @@
 
 	let directSyntheticFileUploadEnabled = true;
 	$: directSyntheticFileUploadEnabled = $user?.role === 'admin';
+
 	let syntheticFilesEnabled = true;
 	$: syntheticFilesEnabled =
 		$user?.permissions?.chat?.file_synthetic_enable && $config?.file?.file_synthetic_enable;
@@ -68,6 +69,7 @@
 	console.info('====>> $user?.permissions?.chat:', $user?.permissions?.chat );
 	console.info('====>> $config?.file:', $config?.file );
 	console.info('====>> $config:', $config );
+	console.info('====>> selectedModels:', { selectedModels });
 
 	const init = async () => {
 		if ($_tools === null) {
