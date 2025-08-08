@@ -781,7 +781,7 @@
 	const inputFilesHandler = async (inputFiles) => {
 		console.info('Input files handler called with:', inputFiles);
 
-		let filtered = filterFilesUpload($config?.file?.allow_file_extensions, inputFiles, false);
+		let filtered = await filterFilesUpload($config?.file?.allow_file_extensions, inputFiles, false);
 		console.info('filtered:', filtered);
 		if (!filtered) {
 			return;
@@ -934,7 +934,7 @@
 
 	const inputDirectFilesHandler = async (inputFiles) => {
 		console.info('Input files handler called with:', inputFiles);
-		let filtered = filterFilesUpload($config?.file?.allow_direct_file_extensions, inputFiles, true);
+		let filtered = await filterFilesUpload($config?.file?.allow_direct_file_extensions, inputFiles, true);
 		console.info('filtered:', filtered);
 		if (!filtered) {
 			return;
