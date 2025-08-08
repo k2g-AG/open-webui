@@ -661,14 +661,20 @@
 		if (directType) {
 			total_files.push(...allFiles
 				// .filter((item) => ['file'].includes(item.type))
-				.filter((item) => item.file?.meta?.data?.uploadType === 'direct')
-				.filter((item) => item.file?.meta?.data?.synthetic !== true)
+				.filter((item) => {
+					console.info('==> item.file?.meta?.data?.uploadType:', {uploadType: item.meta?.data?.uploadType});
+					return item.meta?.data?.uploadType === 'direct';
+				})
+				.filter((item) => {
+					console.info('==> item.meta?.data?.synthetic:', {synthetic: item.meta?.data?.synthetic});
+					return item.meta?.data?.synthetic !== true;
+				})
 			);
 		} else {
 			total_files.push(...allFiles
 				// .filter((item) => ['file'].includes(item.type))
-				.filter((item) => item.file?.meta?.data?.uploadType !== 'direct')
-				.filter((item) => item.file?.meta?.data?.synthetic !== true));
+				.filter((item) => item.meta?.data?.uploadType !== 'direct')
+				.filter((item) => item.meta?.data?.synthetic !== true));
 		}
 		console.info('==> total_files:', {total_files});
 
@@ -678,14 +684,14 @@
 		if (directType) {
 			total_chatFiles.push(...inputFiles
 				// .filter((item) => ['file'].includes(item.type))
-				// .filter((item) => ((item.file?.meta?.data?.uploadType === 'direct') && !(item.file?.meta?.data?.synthetic === true)))
-				.filter((item) => item.file?.meta?.data?.synthetic !== true)
+				// .filter((item) => ((item.meta?.data?.uploadType === 'direct') && !(item.meta?.data?.synthetic === true)))
+				.filter((item) => item.meta?.data?.synthetic !== true)
 			);
 		} else {
 			total_chatFiles.push(...inputFiles
 				// .filter((item) => ['file'].includes(item.type))
-				// .filter((item) => (!(item.file?.meta?.data?.uploadType === 'direct') && !(item.file?.meta?.data?.synthetic === true)))
-				.filter((item) => item.file?.meta?.data?.synthetic !== true)
+				// .filter((item) => (!(item.meta?.data?.uploadType === 'direct') && !(item.meta?.data?.synthetic === true)))
+				.filter((item) => item.meta?.data?.synthetic !== true)
 			);
 		}
 		console.info('==> total_chatFiles:', {total_chatFiles});
