@@ -661,8 +661,14 @@
 		if (directType) {
 			total_files.push(...allFiles
 				// .filter((item) => ['file'].includes(item.type))
-				.filter((item) => item.file?.meta?.data?.uploadType === 'direct')
-				.filter((item) => item.file?.meta?.data?.synthetic !== true)
+				.filter((item) => {
+					console.info('==> item.file?.meta?.data?.uploadType:', {uploadType: item.file?.meta?.data?.uploadType});
+					return item.file?.meta?.data?.uploadType === 'direct';
+				})
+				.filter((item) => {
+					console.info('==> item.file?.meta?.data?.synthetic:', {synthetic: item.file?.meta?.data?.synthetic});
+					return item.file?.meta?.data?.synthetic !== true;
+				})
 			);
 		} else {
 			total_files.push(...allFiles
