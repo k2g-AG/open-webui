@@ -48,18 +48,20 @@
 		init();
 	}
 
-	let fileUploadEnabled = true;
+	let fileUploadEnabled = false;
 	$: fileUploadEnabled =
 		fileUploadCapableModels.length === selectedModels.length &&
+		selectedModels.length > 0 &&
 		($user?.role === 'admin' || $user?.permissions?.chat?.file_upload);
 
-	let directFileUploadEnabled = true;
+	let directFileUploadEnabled = false;
 	$: directFileUploadEnabled =
 		fileUploadCapableModels.length === selectedModels.length &&
+		selectedModels.length > 0 &&
 		($user?.role === 'admin' || $user?.permissions?.chat?.file_direct_upload) &&
 		$config?.file?.enable_direct_file_upload;
 
-	let directSyntheticFileUploadEnabled = true;
+	let directSyntheticFileUploadEnabled = false;
 	$: directSyntheticFileUploadEnabled = $user?.role === 'admin';
 
 	let file_synthetic_models_enable = false;
@@ -67,9 +69,8 @@
 		.map((selected_model) => selected_model.info?.meta?.capabilities?.file_synthetic_enable)
 		.forEach((fse) => file_synthetic_models_enable = file_synthetic_models_enable || fse);
 
-	let syntheticFilesEnabled = true;
-	$: syntheticFilesEnabled =
-		$user?.permissions?.chat?.file_synthetic_enable && file_synthetic_models_enable;
+	let syntheticFilesEnabled = false;
+	$: syntheticFilesEnabled = $user?.permissions?.chat?.file_synthetic_enable && file_synthetic_models_enable;
 
 	const init = async () => {
 		if ($_tools === null) {
