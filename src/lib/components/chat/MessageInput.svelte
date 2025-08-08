@@ -644,28 +644,32 @@
 		if (error) {
 			return false;
 		}
-		
+
+		console.info('==> in files:', {files});
+
 		let total_files = [];
 		if (directType) {
 			total_files.push(...files
 				// .filter((item) => ['file'].includes(item.type))
-				.filter((item) => ((item.file.meta.data.uploadType === 'direct') && !(item.file.meta.data.synthetic === true))));
+				.filter((item) => ((item.file?.meta?.data?.uploadType === 'direct') && !(item.file?.meta?.data?.synthetic === true))));
 		} else {
 			total_files.push(...files
 				// .filter((item) => ['file'].includes(item.type))
-				.filter((item) => (!(item.file.meta.data.uploadType === 'direct') && !(item.file.meta.data.synthetic === true))));
+				.filter((item) => (!(item.file?.meta?.data?.uploadType === 'direct') && !(item.file?.meta?.data?.synthetic === true))));
 		}
 		console.info('==> total_files:', {total_files});
+
+		console.info('==> in inputFiles:', {inputFiles});
 
 		let total_chatFiles = [];
 		if (directType) {
 			total_chatFiles.push(...inputFiles
 				// .filter((item) => ['file'].includes(item.type))
-				.filter((item) => ((item.file.meta.data.uploadType === 'direct') && !(item.file.meta.data.synthetic === true))));
+				.filter((item) => ((item.file?.meta?.data?.uploadType === 'direct') && !(item.file?.meta?.data?.synthetic === true))));
 		} else {
 			total_chatFiles.push(...inputFiles
 				// .filter((item) => ['file'].includes(item.type))
-				.filter((item) => (!(item.file.meta.data.uploadType === 'direct') && !(item.file.meta.data.synthetic === true))));
+				.filter((item) => (!(item.file?.meta?.data?.uploadType === 'direct') && !(item.file?.meta?.data?.synthetic === true))));
 		}
 		console.info('==> total_chatFiles:', {total_chatFiles});
 
