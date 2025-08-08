@@ -3,7 +3,7 @@
 	import { flyAndScale } from '$lib/utils/transitions';
 	import { getContext, onMount, tick } from 'svelte';
 
-	import { config, user, tools as _tools, mobile } from '$lib/stores';
+	import { config, user, tools as _tools, mobile, models } from '$lib/stores';
 	import { createPicker } from '$lib/utils/google-drive-picker';
 
 	import { getTools } from '$lib/apis/tools';
@@ -48,22 +48,31 @@
 		init();
 	}
 
-	let fileUploadEnabled = true;
+	let fileUploadEnabled = false;
 	$: fileUploadEnabled =
 		fileUploadCapableModels.length === selectedModels.length &&
+		selectedModels.length > 0 &&
 		($user?.role === 'admin' || $user?.permissions?.chat?.file_upload);
 
-	let directFileUploadEnabled = true;
+	let directFileUploadEnabled = false;
 	$: directFileUploadEnabled =
 		fileUploadCapableModels.length === selectedModels.length &&
+		selectedModels.length > 0 &&
 		($user?.role === 'admin' || $user?.permissions?.chat?.file_direct_upload) &&
 		$config?.file?.enable_direct_file_upload;
 
-	let directSyntheticFileUploadEnabled = true;
+	let directSyntheticFileUploadEnabled = false;
 	$: directSyntheticFileUploadEnabled = $user?.role === 'admin';
-	let syntheticFilesEnabled = true;
+
+	let file_synthetic_models_enable = false;
+	$: $models
+		.filter((m) => selectedModels.includes(m.id))
+		.map((selected_model) => selected_model.info?.meta?.capabilities?.file_synthetic_enable)
+		.forEach((fse) => (file_synthetic_models_enable = file_synthetic_models_enable || fse));
+
+	let syntheticFilesEnabled = false;
 	$: syntheticFilesEnabled =
-		$user?.permissions?.chat?.file_synthetic_enable && $config?.file?.file_synthetic_enable;
+		$user?.permissions?.chat?.file_synthetic_enable && file_synthetic_models_enable;
 
 	const init = async () => {
 		if ($_tools === null) {

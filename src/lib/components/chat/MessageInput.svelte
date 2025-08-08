@@ -45,9 +45,8 @@
 		getUserTimezone,
 		getWeekday
 	} from '$lib/utils';
-	import { uploadFile, uploadDirectFile } from '$lib/apis/files';
+	import { getFiles, uploadFile, uploadDirectFile, deleteFileById } from '$lib/apis/files';
 	import { generateAutoCompletion } from '$lib/apis';
-	import { deleteFileById } from '$lib/apis/files';
 
 	import { WEBUI_BASE_URL, WEBUI_API_BASE_URL, PASTED_TEXT_CHARACTER_LIMIT } from '$lib/constants';
 
@@ -72,6 +71,7 @@
 
 	import { KokoroWorker } from '$lib/workers/KokoroWorker';
 	import InputVariablesModal from './MessageInput/InputVariablesModal.svelte';
+
 	const i18n = getContext('i18n');
 
 	export let transparentBackground = false;
@@ -583,7 +583,6 @@
 			}
 		} else {
 			// If temporary chat is enabled, we just add the file to the list without uploading it.
-
 			const content = await extractContentFromFile(file, pdfjsLib).catch((error) => {
 				toast.error(
 					$i18n.t('Failed to extract content from the file: {{error}}', { error: error })
@@ -612,18 +611,182 @@
 		}
 	};
 
+	const filterFilesUpload = async (extensions, inputFiles, directType) => {
+		if ($_user?.role == 'admin') {
+			toast.error($i18n.t('You have admin permission with no limits to upload files.'));
+			return true;
+		}
+
+		let allow_direct_file_extensions = extensions;
+		if (typeof extensions === 'string') {
+			allow_direct_file_extensions = extensions
+				.split(',')
+				.map((ext) => ext.trim().toLowerCase());
+		}
+
+		console.info('==> allow_direct_file_extensions:', {allow_direct_file_extensions});
+
+		let error = false;
+
+		inputFiles.forEach((file) => {
+			let fileExtension = file.name.split('.').at(-1);
+
+			if (!allow_direct_file_extensions.includes(fileExtension.toLowerCase())) {
+				toast.error(
+					$i18n.t(`You can only chat allow file extensions of {{allow_direct_file_extensions}} file(s) at a time.`, {
+						allow_direct_file_extensions: extensions
+					})
+				);
+				error = true;
+			}
+		});
+
+		if (error) {
+			return false;
+		}
+
+		let allFiles = [];
+		try {
+			const res = await getFiles(localStorage.token);
+			console.info('getFiles:', { res });
+			allFiles = res;
+		} catch (error) {
+			console.warn('getFiles error:', { error });
+		}
+
+
+		console.info('==> in files:', {allFiles});
+
+		let total_files = [];
+		if (directType) {
+			total_files.push(...allFiles
+				// .filter((item) => ['file'].includes(item.type))
+				.filter((item) => item.file?.meta?.data?.uploadType === 'direct')
+				.filter((item) => item.file?.meta?.data?.synthetic !== true)
+			);
+		} else {
+			total_files.push(...allFiles
+				// .filter((item) => ['file'].includes(item.type))
+				.filter((item) => item.file?.meta?.data?.uploadType !== 'direct')
+				.filter((item) => item.file?.meta?.data?.synthetic !== true));
+		}
+		console.info('==> total_files:', {total_files});
+
+		console.info('==> in inputFiles:', {inputFiles});
+
+		let total_chatFiles = [];
+		if (directType) {
+			total_chatFiles.push(...inputFiles
+				// .filter((item) => ['file'].includes(item.type))
+				// .filter((item) => ((item.file?.meta?.data?.uploadType === 'direct') && !(item.file?.meta?.data?.synthetic === true)))
+				.filter((item) => item.file?.meta?.data?.synthetic !== true)
+			);
+		} else {
+			total_chatFiles.push(...inputFiles
+				// .filter((item) => ['file'].includes(item.type))
+				// .filter((item) => (!(item.file?.meta?.data?.uploadType === 'direct') && !(item.file?.meta?.data?.synthetic === true)))
+				.filter((item) => item.file?.meta?.data?.synthetic !== true)
+			);
+		}
+		console.info('==> total_chatFiles:', {total_chatFiles});
+
+		// check unique files by file.id if file.id exist
+		let unique_files_by_id = [];
+		let new_files = [];
+		let files_id = [];
+		total_files.forEach((file) => {
+			if (file.id) {
+				if (!files_id.includes(file.id)) {
+					unique_files_by_id.push(file);
+					files_id.push(file.id);
+				}
+			} else {
+				new_files.push(file);
+			}
+		});
+		
+		total_chatFiles.forEach((file) => {
+			if (file.id) {
+				if (!files_id.includes(file.id)) {
+					unique_files_by_id.push(file);
+					files_id.push(file.id);
+				}
+			} else {
+				new_files.push(file);
+			}
+		});
+		
+		console.info('==> files_id:', {files_id});
+		console.info('==> unique_files_by_id:', {unique_files_by_id});
+		console.info('==> new_files:', {new_files});
+		
+		if (directType) {
+			if (
+				($config?.file?.direct_max_count ?? null) !== null &&
+				unique_files_by_id.length + new_files.length > $config?.file?.direct_max_count
+			) {
+				toast.error(
+					$i18n.t(`You can only chat with a maximum of {{maxCount}} file(s) at a time.`, {
+						maxCount: $config?.file?.direct_max_count
+					})
+				);
+				return false;
+			}
+		} else {
+			if (
+				($config?.file?.max_count ?? null) !== null &&
+				unique_files_by_id.length + new_files.length > $config?.file?.max_count
+			) {
+				toast.error(
+					$i18n.t(`You can only chat with a maximum of {{maxCount}} file(s) at a time.`, {
+						maxCount: $config?.file?.max_count
+					})
+				);
+				return false;
+			}
+		}
+
+		let filesAndChatFilesTotalSize = 0;
+		unique_files_by_id.forEach((itemFile) => {filesAndChatFilesTotalSize = filesAndChatFilesTotalSize + itemFile.size;});
+		new_files.forEach((itemFile) => {filesAndChatFilesTotalSize = filesAndChatFilesTotalSize + itemFile.size;});
+
+		if (directType) {
+			if (
+				($config?.file?.direct_max_size ?? null) !== null &&
+				filesAndChatFilesTotalSize > $config?.file?.direct_max_size * 1024 * 1024
+			) {
+				toast.error(
+					$i18n.t(`You can only chat with a maximum of file(s) size - {{max_size}} with current file(s) size - {{current_total_size}} at a time.`, {
+						max_size: $config?.file?.direct_max_size * 1024 * 1024,
+						current_total_size: filesAndChatFilesTotalSize
+					})
+				);
+				return false;
+			}
+		} else {
+			if (
+				($config?.file?.max_size ?? null) !== null &&
+				filesAndChatFilesTotalSize > $config?.file?.max_size * 1024 * 1024
+			) {
+				toast.error(
+					$i18n.t(`You can only chat with a maximum of file(s) size - {{max_size}} with current file(s) size - {{current_total_size}} at a time.`, {
+						max_size: $config?.file?.max_size * 1024 * 1024,
+						current_total_size: filesAndChatFilesTotalSize
+					})
+				);
+				return false;
+			}
+		}
+
+		return true;
+	};
+
 	const inputFilesHandler = async (inputFiles) => {
 		console.info('Input files handler called with:', inputFiles);
 
-		if (
-			($config?.file?.max_count ?? null) !== null &&
-			files.length + inputFiles.length > $config?.file?.max_count
-		) {
-			toast.error(
-				$i18n.t(`You can only chat with a maximum of {{maxCount}} file(s) at a time.`, {
-					maxCount: $config?.file?.max_count
-				})
-			);
+		let filtered = await filterFilesUpload($config?.file?.allow_file_extensions, inputFiles, false);
+		console.info('filtered:', filtered);
+		if (!filtered) {
 			return;
 		}
 
@@ -634,22 +797,6 @@
 				size: file.size,
 				extension: file.name.split('.').at(-1)
 			});
-
-			if (
-				($config?.file?.max_size ?? null) !== null &&
-				file.size > ($config?.file?.max_size ?? 0) * 1024 * 1024
-			) {
-				console.info('File exceeds max size limit:', {
-					fileSize: file.size,
-					maxSize: ($config?.file?.max_size ?? 0) * 1024 * 1024
-				});
-				toast.error(
-					$i18n.t(`File size should not exceed {{maxSize}} MB.`, {
-						maxSize: $config?.file?.max_size
-					})
-				);
-				return;
-			}
 
 			if (file['type'].startsWith('image/')) {
 				if (visionCapableModels.length === 0) {
@@ -790,81 +937,13 @@
 
 	const inputDirectFilesHandler = async (inputFiles) => {
 		console.info('Input files handler called with:', inputFiles);
-
-		if (
-			($config?.file?.direct_max_count ?? null) !== null &&
-			files.length + inputFiles.length > $config?.file?.direct_max_count
-		) {
-			toast.error(
-				$i18n.t(`You can only chat with a maximum of {{maxCount}} file(s) at a time.`, {
-					maxCount: $config?.file?.direct_max_count
-				})
-			);
+		let filtered = await filterFilesUpload($config?.file?.allow_direct_file_extensions, inputFiles, true);
+		console.info('filtered:', filtered);
+		if (!filtered) {
 			return;
 		}
 
-		let allow_direct_file_extensions = $config?.file?.allow_direct_file_extensions;
-		if (typeof $config?.file?.allow_direct_file_extensions === 'string') {
-			allow_direct_file_extensions = $config?.file?.allow_direct_file_extensions
-				.split(',')
-				.map((ext) => ext.trim().toLowerCase());
-		}
-
-		let totalFileSize = 0;
-		let inputFilesFiltered = [];
-
-		files.forEach((file) => {
-			let extension = file.name.split('.').at(-1);
-
-			if (allow_direct_file_extensions.includes(extension.toLowerCase())) {
-				totalFileSize += file.size;
-			}
-
-			if (
-				($config?.file?.direct_max_size ?? null) !== null &&
-				totalFileSize > ($config?.file?.direct_max_size ?? 0) * 1024 * 1024
-			) {
-				console.warn('Files total exceeds max size limit:', {
-					totalFileSize: totalFileSize,
-					maxSize: ($config?.file?.direct_max_size ?? 0) * 1024 * 1024
-				});
-				toast.error(
-					$i18n.t(`Files size total should not exceed {{maxSize}} MB.`, {
-						maxSize: $config?.file?.direct_max_size
-					})
-				);
-				inputFilesFiltered = [];
-				return;
-			}
-		});
-
-		inputFiles.forEach((file) => {
-			let extension = file.name.split('.').at(-1);
-
-			if (allow_direct_file_extensions.includes(extension.toLowerCase())) {
-				totalFileSize += file.size;
-				inputFilesFiltered = [...inputFilesFiltered, file];
-			}
-
-			if (
-				($config?.file?.direct_max_size ?? null) !== null &&
-				totalFileSize > ($config?.file?.direct_max_size ?? 0) * 1024 * 1024
-			) {
-				console.warn('Files total exceeds max size limit:', {
-					totalFileSize: totalFileSize,
-					maxSize: ($config?.file?.direct_max_size ?? 0) * 1024 * 1024
-				});
-				toast.error(
-					$i18n.t(`Files size total should not exceed {{maxSize}} MB.`, {
-						maxSize: $config?.file?.direct_max_size
-					})
-				);
-				inputFilesFiltered = [];
-				return;
-			}
-		});
-
-		inputFilesFiltered.forEach(async (file) => {
+		inputFiles.forEach(async (file) => {
 			let extension = file.name.split('.').at(-1);
 			console.info('Processing file:', {
 				name: file.name,
@@ -880,53 +959,7 @@
 	const inputSyntheticDirectFilesHandler = async (inputFiles) => {
 		console.info('Input files handler called with:', inputFiles);
 
-		if (
-			($config?.file?.direct_max_count ?? null) !== null &&
-			files.length + inputFiles.length > $config?.file?.direct_max_count
-		) {
-			toast.error(
-				$i18n.t(`You can only chat with a maximum of {{maxCount}} file(s) at a time.`, {
-					maxCount: $config?.file?.direct_max_count
-				})
-			);
-			return;
-		}
-
-		let allow_direct_file_extensions = $config?.file?.allow_direct_file_extensions;
-		if (typeof $config?.file?.allow_direct_file_extensions === 'string') {
-			allow_direct_file_extensions = $config?.file?.allow_direct_file_extensions
-				.split(',')
-				.map((ext) => ext.trim().toLowerCase());
-		}
-
-		let totalFileSize = 0;
-		let inputFilesFiltered = [];
-		inputFiles.forEach((file) => {
-			let extension = file.name.split('.').at(-1);
-
-			if (allow_direct_file_extensions.includes(extension.toLowerCase())) {
-				totalFileSize += file.size;
-				inputFilesFiltered = [...inputFilesFiltered, file];
-			}
-
-			if (
-				($config?.file?.direct_max_size ?? null) !== null &&
-				totalFileSize > ($config?.file?.direct_max_size ?? 0) * 1024 * 1024
-			) {
-				console.warn('Files total exceeds max size limit:', {
-					totalFileSize: totalFileSize,
-					maxSize: ($config?.file?.direct_max_size ?? 0) * 1024 * 1024
-				});
-				toast.error(
-					$i18n.t(`Files size total should not exceed {{maxSize}} MB.`, {
-						maxSize: $config?.file?.direct_max_size
-					})
-				);
-				return;
-			}
-		});
-
-		inputFilesFiltered.forEach(async (file) => {
+		inputFiles.forEach(async (file) => {
 			let extension = file.name.split('.').at(-1);
 			console.info('Processing file:', {
 				name: file.name,
@@ -959,16 +992,30 @@
 	const onDrop = async (e) => {
 		e.preventDefault();
 		console.info(e);
+		let filsDropProcessed = false;
 
 		if (e.dataTransfer?.files) {
 			const inputFiles = Array.from(e.dataTransfer?.files);
 			if (inputFiles && inputFiles.length > 0) {
 				console.info(inputFiles);
-				inputFilesHandler(inputFiles);
+				if ($user?.permissions?.chat?.file_direct_upload) {
+					console.info('drop files for direct upload...');
+					inputDirectFilesHandler(inputFiles);
+					filsDropProcessed = true;
+				} else {
+					if ($user?.permissions?.chat?.file_upload) {
+						console.info('drop files for vector upload...');
+						inputFilesHandler(inputFiles);
+						filsDropProcessed = true;
+					}
+				}
 			}
 		}
-
 		dragged = false;
+		if (filsDropProcessed) {
+			return;
+		}
+		toast.error($i18n.t('You do not have permission to upload files.'));
 	};
 
 	const onKeyDown = (e) => {

@@ -481,9 +481,12 @@
 			syntheticFiles = res.filter((item) => {
 				return !!item.meta.data.synthetic;
 			});
-			console.info('syntheticFiles:', { res });
+			console.info('syntheticFiles:', { syntheticFiles });
 			allFiles = res;
-		} catch (error) {}
+		} catch (error) {
+			console.warn('getFiles error:', { error });
+		}
+
 		const storageChatInput = sessionStorage.getItem(
 			`chat-input${chatIdProp ? `-${chatIdProp}` : ''}`
 		);
@@ -1431,50 +1434,6 @@
 		) {
 			toast.error(
 				$i18n.t(`Oops! There are files still uploading. Please wait for the upload to complete.`)
-			);
-			return;
-		}
-		
-		console.info('== files:', {files});
-		console.info('== chatFiles:', {chatFiles});
-		console.info('== $config?.file?.direct_max_count:', $config?.file?.direct_max_count);
-
-		let direct_files = [];
-		direct_files.push(...files.filter((item) => ((item.file.meta.data.uploadType === 'direct') && (item.file.meta.data.synthetic === false))));
-		let direct_chatFiles = [];
-		direct_chatFiles.push(...chatFiles.filter((item) => ((item.file.meta.data.uploadType === 'direct') && (item.file.meta.data.synthetic === false))));
-		if (
-			($config?.file?.direct_max_count ?? null) !== null &&
-			direct_files.length + direct_chatFiles.length > $config?.file?.direct_max_count
-		) {
-			toast.error(
-				$i18n.t(`You can only chat with a maximum of {{maxCount}} file(s) at a time.`, {
-					maxCount: $config?.file?.direct_max_count
-				})
-			);
-			return;
-		}
-
-		let filesAndChatFilesTotalSize = 0;
-		let _chatFiles = [];
-
-		_chatFiles.push(...chatFiles.filter((item) => ['file'].includes(item.type)));
-		const _files_tmp = JSON.parse(JSON.stringify(files));
-		_chatFiles.push(..._files_tmp.filter((item) => ['file'].includes(item.type)));
-		
-		console.info('== _chatFiles:', {_chatFiles});
-
-		_chatFiles.forEach((itemFile) => {filesAndChatFilesTotalSize = filesAndChatFilesTotalSize + itemFile.size;});
-
-		if (
-			($config?.file?.max_size ?? null) !== null &&
-			filesAndChatFilesTotalSize > $config?.file?.direct_max_size * 1024 * 1024
-		) {
-			toast.error(
-				$i18n.t(`You can only chat with a maximum of file(s) size - {{max_size}} with current file(s) size - {{current_total_size}} at a time.`, {
-					max_size: $config?.file?.direct_max_size * 1024 * 1024,
-					current_total_size: filesAndChatFilesTotalSize
-				})
 			);
 			return;
 		}
