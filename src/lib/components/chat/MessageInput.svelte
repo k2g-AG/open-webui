@@ -626,6 +626,8 @@
 
 		console.info('==> allow_direct_file_extensions:', {allow_direct_file_extensions});
 
+		let error = false;
+
 		inputFiles.forEach((file) => {
 			let fileExtension = file.name.split('.').at(-1);
 
@@ -635,10 +637,14 @@
 						allow_direct_file_extensions: extensions
 					})
 				);
-				return false;
+				error = true;
 			}
 		});
 
+		if (error) {
+			return false;
+		}
+		
 		let total_files = [];
 		if (directType) {
 			total_files.push(...files
