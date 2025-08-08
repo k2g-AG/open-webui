@@ -624,6 +624,8 @@
 				.map((ext) => ext.trim().toLowerCase());
 		}
 
+		console.info('==> allow_direct_file_extensions:', {allow_direct_file_extensions});
+
 		inputFiles.forEach((file) => {
 			let fileExtension = file.name.split('.').at(-1);
 
@@ -637,38 +639,57 @@
 			}
 		});
 
-		let total_files = directType 
-			? files.filter((item) => ['file'].includes(item.type)).filter((item) => ((item.file.meta.data.uploadType === 'direct') && !(item.file.meta.data.synthetic === true)))
-			: files.filter((item) => ['file'].includes(item.type)).filter((item) => (!(item.file.meta.data.uploadType === 'direct') && !(item.file.meta.data.synthetic === true)));
+		let total_files = [];
+		if (directType) {
+			total_files.push(...files
+				.filter((item) => ['file'].includes(item.type))
+				.filter((item) => ((item.file.meta.data.uploadType === 'direct') && !(item.file.meta.data.synthetic === true))));
+		} else {
+			total_files.push(...files
+				.filter((item) => ['file'].includes(item.type))
+				.filter((item) => (!(item.file.meta.data.uploadType === 'direct') && !(item.file.meta.data.synthetic === true))));
+		}
 		console.info('==> total_files:', {total_files});
 
-		let total_chatFiles = directType 
-			? inputFiles.filter((item) => ['file'].includes(item.type)).filter((item) => ((item.file.meta.data.uploadType === 'direct') && !(item.file.meta.data.synthetic === true)))
-			: inputFiles.filter((item) => ['file'].includes(item.type)).filter((item) => (!(item.file.meta.data.uploadType === 'direct') && !(item.file.meta.data.synthetic === true)));
+		let total_chatFiles = [];
+		if (directType) {
+			total_chatFiles.push(...inputFiles
+				.filter((item) => ['file'].includes(item.type))
+				.filter((item) => ((item.file.meta.data.uploadType === 'direct') && !(item.file.meta.data.synthetic === true))));
+		} else {
+			total_chatFiles.push(...inputFiles
+				.filter((item) => ['file'].includes(item.type))
+				.filter((item) => (!(item.file.meta.data.uploadType === 'direct') && !(item.file.meta.data.synthetic === true))));
+		}
 		console.info('==> total_chatFiles:', {total_chatFiles});
 
 		// check unique files by file.id if file.id exist
 		let unique_files_by_id = [];
 		let new_files = [];
+		let files_id = [];
 		total_files.forEach((file) => {
 			if (file.id) {
 				if (!files_id.includes(file.id)) {
 					unique_files_by_id.push(...file);
-				}
-			} else {
-				new_files.push(...file);
-			}
-		});
-		total_chatFiles.forEach((file) => {
-			if (file.id) {
-				if (!files_id.includes(file.id)) {
-					unique_files_by_id.push(...file);
+					files_id.push(...file.id);
 				}
 			} else {
 				new_files.push(...file);
 			}
 		});
 		
+		total_chatFiles.forEach((file) => {
+			if (file.id) {
+				if (!files_id.includes(file.id)) {
+					unique_files_by_id.push(...file);
+					files_id.push(...file.id);
+				}
+			} else {
+				new_files.push(...file);
+			}
+		});
+		
+		console.info('==> files_id:', {files_id});
 		console.info('==> unique_files_by_id:', {unique_files_by_id});
 		console.info('==> new_files:', {new_files});
 		
@@ -736,7 +757,9 @@
 	const inputFilesHandler = async (inputFiles) => {
 		console.info('Input files handler called with:', inputFiles);
 
-		if (!filterFilesUpload($config?.file?.allow_file_extensions, inputFiles, false)) {
+		let filtered = filterFilesUpload($config?.file?.allow_file_extensions, inputFiles, false);
+		console.info('filtered:', filtered);
+		if (!filtered) {
 			return;
 		}
 
@@ -887,8 +910,9 @@
 
 	const inputDirectFilesHandler = async (inputFiles) => {
 		console.info('Input files handler called with:', inputFiles);
-
-		if (!filterFilesUpload($config?.file?.allow_direct_file_extensions, inputFiles, true)) {
+		let filtered = filterFilesUpload($config?.file?.allow_direct_file_extensions, inputFiles, true);
+		console.info('filtered:', filtered);
+		if (!filtered) {
 			return;
 		}
 
