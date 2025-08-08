@@ -624,8 +624,6 @@
 				.map((ext) => ext.trim().toLowerCase());
 		}
 
-		console.info('==> allow_direct_file_extensions:', {allow_direct_file_extensions});
-
 		let error = false;
 
 		inputFiles.forEach((file) => {
@@ -648,12 +646,10 @@
 		let allFiles = [];
 		try {
 			const res = await getFiles(localStorage.token);
-			console.info('getFiles:', { res });
 			allFiles = res;
 		} catch (error) {
 			console.warn('getFiles error:', { error });
 		}
-
 
 		console.info('==> in files:', {allFiles});
 
@@ -661,14 +657,8 @@
 		if (directType) {
 			total_files.push(...allFiles
 				// .filter((item) => ['file'].includes(item.type))
-				.filter((item) => {
-					console.info('==> item.file?.meta?.data?.uploadType:', {uploadType: item.meta?.data?.uploadType});
-					return item.meta?.data?.uploadType === 'direct';
-				})
-				.filter((item) => {
-					console.info('==> item.meta?.data?.synthetic:', {synthetic: item.meta?.data?.synthetic});
-					return item.meta?.data?.synthetic !== true;
-				})
+				.filter((item) => item.meta?.data?.uploadType === 'direct')
+				.filter((item) => item.meta?.data?.synthetic !== true)
 			);
 		} else {
 			total_files.push(...allFiles
@@ -677,7 +667,6 @@
 				.filter((item) => item.meta?.data?.synthetic !== true));
 		}
 		console.info('==> total_files:', {total_files});
-
 		console.info('==> in inputFiles:', {inputFiles});
 
 		let total_chatFiles = [];
