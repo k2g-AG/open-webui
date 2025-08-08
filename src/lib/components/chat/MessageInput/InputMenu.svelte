@@ -63,24 +63,13 @@
 	$: directSyntheticFileUploadEnabled = $user?.role === 'admin';
 
 	let file_synthetic_models_enable = false;
-	console.info('====>> $models:', $models );
-	$: selected_models = $models.filter((m) => selectedModels.includes(m.id));
-	console.info('====>> selected_models:', { selected_models });
-	$: fse_array = selected_models.map((selected_model) => selected_model.info?.meta?.capabilities?.file_synthetic_enable);
-	console.info('====>> fse_array:', { fse_array });
-	$: fse_array.forEach((fse) => {
-		file_synthetic_models_enable = file_synthetic_models_enable || fse;
-		console.info('====>> fse:', { fse });
-	});
+	$: $models.filter((m) => selectedModels.includes(m.id))
+		.map((selected_model) => selected_model.info?.meta?.capabilities?.file_synthetic_enable)
+		.forEach((fse) => file_synthetic_models_enable = file_synthetic_models_enable || fse);
 
 	let syntheticFilesEnabled = true;
 	$: syntheticFilesEnabled =
 		$user?.permissions?.chat?.file_synthetic_enable && file_synthetic_models_enable;
-
-	console.info('====>> $user?.permissions?.chat:', $user?.permissions?.chat );
-	console.info('====>> $config?.file:', $config?.file );
-	console.info('====>> $config:', $config );
-	console.info('====>> selectedModels:', { selectedModels });
 
 	const init = async () => {
 		if ($_tools === null) {

@@ -892,7 +892,7 @@
 			return;
 		}
 
-		inputFilesFiltered.forEach(async (file) => {
+		inputFiles.forEach(async (file) => {
 			let extension = file.name.split('.').at(-1);
 			console.info('Processing file:', {
 				name: file.name,
@@ -908,7 +908,7 @@
 	const inputSyntheticDirectFilesHandler = async (inputFiles) => {
 		console.info('Input files handler called with:', inputFiles);
 
-		inputFilesFiltered.forEach(async (file) => {
+		inputFiles.forEach(async (file) => {
 			let extension = file.name.split('.').at(-1);
 			console.info('Processing file:', {
 				name: file.name,
