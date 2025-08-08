@@ -660,11 +660,11 @@
 		let total_files = [];
 		if (directType) {
 			total_files.push(...allFiles
-				.filter((item) => ['file'].includes(item.type))
+				// .filter((item) => ['file'].includes(item.type))
 				.filter((item) => ((item.file?.meta?.data?.uploadType === 'direct') && !(item.file?.meta?.data?.synthetic === true))));
 		} else {
 			total_files.push(...allFiles
-				.filter((item) => ['file'].includes(item.type))
+				// .filter((item) => ['file'].includes(item.type))
 				.filter((item) => (!(item.file?.meta?.data?.uploadType === 'direct') && !(item.file?.meta?.data?.synthetic === true))));
 		}
 		console.info('==> total_files:', {total_files});
