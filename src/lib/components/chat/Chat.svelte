@@ -234,7 +234,7 @@
 		oldSelectedModelIds = selectedModelIds;
 	};
 	const getFilesHandler = () => {
-		getFilesReq()
+		getFilesReq();
 		show = true;
 	};
 
@@ -464,7 +464,7 @@
 	};
 
 	let pageSubscribe = null;
-	const getFilesReq = () => {
+	const getFilesReq = async () => {
 		try {
 			const res = await getFiles(localStorage.token);
 			console.info('getFiles:', { res });
@@ -476,7 +476,7 @@
 		} catch (error) {
 			console.warn('getFiles error:', { error });
 		}
-	}
+	};
 	onMount(async () => {
 		loading = true;
 		console.info('mounted');
@@ -489,7 +489,7 @@
 				initNewChat();
 			}
 		});
-		getFilesReq()
+		getFilesReq();
 
 		const storageChatInput = sessionStorage.getItem(
 			`chat-input${chatIdProp ? `-${chatIdProp}` : ''}`
