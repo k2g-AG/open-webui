@@ -234,6 +234,7 @@
 		oldSelectedModelIds = selectedModelIds;
 	};
 	const getFilesHandler = () => {
+		getFilesReq()
 		show = true;
 	};
 
@@ -463,6 +464,19 @@
 	};
 
 	let pageSubscribe = null;
+	const getFilesReq = () => {
+		try {
+			const res = await getFiles(localStorage.token);
+			console.info('getFiles:', { res });
+			syntheticFiles = res.filter((item) => {
+				return !!item.meta.data.synthetic;
+			});
+			console.info('syntheticFiles:', { syntheticFiles });
+			allFiles = res;
+		} catch (error) {
+			console.warn('getFiles error:', { error });
+		}
+	}
 	onMount(async () => {
 		loading = true;
 		console.info('mounted');
@@ -475,17 +489,7 @@
 				initNewChat();
 			}
 		});
-		try {
-			const res = await getFiles(localStorage.token);
-			console.info('getFiles:', { res });
-			syntheticFiles = res.filter((item) => {
-				return !!item.meta.data.synthetic;
-			});
-			console.info('syntheticFiles:', { syntheticFiles });
-			allFiles = res;
-		} catch (error) {
-			console.warn('getFiles error:', { error });
-		}
+		getFilesReq()
 
 		const storageChatInput = sessionStorage.getItem(
 			`chat-input${chatIdProp ? `-${chatIdProp}` : ''}`
@@ -1450,12 +1454,12 @@
 			}
 		}
 
-		console.info('== files:', {files});
+		console.info('== files:', { files });
 
 		const _files = JSON.parse(JSON.stringify(files));
 		chatFiles.push(..._files.filter((item) => ['doc', 'file', 'collection'].includes(item.type)));
 
-		console.info('== chatFiles:', {chatFiles});
+		console.info('== chatFiles:', { chatFiles });
 
 		chatFiles = chatFiles.filter(
 			// Remove duplicates
@@ -1479,7 +1483,7 @@
 			models: selectedModels
 		};
 
-		console.info('== _files:', {_files});
+		console.info('== _files:', { _files });
 
 		// Add message to history and Set currentId to messageId
 		history.messages[userMessageId] = userMessage;
@@ -1614,7 +1618,7 @@
 			.filter((message) => message.files)
 			.flatMap((message) => message.files);
 
-		console.info('-- chatMessageFiles:', {chatMessageFiles});
+		console.info('-- chatMessageFiles:', { chatMessageFiles });
 
 		// Filter chatFiles to only include files that are in the chatMessageFiles
 		chatFiles = chatFiles.filter((item) => {
@@ -1622,8 +1626,8 @@
 			return fileExists;
 		});
 
-		console.info('-- chatFiles:', {chatFiles});
-		
+		console.info('-- chatFiles:', { chatFiles });
+
 		let files = JSON.parse(JSON.stringify(chatFiles));
 		files.push(
 			...(userMessage?.files ?? []).filter((item) =>
@@ -1631,7 +1635,7 @@
 			)
 		);
 
-		console.info('-- files:', {files});
+		console.info('-- files:', { files });
 
 		// Remove duplicates
 		files = files.filter(
@@ -1639,7 +1643,7 @@
 				array.findIndex((i) => JSON.stringify(i) === JSON.stringify(item)) === index
 		);
 
-		console.info('-- files fin:', {files});
+		console.info('-- files fin:', { files });
 
 		scrollToBottom();
 		eventTarget.dispatchEvent(
@@ -2320,6 +2324,7 @@
 					>
 					<Modal size="2xl" bind:show={syntheticShow}
 						><Table
+							headerTitle={'Synthetic datasets'}
 							handleClose={() => {
 								syntheticShow = false;
 							}}

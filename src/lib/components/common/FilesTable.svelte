@@ -2,6 +2,7 @@
 	export let handleClose: () => void; // Accept close function
 	export let setFile: (file: any) => void;
 	export let allFiles = [];
+	export let headerTitle = '';
 
 	function formatSize(bytes: number) {
 		return (bytes / 1_000_000).toFixed(1);
@@ -17,7 +18,7 @@
 </script>
 
 <div class="modal">
-	<h2 class="title">Uploaded datasets</h2>
+	<h2 class="title">{headerTitle || 'Uploaded datasets'}</h2>
 	<table class="file-table">
 		<thead>
 			<tr>
