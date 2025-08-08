@@ -611,7 +611,7 @@
 		}
 	};
 
-	const filterFilesUpload = (extensions, inputFiles, directType) => {
+	const filterFilesUpload = async (extensions, inputFiles, directType) => {
 		if ($_user?.role == 'admin') {
 			toast.error($i18n.t('You have admin permission with no limits to upload files.'));
 			return true;
@@ -645,15 +645,25 @@
 			return false;
 		}
 
-		console.info('==> in files:', {files});
+		let allFiles = [];
+		try {
+			const res = await getFiles(localStorage.token);
+			console.info('getFiles:', { res });
+			allFiles = res;
+		} catch (error) {
+			console.warn('getFiles error:', { error });
+		}
+
+
+		console.info('==> in files:', {allFiles});
 
 		let total_files = [];
 		if (directType) {
-			total_files.push(...files
+			total_files.push(...allFiles
 				// .filter((item) => ['file'].includes(item.type))
 				.filter((item) => ((item.file?.meta?.data?.uploadType === 'direct') && !(item.file?.meta?.data?.synthetic === true))));
 		} else {
-			total_files.push(...files
+			total_files.push(...allFiles
 				// .filter((item) => ['file'].includes(item.type))
 				.filter((item) => (!(item.file?.meta?.data?.uploadType === 'direct') && !(item.file?.meta?.data?.synthetic === true))));
 		}
