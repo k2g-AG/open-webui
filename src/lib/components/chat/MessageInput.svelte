@@ -684,22 +684,22 @@
 		total_files.forEach((file) => {
 			if (file.id) {
 				if (!files_id.includes(file.id)) {
-					unique_files_by_id.push(...file);
-					files_id.push(...file.id);
+					unique_files_by_id.push(file);
+					files_id.push(file.id);
 				}
 			} else {
-				new_files.push(...file);
+				new_files.push(file);
 			}
 		});
 		
 		total_chatFiles.forEach((file) => {
 			if (file.id) {
 				if (!files_id.includes(file.id)) {
-					unique_files_by_id.push(...file);
-					files_id.push(...file.id);
+					unique_files_by_id.push(file);
+					files_id.push(file.id);
 				}
 			} else {
-				new_files.push(...file);
+				new_files.push(file);
 			}
 		});
 		
