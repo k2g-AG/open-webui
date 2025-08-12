@@ -1236,6 +1236,7 @@
 						bind:this={filesInputElement}
 						bind:files={inputFiles}
 						type="file"
+						autocomplete="off"
 						hidden
 						multiple
 						on:change={async () => {
@@ -1255,6 +1256,7 @@
 						bind:this={filesDirectInputElement}
 						bind:files={inputFiles}
 						type="file"
+						autocomplete="off"
 						hidden
 						multiple
 						on:change={async () => {
@@ -1273,6 +1275,7 @@
 					<input
 						bind:this={filesSyntheticDirectInputElement}
 						bind:files={inputFiles}
+						autocomplete="off"
 						type="file"
 						hidden
 						multiple
