@@ -200,7 +200,6 @@
 			await goto('/');
 		}
 	};
-	console.info({ files });
 	const onSelect = async (e) => {
 		const { type, data } = e;
 
@@ -219,7 +218,6 @@
 			return;
 		}
 		sessionStorage.selectedModels = JSON.stringify(selectedModels);
-		console.info('saveSessionSelectedModels', selectedModels, sessionStorage.selectedModels);
 	};
 
 	let oldSelectedModelIds = [''];

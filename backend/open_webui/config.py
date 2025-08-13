@@ -272,7 +272,7 @@ class AppConfig:
 ENABLE_API_KEY = PersistentConfig(
     "ENABLE_API_KEY",
     "auth.api_key.enable",
-    os.environ.get("ENABLE_API_KEY", "True").lower() == "true",
+    os.environ.get("ENABLE_API_KEY", "False").lower() == "true",
 )
 
 ENABLE_API_KEY_ENDPOINT_RESTRICTIONS = PersistentConfig(
@@ -1162,7 +1162,8 @@ USER_PERMISSIONS_CHAT_FILE_DIRECT_UPLOAD = (
 )
 
 USER_PERMISSIONS_CHAT_FILE_SYNTHETIC_ENABLE = (
-    os.environ.get("USER_PERMISSIONS_CHAT_FILE_SYNTHETIC_ENABLE", "True").lower() == "true"
+    os.environ.get("USER_PERMISSIONS_CHAT_FILE_SYNTHETIC_ENABLE", "True").lower()
+    == "true"
 )
 
 
@@ -1381,7 +1382,8 @@ else:
     # Doing both will result in CORS errors in the browser.
     for origin in CORS_ALLOW_ORIGIN:
         validate_cors_origin(origin)
-    log.info(f'CORS_ALLOW_ORIGIN set to: {CORS_ALLOW_ORIGIN}')
+    log.info(f"CORS_ALLOW_ORIGIN set to: {CORS_ALLOW_ORIGIN}")
+
 
 class BannerModel(BaseModel):
     id: str
