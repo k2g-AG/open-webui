@@ -3,7 +3,7 @@
 	import { flyAndScale } from '$lib/utils/transitions';
 	import { getContext, onMount, tick } from 'svelte';
 
-	import { config, user, tools as _tools, mobile } from '$lib/stores';
+	import { config, user, tools as _tools, mobile, models } from '$lib/stores';
 	import { createPicker } from '$lib/utils/google-drive-picker';
 
 	import { getTools } from '$lib/apis/tools';
@@ -48,19 +48,31 @@
 		init();
 	}
 
-	let fileUploadEnabled = true;
+	let fileUploadEnabled = false;
 	$: fileUploadEnabled =
 		fileUploadCapableModels.length === selectedModels.length &&
+		selectedModels.length > 0 &&
 		($user?.role === 'admin' || $user?.permissions?.chat?.file_upload);
 
-	let directFileUploadEnabled = true;
+	let directFileUploadEnabled = false;
 	$: directFileUploadEnabled =
 		fileUploadCapableModels.length === selectedModels.length &&
+		selectedModels.length > 0 &&
 		($user?.role === 'admin' || $user?.permissions?.chat?.file_direct_upload) &&
 		$config?.file?.enable_direct_file_upload;
 
-	let directSyntheticFileUploadEnabled = true;
+	let directSyntheticFileUploadEnabled = false;
 	$: directSyntheticFileUploadEnabled = $user?.role === 'admin';
+
+	let file_synthetic_models_enable = false;
+	$: $models
+		.filter((m) => selectedModels.includes(m.id))
+		.map((selected_model) => selected_model.info?.meta?.capabilities?.file_synthetic_enable)
+		.forEach((fse) => (file_synthetic_models_enable = file_synthetic_models_enable || fse));
+
+	let syntheticFilesEnabled = false;
+	$: syntheticFilesEnabled =
+		$user?.permissions?.chat?.file_synthetic_enable && file_synthetic_models_enable;
 
 	const init = async () => {
 		if ($_tools === null) {
@@ -244,46 +256,50 @@
 			<Tooltip
 				content={fileUploadCapableModels.length !== selectedModels.length
 					? $i18n.t('Model(s) do not support file upload')
-					: !fileUploadEnabled
+					: !syntheticFilesEnabled
 						? $i18n.t('You do not have permission to upload files.')
 						: ''}
 				className="w-full"
 			>
 				<DropdownMenu.Item
-					class="flex gap-2 items-center px-3 py-2 text-sm font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl {!fileUploadEnabled
+					class="flex gap-2 items-center px-3 py-2 text-sm font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl {!syntheticFilesEnabled
 						? 'opacity-50'
 						: ''}"
 					on:click={() => {
-						console.log('Files handler', getFilesHandler);
-						getFilesHandler();
+						console.log('syntheticFilesEnabled:', syntheticFilesEnabled);
+						if (syntheticFilesEnabled) {
+							getFilesHandler();
+						}
 					}}
 				>
 					<DocumentArrowUpSolid />
 					<div class="line-clamp-1">Uploaded datasets</div>
 				</DropdownMenu.Item>
 			</Tooltip>
-			<Tooltip
-				content={fileUploadCapableModels.length !== selectedModels.length
-					? $i18n.t('Model(s) do not support file upload')
-					: !fileUploadEnabled
-						? $i18n.t('You do not have permission to upload files.')
-						: ''}
-				className="w-full"
-			>
-				<DropdownMenu.Item
-					class="flex gap-2 items-center px-3 py-2 text-sm font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl {!fileUploadEnabled
-						? 'opacity-50'
-						: ''}"
-					on:click={() => {
-						console.log('Files handler', getFilesHandler);
-						handleSynthetic();
-					}}
+			{#if syntheticFilesEnabled}
+				<Tooltip
+					content={fileUploadCapableModels.length !== selectedModels.length
+						? $i18n.t('Model(s) do not support file upload')
+						: !syntheticFilesEnabled
+							? $i18n.t('You do not have permission to upload files.')
+							: ''}
+					className="w-full"
 				>
-					<SyntheticDataset />
-					<div class="line-clamp-1">Synthetic dataset</div>
-				</DropdownMenu.Item>
-			</Tooltip>
-
+					<DropdownMenu.Item
+						class="flex gap-2 items-center px-3 py-2 text-sm font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl {!syntheticFilesEnabled
+							? 'opacity-50'
+							: ''}"
+						on:click={() => {
+							if (syntheticFilesEnabled) {
+								handleSynthetic();
+							}
+						}}
+					>
+						<SyntheticDataset />
+						<div class="line-clamp-1">Synthetic dataset</div>
+					</DropdownMenu.Item>
+				</Tooltip>
+			{/if}
 			<Tooltip
 				content={fileUploadCapableModels.length !== selectedModels.length
 					? $i18n.t('Model(s) do not support file direct upload')

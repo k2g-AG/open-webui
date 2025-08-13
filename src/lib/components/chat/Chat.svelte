@@ -234,6 +234,7 @@
 		oldSelectedModelIds = selectedModelIds;
 	};
 	const getFilesHandler = () => {
+		getFilesReq();
 		show = true;
 	};
 
@@ -463,6 +464,19 @@
 	};
 
 	let pageSubscribe = null;
+	const getFilesReq = async () => {
+		try {
+			const res = await getFiles(localStorage.token);
+			console.info('getFiles:', { res });
+			syntheticFiles = res.filter((item) => {
+				return !!item.meta.data.synthetic;
+			});
+			console.info('syntheticFiles:', { syntheticFiles });
+			allFiles = res;
+		} catch (error) {
+			console.warn('getFiles error:', { error });
+		}
+	};
 	onMount(async () => {
 		loading = true;
 		console.info('mounted');
@@ -475,15 +489,8 @@
 				initNewChat();
 			}
 		});
-		try {
-			const res = await getFiles(localStorage.token);
-			console.info('getFiles:', { res });
-			syntheticFiles = res.filter((item) => {
-				return !!item.meta.data.synthetic;
-			});
-			console.info('syntheticFiles:', { res });
-			allFiles = res;
-		} catch (error) {}
+		getFilesReq();
+
 		const storageChatInput = sessionStorage.getItem(
 			`chat-input${chatIdProp ? `-${chatIdProp}` : ''}`
 		);
@@ -1434,40 +1441,6 @@
 			);
 			return;
 		}
-		if (
-			($config?.file?.max_count ?? null) !== null &&
-			files.length + chatFiles.length > $config?.file?.max_count
-		) {
-			toast.error(
-				$i18n.t(`You can only chat with a maximum of {{maxCount}} file(s) at a time.`, {
-					maxCount: $config?.file?.max_count
-				})
-			);
-			return;
-		}
-
-		filesAndChatFilesTotalSize = 0;
-		_chatFiles = [];
-
-		_chatFiles.push(...chatFiles.filter((item) => ['file'].includes(item.type)));
-		const _files = JSON.parse(JSON.stringify(files));
-		_chatFiles.push(..._files.filter((item) => ['file'].includes(item.type)));
-		
-		console.info('== _chatFiles:', {_chatFiles});
-
-		_chatFiles.forEach((itemfile) => {filesAndChatFilesTotalSize = filesAndChatFilesTotalSize + itemfile.size;});
-
-		if (
-			($config?.file?.max_size ?? null) !== null &&
-			filesAndChatFilesTotalSize > $config?.file?.max_size
-		) {
-			toast.error(
-				$i18n.t(`You can only chat with a maximum of {{maxCount}} file(s) at a time.`, {
-					maxCount: $config?.file?.max_count
-				})
-			);
-			return;
-		}
 
 		messageInput?.setText('');
 
@@ -1481,12 +1454,12 @@
 			}
 		}
 
-		console.info('== files:', {files});
+		console.info('== files:', { files });
 
 		const _files = JSON.parse(JSON.stringify(files));
 		chatFiles.push(..._files.filter((item) => ['doc', 'file', 'collection'].includes(item.type)));
 
-		console.info('== chatFiles:', {chatFiles});
+		console.info('== chatFiles:', { chatFiles });
 
 		chatFiles = chatFiles.filter(
 			// Remove duplicates
@@ -1510,7 +1483,7 @@
 			models: selectedModels
 		};
 
-		console.info('== _files:', {_files});
+		console.info('== _files:', { _files });
 
 		// Add message to history and Set currentId to messageId
 		history.messages[userMessageId] = userMessage;
@@ -1645,7 +1618,7 @@
 			.filter((message) => message.files)
 			.flatMap((message) => message.files);
 
-		console.info('-- chatMessageFiles:', {chatMessageFiles});
+		console.info('-- chatMessageFiles:', { chatMessageFiles });
 
 		// Filter chatFiles to only include files that are in the chatMessageFiles
 		chatFiles = chatFiles.filter((item) => {
@@ -1653,8 +1626,8 @@
 			return fileExists;
 		});
 
-		console.info('-- chatFiles:', {chatFiles});
-		
+		console.info('-- chatFiles:', { chatFiles });
+
 		let files = JSON.parse(JSON.stringify(chatFiles));
 		files.push(
 			...(userMessage?.files ?? []).filter((item) =>
@@ -1662,7 +1635,7 @@
 			)
 		);
 
-		console.info('-- files:', {files});
+		console.info('-- files:', { files });
 
 		// Remove duplicates
 		files = files.filter(
@@ -1670,7 +1643,7 @@
 				array.findIndex((i) => JSON.stringify(i) === JSON.stringify(item)) === index
 		);
 
-		console.info('-- files fin:', {files});
+		console.info('-- files fin:', { files });
 
 		scrollToBottom();
 		eventTarget.dispatchEvent(
@@ -2333,7 +2306,17 @@
 								show = false;
 							}}
 							setFile={(file) => {
-								files = [...files, file];
+								const formattedFile = {
+									name: file?.filename,
+									size: file?.meta?.size,
+									type: 'file',
+									url: `/api/v1/files/${file?.id}`,
+									id: file?.id,
+									status: 'uploaded',
+									error: '',
+									file: { ...file }
+								};
+								files = [...files, formattedFile];
 								show = false;
 							}}
 							bind:allFiles
@@ -2341,11 +2324,22 @@
 					>
 					<Modal size="2xl" bind:show={syntheticShow}
 						><Table
+							headerTitle={'Synthetic datasets'}
 							handleClose={() => {
 								syntheticShow = false;
 							}}
 							setFile={(file) => {
-								files = [...files, file];
+								const formattedFile = {
+									name: file?.filename,
+									size: file?.meta?.size,
+									type: 'file',
+									url: `/api/v1/files/${file?.id}`,
+									id: file?.id,
+									status: 'uploaded',
+									error: '',
+									file: { ...file }
+								};
+								files = [...files, formattedFile];
 								syntheticShow = false;
 								console.info('selected file added:', { files });
 							}}

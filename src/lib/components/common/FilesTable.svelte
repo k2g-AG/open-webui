@@ -2,12 +2,13 @@
 	export let handleClose: () => void; // Accept close function
 	export let setFile: (file: any) => void;
 	export let allFiles = [];
+	export let headerTitle = '';
 
 	function formatSize(bytes: number) {
 		return (bytes / 1_000_000).toFixed(1);
 	}
 	function formatDate(dateStr: string) {
-		const d = new Date(dateStr);
+		const d = new Date(dateStr * 1000);
 		const day = String(d.getDate()).padStart(2, '0');
 		const month = String(d.getMonth() + 1).padStart(2, '0');
 		const year = d.getFullYear();
@@ -17,7 +18,7 @@
 </script>
 
 <div class="modal">
-	<h2 class="title">Uploaded datasets</h2>
+	<h2 class="title">{headerTitle || 'Uploaded datasets'}</h2>
 	<table class="file-table">
 		<thead>
 			<tr>
