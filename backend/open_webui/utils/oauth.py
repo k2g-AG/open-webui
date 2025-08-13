@@ -726,7 +726,7 @@ class OAuthManager:
                 stripe_client = StripeService()
                 stripe_customer = stripe_client.get_customer_by_email(email)
                 if stripe_customer:
-                    log.info(f"Stripe customer found for email: {email}")
+                    log.info(f"Stripe customer found for email: {email}, customer: {stripe_customer}")
                 else:
                     log.info(f"Stripe customer not found for email: {email}. Creating new customer.")
                     customer_metadata = {"keycloakId": sub}
