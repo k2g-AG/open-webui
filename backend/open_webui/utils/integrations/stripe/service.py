@@ -17,34 +17,56 @@ log = logging.getLogger(__name__)
 class StripeService:
     @staticmethod
     def get_customer_by_email(email: str) -> dict | None:
+        log.debug(f"Attempting to fetch Stripe customer by email: {email}")
         try:
             customers = stripe.Customer.list(email=email, limit=1).data
-            return customers[0] if customers else None
+            if customers:
+                log.info(f"Found Stripe customer {customers[0]['id']} for email: {email}")
+                return customers[0]
+            else:
+                log.info(f"No Stripe customer found for email: {email}")
+                return None
+        except stripe.error.StripeError as e:
+            log.error(f"Stripe API Error fetching customer by email {email}: {e.code} - {e.user_message} (param: {e.param}, http_status: {e.http_status})")
+            return None
         except Exception as e:
-            log.error(f"Error fetching Stripe customer by email {email}: {e}")
+            log.error(f"Unexpected error fetching Stripe customer by email {email}: {e}")
             return None
 
     @staticmethod
     def create_customer(email: str, name: str, metadata: dict) -> dict | None:
+        log.debug(f"Attempting to create Stripe customer for email: {email}, name: {name}")
         try:
-            return stripe.Customer.create(
+            customer = stripe.Customer.create(
                 email=email,
                 name=name,
                 metadata=metadata
             )
+            log.info(f"Successfully created Stripe customer: {customer['id']} for email: {email}")
+            return customer
+        except stripe.error.StripeError as e:
+            log.error(f"Stripe API Error creating customer for email {email}: {e.code} - {e.user_message} (param: {e.param}, http_status: {e.http_status})")
+            return None
         except Exception as e:
-            log.error(f"Error creating Stripe customer: {e}")
+            log.error(f"Unexpected error creating Stripe customer for email {email}: {e}")
             return None
 
     @staticmethod
     def create_trial_subscription(customer_id: str, metadata: dict) -> dict | None:
+        log.debug(f"Attempting to create trial subscription for customer ID: {customer_id}")
         try:
-            return stripe.Subscription.create(
+            subscription = stripe.Subscription.create(
                 customer=customer_id,
                 items=[{"price": STRIPE_TRIAL_PRICE_ID}],
                 trial_period_days= STRIPE_TRIAL_PERIOD_DAYS,
-                metadata = metadata
+                metadata = metadata,
+                cancel_at_period_end=True
             )
+            log.info(f"Successfully created trial subscription {subscription['id']} for customer: {customer_id}")
+            return subscription
+        except stripe.error.StripeError as e:
+            log.error(f"Stripe API Error creating trial subscription for customer {customer_id}: {e.code} - {e.user_message} (param: {e.param}, http_status: {e.http_status})")
+            return None
         except Exception as e:
-            log.error(f"Error creating trial subscription for customer {customer_id}: {e}")
+            log.error(f"Unexpected error creating trial subscription for customer {customer_id}: {e}")
             return None
