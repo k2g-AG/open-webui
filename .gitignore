@@ -20,6 +20,8 @@ CLAUDE.md
 *.so
 /tmp
 
+build_docker.cmd
+
 # Pyodide distribution
 static/pyodide/*
 !static/pyodide/pyodide-lock.json
