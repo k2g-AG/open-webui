@@ -13,7 +13,6 @@
 	// } from '$lib/apis/models';
 	// import { getModels } from '$lib/apis';
 
-
 	let loadingProgress = spring(0, {
 		stiffness: 0.05
 	});
@@ -70,7 +69,7 @@
 		}
 	});
 
-	// let authenticated = false;	
+	// let authenticated = false;
 	// let keycloakPromise = keycloak.init({ onLoad: 'login-required' }).then((auth) => {
 	// 	authenticated = auth;
 	// 	console.log({ authenticated });
@@ -532,7 +531,7 @@
 
 		const res = await userSignRefreshToken(localStorage.token);
 		console.info('onMount userSignRefreshToken result:', res);
-
+		console.info('Parsed', keycloak.tokenParsed);
 		if (typeof window !== 'undefined' && window.applyTheme) {
 			window.applyTheme();
 		}
@@ -651,7 +650,7 @@
 						toast.error(`${error}`);
 						return null;
 					});
-					console.log({sessionUser})
+					console.log({ sessionUser });
 					if (sessionUser) {
 						await user.set(sessionUser);
 						await config.set(await getBackendConfig());
