@@ -743,13 +743,24 @@ class OAuthManager:
 
                 stripe_client = StripeService()
                 stripe_customer = stripe_client.get_customer_by_email(email)
-                if not stripe_customer:
+                if stripe_customer:
+                    log.info(f"Stripe customer found for email: {email}")
+                else:
+                    log.info(
+                        f"Stripe customer not found for email: {email}. Creating new customer."
+                    )
+                    customer_metadata = {"keycloakId": sub}
                     stripe_customer = stripe_client.create_customer(
                         email=email, name=name, metadata={"keycloakId": sub}
+                        email=email,
+                        name=name,
+                        metadata=customer_metadata
                     )
                     stripe_customer_id = stripe_customer["id"]
                     stripe_client.create_trial_subscription(stripe_customer_id)
                 # TODO: Handle case if stripe_customer exist, in this case it means - somehow customer was able to login in a different way,
+                    stripe_client.create_trial_subscription(stripe_customer_id, customer_metadata)
+                #TODO: Handle case if stripe_customer exist, in this case it means - somehow customer was able to login in a different way,
                 # so same email was not recognized by OWUI as another user and this user already had an trial subscription.
 
                 # We have to make a choice - what to do if stripe customer or subscription was not made

@@ -521,7 +521,8 @@
 
 				if (!$temporaryChatEnabled) {
 					messageInput?.setText(input.prompt);
-					files = input.files;
+					// files = input.files; maybe uncomment later; try not reload with files
+					files = [];
 					selectedToolIds = input.selectedToolIds;
 					selectedFilterIds = input.selectedFilterIds;
 					webSearchEnabled = input.webSearchEnabled;
