@@ -66,7 +66,9 @@
 		},
 		chat: {
 			controls: true,
+			valves: true,
 			system_prompt: true,
+			params: true,
 			file_upload: true,
 			file_direct_upload: true,
     		file_synthetic_enable: true,

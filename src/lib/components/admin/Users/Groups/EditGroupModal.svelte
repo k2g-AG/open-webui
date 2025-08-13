@@ -48,12 +48,22 @@
 		},
 		chat: {
 			controls: true,
+			valves: true,
+			system_prompt: true,
+			params: true,
 			file_upload: true,
 			file_direct_upload: true,
     		file_synthetic_enable: true,
 			delete: true,
 			edit: true,
-			temporary: false
+			share: true,
+			export: true,
+			stt: true,
+			tts: true,
+			call: true,
+			multiple_models: true,
+			temporary: false,
+			temporary_enforced: false
 		},
 		features: {
 			direct_tool_servers: false,
