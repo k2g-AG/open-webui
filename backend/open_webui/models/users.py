@@ -107,10 +107,10 @@ class UserRoleUpdateForm(BaseModel):
 
 
 class UserUpdateForm(BaseModel):
-    role: str
-    name: str
-    email: str
-    profile_image_url: str
+    role: Optional[str] = None
+    name: Optional[str] = None
+    email: Optional[str] = None
+    profile_image_url: Optional[str] = None
     password: Optional[str] = None
 
 
