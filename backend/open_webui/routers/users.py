@@ -515,7 +515,7 @@ class CreateCheckoutRequest(BaseModel):
 @router.post("/stripe/checkout")
 async def create_stripe_checkout_session(
     request: CreateCheckoutRequest,
-    user=Depends(get_verified_user)
+    user=Depends(get_current_user)
 ):
     """
     Create a Stripe checkout session for the current user.
