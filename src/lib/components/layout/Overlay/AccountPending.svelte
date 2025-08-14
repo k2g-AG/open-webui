@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { getAdminDetails } from '$lib/apis/auths';
+	import { createCheckoutSession } from '$lib/apis/payments';
 	import { onMount, tick, getContext } from 'svelte';
 	import { config } from '$lib/stores';
 	import { WEBUI_BASE_URL } from '$lib/constants';
@@ -57,10 +58,16 @@
 					<button
 						class="relative z-20 flex px-5 py-2 rounded-full bg-white border border-gray-100 dark:border-none hover:bg-gray-100 text-gray-700 transition font-medium text-sm"
 						on:click={async () => {
-							location.href = '/';
+							const checkoutSession = await createCheckoutSession(localStorage.token);
+							if (checkoutSession && checkoutSession.url) {
+								window.location.href = checkoutSession.url;
+							} else {
+								// Fallback to check again if checkout session creation fails
+								location.href = '/';
+							}
 						}}
 					>
-						{$i18n.t('Check Again')}
+						{$i18n.t('Proceed to Payment')}
 					</button>
 
 					<button
