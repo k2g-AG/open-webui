@@ -335,96 +335,6 @@ class OAuthManager:
             log.error(f"Error processing profile picture '{picture_url}': {e}")
             return "/user.png"
 
-    def get_or_create_stripe_customer(self, email: str, name: str, sub: str) -> tuple[dict, str]:
-        """
-        Get existing Stripe customer or create a new one with trial subscription.
-        
-        Args:
-            email: Customer email
-            name: Customer name
-            sub: The unique identifier from the OAuth provider (Keycloak ID)
-            
-        Returns:
-            Tuple of (stripe_customer_dict, stripe_customer_id)
-        """
-        log.info(f"Starting Stripe customer lookup/creation process for email: {email}, sub: {sub}")
-
-        if not email or not email.strip():
-            log.error("get_or_create_stripe_customer: Email is required for Stripe customer. Returning None, None.")
-            return None, None
-        
-        # Clean up inputs
-        email = email.strip().lower()
-        name = name.strip() if name else ""
-        
-        log.info(f"Processing Stripe customer for email: {email}, name: {name}, sub: {sub}")
-        
-        # Try to get existing customer
-        try:
-            log.info(f"Attempting to retrieve existing Stripe customer by email: {email}")
-            stripe_customer = StripeService.get_customer_by_email(email)
-            
-            if stripe_customer:
-                stripe_customer_id = stripe_customer.get("id")
-                if not stripe_customer_id:
-                    log.error(f"Existing Stripe customer found for email: {email} but missing ID field. Customer data: {stripe_customer}. Returning None, None.")
-                    return None, None
-                log.info(f"Found existing Stripe customer: {stripe_customer_id} for email: {email}. Returning existing customer.")
-                return stripe_customer, stripe_customer_id
-            else:
-                log.info(f"No existing Stripe customer found for email: {email}. Proceeding to create a new one.")
-                
-        except Exception as e:
-            log.error(f"Error during lookup for existing Stripe customer for email {email}: {e}. Attempting to create new customer.")
-            # Continue to creation attempt even if lookup fails
-        
-        # Create new customer
-        try:
-            log.info(f"Attempting to create new Stripe customer for email: {email}, name: {name}")
-            customer_metadata = {"keycloakId": sub} if sub else {}
-            log.info(f"Metadata for new Stripe customer: {customer_metadata}")
-            
-            stripe_customer = StripeService.create_customer(
-                email=email,
-                name=name,
-                metadata=customer_metadata
-            )
-            
-            if not stripe_customer:
-                log.error(f"Failed to create Stripe customer for email: {email}. StripeService returned None/empty. Returning None, None.")
-                return None, None
-                
-            stripe_customer_id = stripe_customer.get("id")
-            if not stripe_customer_id:
-                log.error(f"Created Stripe customer for email: {email} but missing ID field. Customer data: {stripe_customer}. Returning None, None.")
-                return None, None
-                
-            log.info(f"Successfully created Stripe customer: {stripe_customer_id} for email: {email}.")
-            
-            # Create trial subscription for new customer
-            log.info(f"Attempting to create trial subscription for new Stripe customer: {stripe_customer_id}")
-            try:
-                trial_subscription = StripeService.create_trial_subscription(
-                    stripe_customer_id,
-                    customer_metadata
-                )
-                
-                if trial_subscription:
-                    log.info(f"Successfully created trial subscription: {trial_subscription.get('id')} for customer: {stripe_customer_id}.")
-                else:
-                    log.warning(f"Failed to create trial subscription for customer: {stripe_customer_id}. StripeService returned None/empty. Customer creation was successful.")
-                    
-            except Exception as e:
-                log.error(f"Error creating trial subscription for customer {stripe_customer_id}: {e}. Customer creation was successful, but subscription failed.")
-            
-            log.info(f"Returning newly created Stripe customer {stripe_customer_id} and its ID.")
-            return stripe_customer, stripe_customer_id
-            
-        except Exception as e:
-            log.error(f"Overall error creating new Stripe customer for email {email}: {e}. Returning None, None.")
-            return None, None
-
-    async def handle_login(self, request, provider):
         if provider not in OAUTH_PROVIDERS:
             raise HTTPException(404)
         # If the provider has a custom redirect URL, use that, otherwise automatically generate one
@@ -550,23 +460,12 @@ class OAuthManager:
                         )
                         log.debug(f"Updated profile picture for user {user.email}")
 
-            # Handle existing users without Stripe customer ID
-            if not user.stripe_customer_id:
-                log.info(f"Existing user {user.id} ({user.email}) does not have a Stripe customer ID. Attempting to create/retrieve one.")
-                stripe_customer, stripe_customer_id = self.get_or_create_stripe_customer(
-                    email=user.email,
-                    name=user.name,
-                    sub=sub
-                )
-                
-                if stripe_customer_id:
-                    log.info(f"Stripe customer ID {stripe_customer_id} obtained for existing user {user.id}. Updating user record.")
-                    Users.update_user_by_id(user.id, {"stripe_customer_id": stripe_customer_id})
-                    log.info(f"Successfully updated existing user {user.id} with Stripe customer ID: {stripe_customer_id}.")
-                else:
-                    log.warning(f"Failed to create/find Stripe customer for existing user {user.id} ({user.email}). User record not updated with Stripe ID.")
-            else:
-                log.debug(f"Existing user {user.id} ({user.email}) already has Stripe customer ID: {user.stripe_customer_id}. No action needed.")
+            # Synchronize Stripe customer ID for the user
+            log.info(f"Attempting to synchronize Stripe customer for user {user.email}")
+            try:
+                await StripeService.sync_stripe_customer(user, user.email, user.name, sub)
+            except Exception as e:
+                log.error(f"Error synchronizing Stripe customer for user {user.email}: {e}")
 
         if not user:
             user_count = Users.get_num_users()
@@ -600,11 +499,17 @@ class OAuthManager:
 
                 log.info(f"New user signup via OAuth. Attempting to create Stripe customer and trial subscription for email: {email}.")
                 # Create Stripe customer and get customer_id
-                stripe_customer, stripe_customer_id = self.get_or_create_stripe_customer(
-                    email=email,
-                    name=name,
-                    sub=sub
-                )
+                # This call is now handled by the StripeService
+                log.info(f"Attempting to get or create Stripe customer for new user {email}")
+                try:
+                    stripe_customer, stripe_customer_id = StripeService.get_or_create_stripe_customer(
+                        email=email,
+                        name=name,
+                        sub=sub
+                    )
+                except Exception as e:
+                    log.error(f"Error getting or creating Stripe customer for new user {email}: {e}")
+                    stripe_customer_id = None
                 log.info(f"Stripe customer ID for new user {email}: {stripe_customer_id}")
 
                 user = Auths.insert_new_auth(
@@ -812,24 +717,12 @@ class OAuthManager:
                         )
                         log.debug(f"Updated profile picture for user {user.email}")
 
-            # Handle existing users without Stripe customer ID during refresh
-            if not user.stripe_customer_id:
-                log.info(f"Existing user {user.id} ({user.email}) does not have a Stripe customer ID during refresh. Attempting to create/retrieve one.")
-                stripe_customer, stripe_customer_id = self.get_or_create_stripe_customer(
-                    email=user.email,
-                    name=user.name,
-                    sub=sub
-                )
-                
-                if stripe_customer_id:
-                    log.info(f"Stripe customer ID {stripe_customer_id} obtained for existing user {user.id} during refresh. Updating user record.")
-                    # Update user with Stripe customer ID
-                    Users.update_user_by_id(user.id, {"stripe_customer_id": stripe_customer_id})
-                    log.info(f"Successfully updated existing user {user.id} with Stripe customer ID during refresh: {stripe_customer_id}.")
-                else:
-                    log.warning(f"Failed to create/find Stripe customer for existing user {user.id} ({user.email}) during refresh. User record not updated with Stripe ID.")
-            else:
-                log.debug(f"Existing user {user.id} ({user.email}) already has Stripe customer ID: {user.stripe_customer_id} during refresh. No action needed.")
+            # Synchronize Stripe customer ID for the user during refresh
+            log.info(f"Attempting to synchronize Stripe customer for user {user.email} during refresh")
+            try:
+                await StripeService.sync_stripe_customer(user, user.email, user.name, sub)
+            except Exception as e:
+                log.error(f"Error synchronizing Stripe customer for user {user.email} during refresh: {e}")
 
         if not user:
             # If the user does not exist, check if signups are enabled
@@ -861,11 +754,17 @@ class OAuthManager:
 
                 log.info(f"New user signup via OAuth during refresh. Attempting to create Stripe customer and trial subscription for email: {email}.")
                 # Create Stripe customer or get customer_id
-                stripe_customer, stripe_customer_id = self.get_or_create_stripe_customer(
-                    email=email,
-                    name=name,
-                    sub=sub
-                )
+                # This call is now handled by the StripeService
+                log.info(f"Attempting to get or create Stripe customer for new user {email} during refresh")
+                try:
+                    stripe_customer, stripe_customer_id = StripeService.get_or_create_stripe_customer(
+                        email=email,
+                        name=name,
+                        sub=sub
+                    )
+                except Exception as e:
+                    log.error(f"Error getting or creating Stripe customer for new user {email} during refresh: {e}")
+                    stripe_customer_id = None
                 log.info(f"Stripe customer ID for new user {email} during refresh: {stripe_customer_id}")
 
                 user = Auths.insert_new_auth(
@@ -978,6 +877,5 @@ class OAuthManager:
         }
         
         log.info(f'oauth_refresh Creating user info for user {user.id} user_info: {user_info}')
-
         return user_info
     
