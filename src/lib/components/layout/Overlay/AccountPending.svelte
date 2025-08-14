@@ -64,7 +64,8 @@
 								window.location.href = checkoutSession.url;
 							} else {
 								// Fallback to check again if checkout session creation fails
-								location.href = '/';
+								// location.href = '/';
+								console.error('Failed to create checkout session:', checkoutSession);
 							}
 						}}
 					>
