@@ -17,6 +17,10 @@ export const WEBUI_VERSION = APP_VERSION;
 export const WEBUI_BUILD_HASH = APP_BUILD_HASH;
 export const REQUIRED_OLLAMA_VERSION = '0.1.16';
 
+// Constants for Stripe payment success polling
+export const PAYMENT_POLLING_INTERVAL_MS = 2000; // Interval in milliseconds to poll for token refresh
+export const PAYMENT_MAX_POLLING_ATTEMPTS = 15; // Maximum number of polling attempts before giving up
+
 export const SUPPORTED_FILE_TYPE = [
 	'application/epub+zip',
 	'application/pdf',

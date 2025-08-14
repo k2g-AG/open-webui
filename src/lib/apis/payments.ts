@@ -3,7 +3,9 @@ import { WEBUI_API_BASE_URL } from '../constants';
 export const createCheckoutSession = async (token: string) => {
     console.log('Attempting to create Stripe checkout session...');
     try {
-        const successUrl = 'https://oi.k2g.ai';
+        // Append a query parameter to the success URL to indicate a successful payment.
+        // This allows the frontend to detect a successful payment redirect.
+        const successUrl = 'https://oi.k2g.ai?payment_success=true';
         const cancelUrl = 'https://oi.k2g.ai';
 
         console.log(`Sending request to ${WEBUI_API_BASE_URL}/stripe/checkout with successUrl: ${successUrl}, cancelUrl: ${cancelUrl}`);
