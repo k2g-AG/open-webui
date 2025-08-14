@@ -234,9 +234,8 @@ class StripeService:
                 )
                 if new_stripe_customer_id:
                     log.info(f"New Stripe customer ID {new_stripe_customer_id} obtained for user {user.id}. Updating user record.")
-                    # Assuming Users.update_user_by_id is available and works as expected
-                    # from open_webui.models.users import Users
-                    # Users.update_user_by_id(user.id, {"stripe_customer_id": new_stripe_customer_id})
+                    # Update the user's Stripe customer ID in the database
+                    Users.update_user_by_id(user.id, {"stripe_customer_id": new_stripe_customer_id})
                     log.info(f"Successfully updated existing user {user.id} with new Stripe customer ID: {new_stripe_customer_id}.")
                 else:
                     log.error(f"Failed to re-create Stripe customer for user {user.id} ({email}) after it was not found in Stripe. User record not updated.")
@@ -250,9 +249,8 @@ class StripeService:
             
             if new_stripe_customer_id:
                 log.info(f"Stripe customer ID {new_stripe_customer_id} obtained for existing user {user.id}. Updating user record.")
-                # Assuming Users.update_user_by_id is available and works as expected
-                # from open_webui.models.users import Users
-                # Users.update_user_by_id(user.id, {"stripe_customer_id": new_stripe_customer_id})
+                # Update the user's Stripe customer ID in the database
+                Users.update_user_by_id(user.id, {"stripe_customer_id": new_stripe_customer_id})
                 log.info(f"Successfully updated existing user {user.id} with Stripe customer ID: {new_stripe_customer_id}.")
             else:
                 log.warning(f"Failed to create/find Stripe customer for existing user {user.id} ({email}). User record not updated with Stripe ID.")
