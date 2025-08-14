@@ -155,18 +155,33 @@
                            type="button"
                            class="relative z-20 flex px-5 py-2 rounded-full bg-white border border-gray-100 dark:border-none hover:bg-gray-100 text-gray-700 transition font-medium text-sm"
                            on:click={async () => {
-                               const token = localStorage.getItem('token');
-                               if (!token) {
-                                   console.error('No token found in localStorage');
-                                   return;
-                               }
-                               const checkoutSession = await createCheckoutSession(token);
-                               if (checkoutSession && checkoutSession.checkout_url) {
-                                   window.location.href = checkoutSession.checkout_url;
-                               } else {
-                                   // Fallback to check again if checkout session creation fails
-                                   // location.href = '/';
-                                   console.error('Failed to create checkout session:', checkoutSession);
+                               try {
+                                   const token = localStorage.getItem('token');
+                                   if (!token) {
+                                       console.error('No token found in localStorage');
+                                       return;
+                                   }
+
+                                   // Show loading state
+                                   showPollingLoader = true;
+
+                                   const checkoutSession = await createCheckoutSession(token);
+                                   
+                                   if (!checkoutSession) {
+                                       throw new Error('Failed to create checkout session - response was empty');
+                                   }
+
+                                   if (!checkoutSession.checkout_url) {
+                                       throw new Error('Checkout URL is missing from response');
+                                   }
+
+                                   // Redirect to checkout
+                                   window.location.assign(checkoutSession.checkout_url);
+                               } catch (error) {
+                                   console.error('Error creating checkout session:', error);
+                                   showPollingErrorMessage = true;
+                               } finally {
+                                   showPollingLoader = false;
                                }
                            }}
                        >
@@ -176,11 +191,11 @@
 
 					<button
 						class="text-xs text-center w-full mt-2 text-gray-400 underline"
-						on:click={async () => {
-							localStorage.removeItem('token');
-							location.href = `${WEBUI_BASE_URL}/oauth/oidc/login`;
-						}}>{i18n.t('Sign Out')}</button
-					>
+						on:click={() => {
+						    localStorage.removeItem('token');
+						    window.location.assign(`${WEBUI_BASE_URL}/oauth/oidc/login`);
+						}}
+		>{i18n.t('Sign Out')}</button>
 				</div>
 			</div>
 		</div>
