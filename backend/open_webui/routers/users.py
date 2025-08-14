@@ -521,20 +521,23 @@ async def create_stripe_checkout_session(
     Create a Stripe checkout session for the current user.
     """
     # Get the user details to access stripe_customer_id
+    log.info(f"Attempting to create Stripe checkout session for user: {user.id}")
     user_details = Users.get_user_by_id(user.id)
     if not user_details:
+        log.error(f"User not found for checkout session: {user.id}")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
     
     if not user_details.stripe_customer_id:
+        log.error(f"No Stripe customer ID found for user: {user.id}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="No Stripe customer found for this user"
         )
     
-    # Create checkout session with configurable price_id
+    log.info(f"Creating checkout session for Stripe customer: {user_details.stripe_customer_id} with price_id: {STRIPE_CHECKOUT_PRICE_ID}")
     session = StripeService.create_checkout_session(
         customer_id=user_details.stripe_customer_id,
         price_id=STRIPE_CHECKOUT_PRICE_ID,
@@ -543,11 +546,13 @@ async def create_stripe_checkout_session(
     )
     
     if not session:
+        log.error(f"Failed to create Stripe checkout session for customer: {user_details.stripe_customer_id}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to create checkout session"
         )
     
+    log.info(f"Stripe checkout session created successfully for user: {user.id}, session_id: {session.id}")
     return {
         "checkout_url": session.url,
         "session_id": session.id
