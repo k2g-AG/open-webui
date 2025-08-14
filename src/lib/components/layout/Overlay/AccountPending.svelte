@@ -60,8 +60,8 @@
 						class="relative z-20 flex px-5 py-2 rounded-full bg-white border border-gray-100 dark:border-none hover:bg-gray-100 text-gray-700 transition font-medium text-sm"
 						on:click={async () => {
 							const checkoutSession = await createCheckoutSession(localStorage.token);
-							if (checkoutSession && checkoutSession.url) {
-								window.location.href = checkoutSession.url;
+							if (checkoutSession && checkoutSession.checkout_url) {
+								window.location.href = checkoutSession.checkout_url;
 							} else {
 								// Fallback to check again if checkout session creation fails
 								// location.href = '/';
