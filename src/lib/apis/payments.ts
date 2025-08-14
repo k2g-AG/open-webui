@@ -8,7 +8,7 @@ export const createCheckoutSession = async (token: string) => {
 
         console.log(`Sending request to ${WEBUI_API_BASE_URL}/stripe/checkout with successUrl: ${successUrl}, cancelUrl: ${cancelUrl}`);
 
-        const response = await fetch(`${WEBUI_API_BASE_URL}/stripe/checkout`, {
+        const response = await fetch(`${WEBUI_API_BASE_URL}/users/stripe/checkout`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
