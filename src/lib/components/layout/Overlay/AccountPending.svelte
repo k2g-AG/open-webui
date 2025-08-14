@@ -5,6 +5,7 @@
 	import { config } from '$lib/stores';
 	import { WEBUI_BASE_URL, PAYMENT_POLLING_INTERVAL_MS, PAYMENT_MAX_POLLING_ATTEMPTS } from '$lib/constants';
 
+	import { isLoading } from '$lib/i18n';
 	const i18n: any = getContext('i18n');
 
 	let adminDetails: any = null;
@@ -95,6 +96,7 @@
 	});
 </script>
 
+{#if !$isLoading && i18n && i18n.t}
 <div class="fixed w-full h-full flex z-999">
 	<div
 		class="absolute w-full h-full backdrop-blur-lg bg-white/10 dark:bg-gray-900/50 flex justify-center"
@@ -120,9 +122,8 @@
 					{#if ($config?.ui?.pending_user_overlay_content ?? '').trim() !== ''}
 						{$config.ui.pending_user_overlay_content}
 					{:else}
-						{i18n.t('Your account status is currently pending activation.')}{'\n'}{i18n.t(
-							'To access the WebUI, please reach out to the administrator. Admins can manage user statuses from the Admin Panel.'
-						)}
+						<div>{i18n.t('Account Activation Pending')}</div>
+						<div class="mt-2">{i18n.t('Contact Admin for WebUI Access')}</div>
 					{/if}
 				</div>
 
@@ -192,12 +193,29 @@
 					<button
 						class="text-xs text-center w-full mt-2 text-gray-400 underline"
 						on:click={() => {
-						    localStorage.removeItem('token');
-						    window.location.assign(`${WEBUI_BASE_URL}/oauth/oidc/login`);
+							localStorage.removeItem('token');
+							window.location.assign(`${WEBUI_BASE_URL}/oauth/oidc/login`);
 						}}
-		>{i18n.t('Sign Out')}</button>
+					>
+						{i18n.t('Sign Out')}
+					</button>
 				</div>
 			</div>
 		</div>
 	</div>
 </div>
+{:else}
+	<!-- Loading state while i18n initializes -->
+	<div class="fixed w-full h-full flex z-999">
+		<div class="absolute w-full h-full backdrop-blur-lg bg-white/10 dark:bg-gray-900/50 flex justify-center">
+			<div class="m-auto pb-10 flex flex-col justify-center">
+				<div class="flex justify-center items-center">
+					<svg class="animate-spin h-8 w-8 text-gray-600 dark:text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+						<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+						<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+					</svg>
+				</div>
+			</div>
+		</div>
+	</div>
+{/if}
