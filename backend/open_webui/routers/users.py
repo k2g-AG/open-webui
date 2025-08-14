@@ -27,6 +27,8 @@ from pydantic import BaseModel
 
 from open_webui.utils.auth import get_admin_user, get_password_hash, get_verified_user
 from open_webui.utils.access_control import get_permissions, has_permission
+from open_webui.utils.integrations.stripe.service import StripeService
+from open_webui.env import STRIPE_CHECKOUT_PRICE_ID
 
 
 log = logging.getLogger(__name__)
@@ -493,6 +495,63 @@ async def update_user_by_id(
         # If no fields to update, return existing user
         log.info(f"No fields to update, returning existing user: user_id={user_id}")
         return user
+
+
+############################
+# DeleteUserById
+############################
+
+
+############################
+# Stripe Checkout
+############################
+
+
+class CreateCheckoutRequest(BaseModel):
+    success_url: str
+    cancel_url: str
+
+
+@router.post("/stripe/checkout")
+async def create_stripe_checkout_session(
+    request: CreateCheckoutRequest,
+    user=Depends(get_verified_user)
+):
+    """
+    Create a Stripe checkout session for the current user.
+    """
+    # Get the user details to access stripe_customer_id
+    user_details = Users.get_user_by_id(user.id)
+    if not user_details:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    if not user_details.stripe_customer_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No Stripe customer found for this user"
+        )
+    
+    # Create checkout session with configurable price_id
+    session = StripeService.create_checkout_session(
+        customer_id=user_details.stripe_customer_id,
+        price_id=STRIPE_CHECKOUT_PRICE_ID,
+        success_url=request.success_url,
+        cancel_url=request.cancel_url
+    )
+    
+    if not session:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create checkout session"
+        )
+    
+    return {
+        "checkout_url": session.url,
+        "session_id": session.id
+    }
 
 
 ############################
