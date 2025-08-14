@@ -97,6 +97,20 @@ export const SUPPORTED_FILE_EXTENSIONS = [
 
 export const PASTED_TEXT_CHARACTER_LIMIT = 1000;
 
+// User Roles Constants
+export const USER_ROLES = {
+	ADMIN: 'admin',
+	USER: 'user',
+	PAID: 'paid',
+	PENDING: 'pending'
+} as const;
+
+// Privileged roles that have access to the main application
+export const PRIVILEGED_ROLES = [USER_ROLES.USER, USER_ROLES.ADMIN, USER_ROLES.PAID];
+
+// Roles that can access admin-only endpoints
+export const ADMIN_ROLES = [USER_ROLES.ADMIN];
+
 // Source: https://kit.svelte.dev/docs/modules#$env-static-public
 // This feature, akin to $env/static/private, exclusively incorporates environment variables
 // that are prefixed with config.kit.env.publicPrefix (usually set to PUBLIC_).

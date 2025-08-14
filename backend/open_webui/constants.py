@@ -1,6 +1,23 @@
 from enum import Enum
 
 
+class USER_ROLES(str, Enum):
+    def __str__(self) -> str:
+        return super().__str__()
+
+    ADMIN = "admin"
+    USER = "user"
+    PAID = "paid"
+    PENDING = "pending"
+
+
+# Privileged roles that have access to the main application
+PRIVILEGED_ROLES = {USER_ROLES.USER, USER_ROLES.ADMIN, USER_ROLES.PAID}
+
+# Roles that can access admin-only endpoints
+ADMIN_ROLES = {USER_ROLES.ADMIN}
+
+
 class MESSAGES(str, Enum):
     DEFAULT = lambda msg="": f"{msg if msg else ''}"
     MODEL_ADDED = lambda model="": f"The model '{model}' has been added successfully."
