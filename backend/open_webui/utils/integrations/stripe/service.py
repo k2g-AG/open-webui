@@ -70,3 +70,33 @@ class StripeService:
         except Exception as e:
             log.error(f"Unexpected error creating trial subscription for customer {customer_id}: {e}")
             return None
+
+    @staticmethod
+    def create_checkout_session(
+        customer_id: str,
+        price_id: str,
+        success_url: str,
+        cancel_url: str
+    ) -> dict | None:
+        log.debug(f"Attempting to create checkout session for customer ID: {customer_id}")
+        try:
+            session = stripe.checkout.Session.create(
+                customer=customer_id,
+                payment_method_types=['card'],
+                line_items=[{
+                    'price': price_id,
+                    'quantity': 1,
+                }],
+                mode='subscription',
+                success_url=success_url,
+                cancel_url=cancel_url,
+                allow_promotion_codes=True,
+            )
+            log.info(f"Successfully created checkout session {session['id']} for customer: {customer_id}")
+            return session
+        except stripe.error.StripeError as e:
+            log.error(f"Stripe API Error creating checkout session for customer {customer_id}: {e.code} - {e.user_message} (param: {e.param}, http_status: {e.http_status})")
+            return None
+        except Exception as e:
+            log.error(f"Unexpected error creating checkout session for customer {customer_id}: {e}")
+            return None
