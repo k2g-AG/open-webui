@@ -335,14 +335,14 @@ class OAuthManager:
             log.error(f"Error processing profile picture '{picture_url}': {e}")
             return "/user.png"
 
-    def get_or_create_stripe_customer(self, email: str, name: str, provider_sub: str) -> tuple[dict, str]:
+    def get_or_create_stripe_customer(self, email: str, name: str, sub: str) -> tuple[dict, str]:
         """
         Get existing Stripe customer or create a new one with trial subscription.
         
         Args:
             email: Customer email
             name: Customer name
-            provider_sub: OAuth provider subscription ID
+            sub: The unique identifier from the OAuth provider (Keycloak ID)
             
         Returns:
             Tuple of (stripe_customer_dict, stripe_customer_id)
@@ -381,7 +381,7 @@ class OAuthManager:
         # Create new customer
         try:
             log.info(f"Creating new Stripe customer for email: {email}, name: {name}")
-            customer_metadata = {"oauth_sub": provider_sub} if provider_sub else {}
+            customer_metadata = {"keycloakId": sub} if sub else {}
             
             stripe_customer = StripeService.create_customer(
                 email=email,
@@ -554,7 +554,7 @@ class OAuthManager:
                 stripe_customer, stripe_customer_id = self.get_or_create_stripe_customer(
                     email=user.email,
                     name=user.name,
-                    provider_sub=provider_sub
+                    sub=sub
                 )
                 
                 if stripe_customer_id:
@@ -598,7 +598,7 @@ class OAuthManager:
                 stripe_customer, stripe_customer_id = self.get_or_create_stripe_customer(
                     email=email,
                     name=name,
-                    provider_sub=provider_sub
+                    sub=sub
                 )
 
                 user = Auths.insert_new_auth(
@@ -812,7 +812,7 @@ class OAuthManager:
                 stripe_customer, stripe_customer_id = self.get_or_create_stripe_customer(
                     email=user.email,
                     name=user.name,
-                    provider_sub=provider_sub
+                    sub=sub
                 )
                 
                 if stripe_customer_id:
@@ -854,7 +854,7 @@ class OAuthManager:
                 stripe_customer, stripe_customer_id = self.get_or_create_stripe_customer(
                     email=email,
                     name=name,
-                    provider_sub=provider_sub
+                    sub=sub
                 )
 
                 user = Auths.insert_new_auth(
