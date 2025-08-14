@@ -72,6 +72,7 @@
        }
    });
 </script>
+</script>
 
 <div class="fixed w-full h-full flex z-999">
 	<div
