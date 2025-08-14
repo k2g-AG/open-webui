@@ -25,7 +25,7 @@ from open_webui.env import SRC_LOG_LEVELS
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 
-from open_webui.utils.auth import get_admin_user, get_password_hash, get_verified_user
+from open_webui.utils.auth import get_admin_user, get_password_hash, get_verified_user, get_current_user
 from open_webui.utils.access_control import get_permissions, has_permission
 from open_webui.utils.integrations.stripe.service import StripeService
 from open_webui.env import STRIPE_CHECKOUT_PRICE_ID
