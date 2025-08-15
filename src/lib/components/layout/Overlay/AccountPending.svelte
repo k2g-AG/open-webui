@@ -4,6 +4,7 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { config } from '$lib/stores';
 	import { WEBUI_BASE_URL, PAYMENT_POLLING_INTERVAL_MS, PAYMENT_MAX_POLLING_ATTEMPTS } from '$lib/constants';
+import { goto } from '$app/navigation';
 
 	let adminDetails: any = null;
 	// Reactive variable to control the visibility of the error message
@@ -43,7 +44,7 @@
 				if (pollingInterval !== undefined) {
 					clearInterval(pollingInterval); // Stop polling as the token is updated
 				}
-				window.location.href = '/'; // Redirect to home page
+				await goto('/', { replaceState: true }); // Redirect to home page and clear URL parameter
 			} else {
 				console.log('Token refresh failed, retrying...');
 			}
@@ -102,8 +103,8 @@
 					{#if ($config?.ui?.pending_user_overlay_title ?? '').trim() !== ''}
 						{$config.ui.pending_user_overlay_title}
 					{:else}
-						Account Activation Pending<br />
-						Contact Admin for WebUI Access
+						Your subscription has ended<br />
+						Please renew your subscription
 					{/if}
 				</div>
 
@@ -114,8 +115,8 @@
 					{#if ($config?.ui?.pending_user_overlay_content ?? '').trim() !== ''}
 						{$config.ui.pending_user_overlay_content}
 					{:else}
-						<div>Account Activation Pending</div>
-						<div class="mt-2">Contact Admin for WebUI Access</div>
+						<div>Your subscription has ended</div>
+						<div class="mt-2">Please renew your subscription to continue using the service.</div>
 					{/if}
 				</div>
 
