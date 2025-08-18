@@ -127,10 +127,11 @@
 									> -->
 									<img
 										crossorigin="anonymous"
-										src={model?.info?.meta?.profile_image_url ??
-											($i18n.language === 'dg-DG'
-												? `${WEBUI_BASE_URL}/doge.png`
-												: `/static/TalkToDataText-logo.svg`)}
+										src={// model?.info?.meta?.profile_image_url ??
+										// $i18n.language === 'dg-DG'
+										// ? `${WEBUI_BASE_URL}/doge.png`
+										// :
+										`/static/TalkToDataText-logo.svg`}
 										aria-hidden="true"
 										draggable="false"
 									/>
@@ -140,24 +141,24 @@
 						</div>
 					</div>
 
-					<div
-						class=" text-3xl @sm:text-3xl line-clamp-1 flex items-center"
-						in:fade={{ duration: 100 }}
-					>
-						{#if models[selectedModelIdx]?.name}
-							<Tooltip
-								content={models[selectedModelIdx]?.name}
-								placement="top"
-								className=" flex items-center "
-							>
-								<span class="line-clamp-1">
-									{models[selectedModelIdx]?.name}
-								</span>
-							</Tooltip>
-						{:else}
-							<!-- {$i18n.t('Hello, {{name}}', { name: $user?.name })} -->
-						{/if}
-					</div>
+					<!-- <div -->
+					<!-- class=" text-3xl @sm:text-3xl line-clamp-1 flex items-center" -->
+					<!-- in:fade={{ duration: 100 }} -->
+					<!-- > -->
+					<!-- {#if models[selectedModelIdx]?.name} -->
+					<!-- <Tooltip -->
+					<!-- content={models[selectedModelIdx]?.name} -->
+					<!-- placement="top" -->
+					<!-- className=" flex items-center " -->
+					<!-- > -->
+					<!-- <span class="line-clamp-1"> -->
+					<!-- {models[selectedModelIdx]?.name} -->
+					<!-- </span> -->
+					<!-- </Tooltip> -->
+					<!-- {:else} -->
+					<!-- {$i18n.t('Hello, {{name}}', { name: $user?.name })} -->
+					<!-- {/if} -->
+					<!-- </div> -->
 				</div>
 
 				<div class="flex mt-1 mb-2">
