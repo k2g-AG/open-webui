@@ -3,15 +3,19 @@
 	import { createCheckoutSession } from '$lib/apis/payments';
 	import { onMount, onDestroy } from 'svelte';
 	import { config } from '$lib/stores';
-	import { WEBUI_BASE_URL, PAYMENT_POLLING_INTERVAL_MS, PAYMENT_MAX_POLLING_ATTEMPTS } from '$lib/constants';
-import { goto } from '$app/navigation';
+	import {
+		WEBUI_BASE_URL,
+		PAYMENT_POLLING_INTERVAL_MS,
+		PAYMENT_MAX_POLLING_ATTEMPTS
+	} from '$lib/constants';
+	import { goto } from '$app/navigation';
 
 	let adminDetails: any = null;
 	// Reactive variable to control the visibility of the error message
 	let showPollingErrorMessage: boolean = false;
 	// Reactive variable to control the visibility of the loader animation
 	let showPollingLoader: boolean = false;
-	
+
 	let pollingInterval: number | undefined;
 	let pollingAttempts: number = 0;
 
@@ -21,8 +25,10 @@ import { goto } from '$app/navigation';
 	 */
 	const checkAndRefreshToken = async () => {
 		pollingAttempts++;
-		console.log(`Attempting to refresh token (attempt ${pollingAttempts}/${PAYMENT_MAX_POLLING_ATTEMPTS})...`);
-		
+		console.log(
+			`Attempting to refresh token (attempt ${pollingAttempts}/${PAYMENT_MAX_POLLING_ATTEMPTS})...`
+		);
+
 		// Check if token exists in localStorage
 		const currentToken = localStorage.getItem('token');
 		if (!currentToken) {
@@ -33,7 +39,7 @@ import { goto } from '$app/navigation';
 			showPollingErrorMessage = true;
 			return;
 		}
-		
+
 		try {
 			const newToken = await userSignRefreshToken(currentToken);
 			if (newToken && newToken.access_token) {
@@ -103,8 +109,7 @@ import { goto } from '$app/navigation';
 					{#if ($config?.ui?.pending_user_overlay_title ?? '').trim() !== ''}
 						{$config.ui.pending_user_overlay_title}
 					{:else}
-						Your subscription has ended<br />
-						Please renew your subscription
+						<div>Your subscription has ended</div>
 					{/if}
 				</div>
 
@@ -115,7 +120,6 @@ import { goto } from '$app/navigation';
 					{#if ($config?.ui?.pending_user_overlay_content ?? '').trim() !== ''}
 						{$config.ui.pending_user_overlay_content}
 					{:else}
-						<div>Your subscription has ended</div>
 						<div class="mt-2">Please renew your subscription to continue using the service.</div>
 					{/if}
 				</div>
@@ -126,46 +130,46 @@ import { goto } from '$app/navigation';
 					</div>
 				{/if}
 
-               {#if showPollingErrorMessage}
-                   <!-- Display error message if polling fails -->
-                   <div class="mt-4 text-center text-red-500 text-sm">
-                       Failed to update account status. Please try again later or contact support.
-                   </div>
-               {/if}
+				{#if showPollingErrorMessage}
+					<!-- Display error message if polling fails -->
+					<div class="mt-4 text-center text-red-500 text-sm">
+						Failed to update account status. Please try again later or contact support.
+					</div>
+				{/if}
 
 				<div class=" mt-6 mx-auto relative group w-fit">
-				                   <!-- Display "Proceed to Payment" button -->
-				                   <button
-				                       type="button"
-				                       class="relative z-20 flex px-5 py-2 rounded-full bg-white border border-gray-100 dark:border-none hover:bg-gray-100 text-gray-700 transition font-medium text-sm"
-				                       on:click={async () => {
-				                           try {
-				                               const token = localStorage.getItem('token');
-				                               if (!token) {
-				                                   console.error('No token found in localStorage');
-				                                   return;
-				                               }
+					<!-- Display "Proceed to Payment" button -->
+					<button
+						type="button"
+						class="relative z-20 flex px-5 py-2 rounded-full bg-white border border-gray-100 dark:border-none hover:bg-gray-100 text-gray-700 transition font-medium text-sm"
+						on:click={async () => {
+							try {
+								const token = localStorage.getItem('token');
+								if (!token) {
+									console.error('No token found in localStorage');
+									return;
+								}
 
-				                               const checkoutSession = await createCheckoutSession(token);
-				                               
-				                               if (!checkoutSession) {
-				                                   throw new Error('Failed to create checkout session - response was empty');
-				                               }
+								const checkoutSession = await createCheckoutSession(token);
 
-				                               if (!checkoutSession.checkout_url) {
-				                                   throw new Error('Checkout URL is missing from response');
-				                               }
+								if (!checkoutSession) {
+									throw new Error('Failed to create checkout session - response was empty');
+								}
 
-				                               // Redirect to checkout
-				                               window.location.assign(checkoutSession.checkout_url);
-				                           } catch (error) {
-				                               console.error('Error creating checkout session:', error);
-				                               showPollingErrorMessage = true;
-				                           }
-				                       }}
-				                   >
-				                       Proceed to Payment
-				                   </button>
+								if (!checkoutSession.checkout_url) {
+									throw new Error('Checkout URL is missing from response');
+								}
+
+								// Redirect to checkout
+								window.location.assign(checkoutSession.checkout_url);
+							} catch (error) {
+								console.error('Error creating checkout session:', error);
+								showPollingErrorMessage = true;
+							}
+						}}
+					>
+						Proceed to Payment
+					</button>
 
 					<button
 						class="text-xs text-center w-full mt-2 text-gray-400 underline"
