@@ -751,16 +751,19 @@ class OAuthManager:
                     )
                     customer_metadata = {"keycloakId": sub}
                     stripe_customer = stripe_client.create_customer(
-                        email=email, name=name, metadata={"keycloakId": sub}
                         email=email,
                         name=name,
-                        metadata=customer_metadata
+                        metadata={"keycloakId": sub},
+                        # email=email,
+                        # name=name,
+                        # metadata=customer_metadata
                     )
                     stripe_customer_id = stripe_customer["id"]
-                    stripe_client.create_trial_subscription(stripe_customer_id)
+                    # stripe_client.create_trial_subscription(stripe_customer_id)
+                    stripe_client.create_trial_subscription(
+                        stripe_customer_id, customer_metadata
+                    )
                 # TODO: Handle case if stripe_customer exist, in this case it means - somehow customer was able to login in a different way,
-                    stripe_client.create_trial_subscription(stripe_customer_id, customer_metadata)
-                #TODO: Handle case if stripe_customer exist, in this case it means - somehow customer was able to login in a different way,
                 # so same email was not recognized by OWUI as another user and this user already had an trial subscription.
 
                 # We have to make a choice - what to do if stripe customer or subscription was not made

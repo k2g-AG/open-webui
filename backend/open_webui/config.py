@@ -2378,8 +2378,8 @@ DIRECT_FILE_MAX_COUNT = PersistentConfig(
     "DIRECT_FILE_MAX_COUNT",
     "file.direct_max_count",
     (
-        int(os.environ.get("DIRECT_FILE_MAX_COUNT", 1))
-        if os.environ.get("DIRECT_FILE_MAX_COUNT", 1)
+        int(os.environ.get("DIRECT_FILE_MAX_COUNT"))
+        if os.environ.get("DIRECT_FILE_MAX_COUNT")
         else None
     ),
 )
@@ -2388,8 +2388,8 @@ DIRECT_FILE_MAX_SIZE = PersistentConfig(
     "DIRECT_FILE_MAX_SIZE",
     "file.direct_max_size",
     (
-        int(os.environ.get("DIRECT_FILE_MAX_SIZE", 10000))
-        if os.environ.get("DIRECT_FILE_MAX_SIZE", 10000)
+        int(os.environ.get("DIRECT_FILE_MAX_SIZE"))
+        if os.environ.get("DIRECT_FILE_MAX_SIZE")
         else None
     ),
 )
