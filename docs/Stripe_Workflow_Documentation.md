@@ -43,7 +43,7 @@ The `AccountPending.svelte` component is designed to handle the state where a us
     *   When a user is redirected to `AccountPending.svelte` with `payment_success=true` in the URL (indicating a successful payment, but the role update might be pending), the component initiates a polling mechanism.
     *   The `checkAndRefreshToken` function is called repeatedly at intervals defined by `PAYMENT_POLLING_INTERVAL_MS` (see [`src/lib/components/layout/Overlay/AccountPending.svelte`](src/lib/components/layout/Overlay/AccountPending.svelte:21)).
     *   This function attempts to refresh the user's token using `userSignRefreshToken`.
-    *   If a new token is successfully obtained (implying the user's role has been updated by the external webhook service), the polling stops, and the user is redirected to the home page (`/`).
+    *   If a new token is successfully obtained (implying the user's role has been updated by the external webhook service), the polling stops, and the user is redirected to the home page (`/`). The `?payment_success=true` URL parameter is now removed using `goto('/', { replaceState: true })` to ensure a clean URL.
     *   If the maximum number of polling attempts (`PAYMENT_MAX_POLLING_ATTEMPTS`) is reached without a successful token refresh, an error message is displayed to the user.
 2.  **"Proceed to Payment" Button**:
     *   The component displays a "Proceed to Payment" button (see [`src/lib/components/layout/Overlay/AccountPending.svelte`](src/lib/components/layout/Overlay/AccountPending.svelte:137)).
@@ -76,7 +76,7 @@ While not directly part of the OWUI codebase provided, the workflow relies on an
         *   The `user.stripe_customer_id` in OWUI's DB is updated.
 3.  **Trial Expiration**: External webhook service detects trial end, updates user role in Keycloak/OAuth to a "pending" state.
 4.  **UI Redirect**: OWUI UI detects the updated role (via token refresh) and redirects the user to `AccountPending.svelte`.
-5.  **Payment Prompt**: `AccountPending.svelte` displays "Account Activation Pending" and a "Proceed to Payment" button.
+5.  **Payment Prompt**: `AccountPending.svelte` displays "Your subscription has ended" and "Please renew your subscription to continue using the service." (default text) and a "Proceed to Payment" button.
 6.  **Checkout Session**: User clicks "Proceed to Payment", which calls `/users/stripe/checkout`.
     *   This endpoint uses `StripeService.create_checkout_session` to generate a Stripe Checkout URL.
 7.  **Stripe Payment**: User is redirected to Stripe to complete payment.
