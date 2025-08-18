@@ -3,13 +3,14 @@
 	import { onMount, getContext } from 'svelte';
 
 	import { user, config, settings } from '$lib/stores';
-	import { updateUserProfile, getAPIKey, getSessionUser } from '$lib/apis/auths';
+	import { updateUserProfile, createAPIKey, getAPIKey, getSessionUser } from '$lib/apis/auths';
 	import { WEBUI_BASE_URL } from '$lib/constants';
 
 	import UpdatePassword from './Account/UpdatePassword.svelte';
 	import { getGravatarUrl } from '$lib/apis/utils';
 	import { generateInitialsImage, canvasPixelTest } from '$lib/utils';
 	import { copyToClipboard } from '$lib/utils';
+	import Plus from '$lib/components/icons/Plus.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import SensitiveInput from '$lib/components/common/SensitiveInput.svelte';
 
@@ -63,6 +64,15 @@
 			return true;
 		}
 		return false;
+	};
+
+	const createAPIKeyHandler = async () => {
+		APIKey = await createAPIKey(localStorage.token);
+		if (APIKey) {
+			toast.success($i18n.t('API Key created.'));
+		} else {
+			toast.error($i18n.t('Failed to create API Key.'));
+		}
 	};
 
 	onMount(async () => {
@@ -387,6 +397,40 @@
 										{/if}
 									</button>
 
+									<Tooltip content={$i18n.t('Create new key')}>
+										<button
+											class=" px-1.5 py-1 dark:hover:bg-gray-850transition rounded-lg"
+											on:click={() => {
+												createAPIKeyHandler();
+											}}
+										>
+											<svg
+												xmlns="http://www.w3.org/2000/svg"
+												fill="none"
+												viewBox="0 0 24 24"
+												stroke-width="2"
+												stroke="currentColor"
+												class="size-4"
+											>
+												<path
+													stroke-linecap="round"
+													stroke-linejoin="round"
+													d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
+												/>
+											</svg>
+										</button>
+									</Tooltip>
+								{:else}
+									<button
+										class="flex gap-1.5 items-center font-medium px-3.5 py-1.5 rounded-lg bg-gray-100/70 hover:bg-gray-100 dark:bg-gray-850 dark:hover:bg-gray-850 transition"
+										on:click={() => {
+											createAPIKeyHandler();
+										}}
+									>
+										<Plus strokeWidth="2" className=" size-3.5" />
+
+										{$i18n.t('Create new secret key')}</button
+									>
 								{/if}
 							</div>
 						</div>
