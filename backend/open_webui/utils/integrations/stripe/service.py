@@ -224,6 +224,7 @@ class StripeService:
             stripe_customer_in_stripe = StripeService.get_customer_by_id(stripe_customer_id_in_db)
             
             if stripe_customer_in_stripe:
+                """ TODO: Add check if stripe_customer_id_in_db is the same as stripe_customer_in_stripe, if not - report an error """
                 log.info(f"Stripe customer {stripe_customer_id_in_db} found in Stripe for user {user.id}. No action needed.")
             else:
                 log.warning(f"Stripe customer {stripe_customer_id_in_db} not found in Stripe for user {user.id}. Re-creating Stripe customer and trial subscription.")
