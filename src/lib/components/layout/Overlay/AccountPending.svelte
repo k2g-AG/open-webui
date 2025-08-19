@@ -11,62 +11,62 @@
 	import { goto } from '$app/navigation';
 
 	let adminDetails: any = null;
-	// Reactive variable to control the visibility of the error message
+	// // Reactive variable to control the visibility of the error message
 	let showPollingErrorMessage: boolean = false;
-	// Reactive variable to control the visibility of the loader animation
-	let showPollingLoader: boolean = false;
+	// // Reactive variable to control the visibility of the loader animation
+	// let showPollingLoader: boolean = false;
 
-	let pollingInterval: number | undefined;
-	let pollingAttempts: number = 0;
+	// let pollingInterval: number | undefined;
+	// let pollingAttempts: number = 0;
 
-	/**
-	 * Function to check and refresh the user's token.
-	 * This is called repeatedly during the polling process.
-	 */
-	const checkAndRefreshToken = async () => {
-		pollingAttempts++;
-		console.log(
-			`Attempting to refresh token (attempt ${pollingAttempts}/${PAYMENT_MAX_POLLING_ATTEMPTS})...`
-		);
+	// /**
+	//  * Function to check and refresh the user's token.
+	//  * This is called repeatedly during the polling process.
+	//  */
+	// const checkAndRefreshToken = async () => {
+	// 	pollingAttempts++;
+	// 	console.log(
+	// 		`Attempting to refresh token (attempt ${pollingAttempts}/${PAYMENT_MAX_POLLING_ATTEMPTS})...`
+	// 	);
 
-		// Check if token exists in localStorage
-		const currentToken = localStorage.getItem('token');
-		if (!currentToken) {
-			console.error('No token found in localStorage');
-			if (pollingInterval !== undefined) {
-				clearInterval(pollingInterval);
-			}
-			showPollingErrorMessage = true;
-			return;
-		}
+	// 	// Check if token exists in localStorage
+	// 	const currentToken = localStorage.getItem('token');
+	// 	if (!currentToken) {
+	// 		console.error('No token found in localStorage');
+	// 		if (pollingInterval !== undefined) {
+	// 			clearInterval(pollingInterval);
+	// 		}
+	// 		showPollingErrorMessage = true;
+	// 		return;
+	// 	}
 
-		try {
-			const newToken = await userSignRefreshToken(currentToken);
-			if (newToken && newToken.access_token) {
-				// If a new token is successfully obtained, it implies the user's role might have been updated.
-				// In a more robust system, you might fetch user details to explicitly confirm the role.
-				localStorage.setItem('token', newToken.access_token);
-				console.log('Token refreshed successfully after payment. Redirecting...');
-				if (pollingInterval !== undefined) {
-					clearInterval(pollingInterval); // Stop polling as the token is updated
-				}
-				await goto('/', { replaceState: true }); // Redirect to home page and clear URL parameter
-			} else {
-				console.log('Token refresh failed, retrying...');
-			}
-		} catch (error) {
-			console.error('Error refreshing token:', error);
-		}
+	// 	try {
+	// 		const newToken = await userSignRefreshToken(currentToken);
+	// 		if (newToken && newToken.access_token) {
+	// 			// If a new token is successfully obtained, it implies the user's role might have been updated.
+	// 			// In a more robust system, you might fetch user details to explicitly confirm the role.
+	// 			localStorage.setItem('token', newToken.access_token);
+	// 			console.log('Token refreshed successfully after payment. Redirecting...');
+	// 			if (pollingInterval !== undefined) {
+	// 				clearInterval(pollingInterval); // Stop polling as the token is updated
+	// 			}
+	// 			await goto('/', { replaceState: true }); // Redirect to home page and clear URL parameter
+	// 		} else {
+	// 			console.log('Token refresh failed, retrying...');
+	// 		}
+	// 	} catch (error) {
+	// 		console.error('Error refreshing token:', error);
+	// 	}
 
-		// If max polling attempts are reached, stop polling and show an error message
-		if (pollingAttempts >= PAYMENT_MAX_POLLING_ATTEMPTS) {
-			console.warn('Max polling attempts reached. Stopping polling.');
-			if (pollingInterval !== undefined) {
-				clearInterval(pollingInterval);
-			}
-			showPollingErrorMessage = true; // Show error message to the user
-		}
-	};
+	// 	// If max polling attempts are reached, stop polling and show an error message
+	// 	if (pollingAttempts >= PAYMENT_MAX_POLLING_ATTEMPTS) {
+	// 		console.warn('Max polling attempts reached. Stopping polling.');
+	// 		if (pollingInterval !== undefined) {
+	// 			clearInterval(pollingInterval);
+	// 		}
+	// 		showPollingErrorMessage = true; // Show error message to the user
+	// 	}
+	// };
 
 	onMount(async () => {
 		// Get admin details if token exists
@@ -78,22 +78,22 @@
 			});
 		}
 
-		// Check if the URL contains the 'payment_success=true' parameter
-		const urlParams = new URLSearchParams(window.location.search);
-		if (urlParams.get('payment_success') === 'true') {
-			console.log('Payment success detected. Starting token refresh polling...');
-			checkAndRefreshToken(); // Perform an initial check immediately
-			// Start polling at defined intervals
-			pollingInterval = setInterval(checkAndRefreshToken, PAYMENT_POLLING_INTERVAL_MS);
-		}
+		// // Check if the URL contains the 'payment_success=true' parameter
+		// const urlParams = new URLSearchParams(window.location.search);
+		// if (urlParams.get('payment_success') === 'true') {
+		// 	console.log('Payment success detected. Starting token refresh polling...');
+		// 	checkAndRefreshToken(); // Perform an initial check immediately
+		// 	// Start polling at defined intervals
+		// 	pollingInterval = setInterval(checkAndRefreshToken, PAYMENT_POLLING_INTERVAL_MS);
+		// }
 	});
 
 	// Cleanup function to clear the polling interval when the component is destroyed
-	onDestroy(() => {
-		if (pollingInterval !== undefined) {
-			clearInterval(pollingInterval);
-		}
-	});
+	// onDestroy(() => {
+	// 	if (pollingInterval !== undefined) {
+	// 		clearInterval(pollingInterval);
+	// 	}
+	// });
 </script>
 
 <div class="fixed w-full h-full flex z-999">
@@ -107,7 +107,7 @@
 					style="white-space: pre-wrap;"
 				>
 					{#if ($config?.ui?.pending_user_overlay_title ?? '').trim() !== ''}
-						{$config.ui.pending_user_overlay_title}
+						{$config?.ui?.pending_user_overlay_title}
 					{:else}
 						<div>Your subscription has ended</div>
 					{/if}
@@ -118,7 +118,7 @@
 					style="white-space: pre-wrap;"
 				>
 					{#if ($config?.ui?.pending_user_overlay_content ?? '').trim() !== ''}
-						{$config.ui.pending_user_overlay_content}
+						{$config?.ui?.pending_user_overlay_content}
 					{:else}
 						<div class="mt-2">Please renew your subscription to continue using the service.</div>
 					{/if}
