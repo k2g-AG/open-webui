@@ -148,6 +148,7 @@
 	let files = [];
 	let params = {};
 	let allFiles = [];
+	let allUserFiles = [];
 	let syntheticFiles = [];
 	let syntheticShow = false;
 
@@ -473,6 +474,9 @@
 			});
 			console.info('syntheticFiles:', { syntheticFiles });
 			allFiles = res;
+			allUserFiles = res.filter((item) => {
+				return !item.meta.data.synthetic;
+			});
 		} catch (error) {
 			console.warn('getFiles error:', { error });
 		}
@@ -2320,7 +2324,7 @@
 								files = [...files, formattedFile];
 								show = false;
 							}}
-							bind:allFiles
+							bind:allFiles={allUserFiles}
 						/></Modal
 					>
 					<Modal size="2xl" bind:show={syntheticShow}
