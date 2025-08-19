@@ -220,7 +220,7 @@
 			return;
 		}
 		sessionStorage.selectedModels = JSON.stringify(selectedModels);
-		console.info('saveSessionSelectedModels', selectedModels, sessionStorage.selectedModels);
+		// console.info('saveSessionSelectedModels', selectedModels, sessionStorage.selectedModels);
 	};
 
 	let oldSelectedModelIds = [''];

@@ -233,7 +233,7 @@
 				</Tooltip>
 			{/if}
 			
-			{#if syntheticFilesEnabled}
+			{#if fileUploadEnabled}
 				<Tooltip
 					content={fileUploadCapableModels.length !== selectedModels.length
 						? $i18n.t('Model(s) do not support file upload')
