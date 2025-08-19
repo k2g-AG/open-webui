@@ -9,6 +9,7 @@
 		PAYMENT_MAX_POLLING_ATTEMPTS
 	} from '$lib/constants';
 	import { goto } from '$app/navigation';
+	import keycloak from '$lib/keycloak';
 
 	let adminDetails: any = null;
 	// // Reactive variable to control the visibility of the error message
@@ -175,7 +176,7 @@
 						class="text-xs text-center w-full mt-2 text-gray-400 underline"
 						on:click={() => {
 							localStorage.removeItem('token');
-							window.location.assign(`${WEBUI_BASE_URL}/oauth/oidc/login`);
+							keycloak.logout();
 						}}
 					>
 						Sign Out
