@@ -1012,20 +1012,19 @@
 
 	const onDrop = async (e) => {
 		e.preventDefault();
-		console.info(e);
 		let filsDropProcessed = false;
 
 		if (e.dataTransfer?.files) {
 			const inputFiles = Array.from(e.dataTransfer?.files);
 			if (inputFiles && inputFiles.length > 0) {
 				console.info('inputFiles:', inputFiles);
-				if ($user?.permissions?.chat?.file_direct_upload) {
+				if ($_user?.permissions?.chat?.file_direct_upload) {
 					console.info('drop files for direct upload...');
 					inputDirectFilesHandler(inputFiles);
 					filsDropProcessed = true;
 				} else {
 					console.info('no permission drop files for direct upload...');
-					if ($user?.permissions?.chat?.file_upload) {
+					if ($_user?.permissions?.chat?.file_upload) {
 						console.info('drop files for vector upload...');
 						inputFilesHandler(inputFiles);
 						filsDropProcessed = true;
@@ -1039,7 +1038,6 @@
 		if (filsDropProcessed) {
 			return;
 		}
-		console.info('user permissions:', $user?.permissions);
 		toast.error($i18n.t('You do not have permission to upload files.'));
 	};
 

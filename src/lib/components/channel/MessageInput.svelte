@@ -442,20 +442,6 @@
 
 		if (e.dataTransfer?.files && acceptFiles) {
 			const inputFiles = Array.from(e.dataTransfer?.files);
-			// if (inputFiles && inputFiles.length > 0) {
-			// 	console.info(inputFiles);
-			// 	if ($user?.permissions?.chat?.file_direct_upload) {
-			// 		console.info('drop files for direct upload...');
-			// 		inputDirectFilesHandler(inputFiles);
-			// 		filsDropProcessed = true;
-			// 	} else {
-			// 		if ($user?.permissions?.chat?.file_upload) {
-			// 			console.info('drop files for vector upload...');
-			// 			inputFilesHandler(inputFiles);
-			// 			filsDropProcessed = true;
-			// 		}
-			// 	}
-			// }
 			if (inputFiles && inputFiles.length > 0) {
 				console.log(inputFiles);
 				inputFilesHandler(inputFiles);
