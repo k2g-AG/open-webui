@@ -207,16 +207,13 @@ from open_webui.config import (
     RAG_TOP_K_RERANKER,
     RAG_RELEVANCE_THRESHOLD,
     RAG_HYBRID_BM25_WEIGHT,
-    
     RAG_ALLOWED_FILE_EXTENSIONS,
     RAG_FILE_MAX_COUNT,
     RAG_FILE_MAX_SIZE,
-
     ENABLE_DIRECT_FILE_UPLOAD,
     DIRECT_ALLOWED_FILE_EXTENSIONS,
     DIRECT_FILE_MAX_COUNT,
     DIRECT_FILE_MAX_SIZE,
-
     FILE_IMAGE_COMPRESSION_WIDTH,
     FILE_IMAGE_COMPRESSION_HEIGHT,
     RAG_OPENAI_API_BASE_URL,
@@ -1095,7 +1092,7 @@ class RedirectMiddleware(BaseHTTPMiddleware):
                 encoded_video_id = urlencode({"youtube": video_id})
                 redirect_url = f"/?{encoded_video_id}"
                 return RedirectResponse(url=redirect_url)
-            
+
         # if request.method == "POST":
         #     path = request.url.path.lower()
         #     if path.endswith("/api/v1/files/tus"):
@@ -1114,14 +1111,14 @@ class RedirectMiddleware(BaseHTTPMiddleware):
         #                 status_code=status.HTTP_400_BAD_REQUEST,
         #                 detail="Error uploading file",
         #             )
-                    
-        if request.method == "DELETE":
-            path = request.url.path.lower()
-            if "/api/v1/files/tus" in path:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="You cannont delete uploading file",
-                )
+
+        # if request.method == "DELETE":
+        #     path = request.url.path.lower()
+        #     if "/api/v1/files/tus" in path:
+        #         raise HTTPException(
+        #             status_code=status.HTTP_400_BAD_REQUEST,
+        #             detail="You cannont delete uploading file",
+        #         )
 
         # Proceed with the normal flow of other requests
         response = await call_next(request)
@@ -1244,7 +1241,7 @@ if audit_level != AuditLevel.NONE:
         excluded_paths=AUDIT_EXCLUDED_PATHS,
         max_body_size=MAX_BODY_LOG_SIZE,
     )
-    
+
 ##################################
 #
 # Chat Endpoints
@@ -1567,7 +1564,7 @@ async def get_app_config(request: Request):
         #     raise HTTPException(
         #         status_code=status.HTTP_401_UNAUTHORIZED,
         #         detail="Invalid token",
-        #     )            
+        #     )
 
     user_count = Users.get_num_users()
     onboarding = False
@@ -1640,12 +1637,10 @@ async def get_app_config(request: Request):
                     "max_size": app.state.config.FILE_MAX_SIZE,
                     "max_count": app.state.config.FILE_MAX_COUNT,
                     "allow_file_extensions": app.state.config.ALLOWED_FILE_EXTENSIONS,
-                    
                     "enable_direct_file_upload": app.state.config.ENABLE_DIRECT_FILE_UPLOAD,
                     "allow_direct_file_extensions": app.state.config.ALLOWED_DIRECT_FILE_EXTENSIONS,
                     "direct_max_size": app.state.config.DIRECT_FILE_MAX_SIZE,
                     "direct_max_count": app.state.config.DIRECT_FILE_MAX_COUNT,
-                    
                     "image_compression": {
                         "width": app.state.config.FILE_IMAGE_COMPRESSION_WIDTH,
                         "height": app.state.config.FILE_IMAGE_COMPRESSION_HEIGHT,
@@ -1788,11 +1783,13 @@ async def oauth_login(provider: str, request: Request):
 #    - Email addresses are considered unique, so we fail registration if the email address is already taken
 @app.get("/oauth/{provider}/callback")
 async def oauth_callback(provider: str, request: Request, response: Response):
-    log.info(f'request headers: {request.headers}')
-    log.info(f'request cookies: {request.cookies}')
-    log.info(f'request cookies: {request.path_params}')
-    log.info(f'request headers: {request.query_params.items}')
-    log.info(f'handle_callback request.state.token.scheme = {request.state.token.scheme}, request.state.token.credentials = {request.state.token.credentials}')
+    log.info(f"request headers: {request.headers}")
+    log.info(f"request cookies: {request.cookies}")
+    log.info(f"request cookies: {request.path_params}")
+    log.info(f"request headers: {request.query_params.items}")
+    log.info(
+        f"handle_callback request.state.token.scheme = {request.state.token.scheme}, request.state.token.credentials = {request.state.token.credentials}"
+    )
 
     return await oauth_manager.handle_callback(request, provider, response)
 
