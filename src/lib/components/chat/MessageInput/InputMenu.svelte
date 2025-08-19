@@ -18,6 +18,7 @@
 	import PhotoSolid from '$lib/components/icons/PhotoSolid.svelte';
 	import CommandLineSolid from '$lib/components/icons/CommandLineSolid.svelte';
 	import SyntheticDataset from '$lib/components/icons/SyntheticDataset.svelte';
+	import DownloadMinimalistic from '$lib/components/icons/DownloadMinimalistic.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -257,6 +258,31 @@
 					</DropdownMenu.Item>
 				</Tooltip>
 			{/if} -->
+			{#if directFileUploadEnabled}
+				<Tooltip
+					content={fileUploadCapableModels.length !== selectedModels.length
+						? $i18n.t('Model(s) do not support file direct upload')
+						: !directFileUploadEnabled
+							? $i18n.t('You do not have permission to direct upload files.')
+							: ''}
+					className="w-full"
+				>
+					<DropdownMenu.Item
+						class="flex gap-2 items-center px-3 py-2 text-sm font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl {!directFileUploadEnabled
+							? 'opacity-50'
+							: ''}"
+						on:click={() => {
+							if (directFileUploadEnabled) {
+								console.info('uploadDirectFilesHandler called..');
+								uploadDirectFilesHandler();
+							}
+						}}
+					>
+						<DownloadMinimalistic />
+						<div class="line-clamp-1">{$i18n.t('Direct Upload Files')}</div>
+					</DropdownMenu.Item>
+				</Tooltip>
+			{/if}
 
 			<Tooltip
 				content={fileUploadCapableModels.length !== selectedModels.length
@@ -277,7 +303,7 @@
 						}
 					}}
 				>
-					<DocumentArrowUpSolid />
+					<DownloadMinimalistic />
 					<div class="line-clamp-1">Uploaded datasets</div>
 				</DropdownMenu.Item>
 			</Tooltip>
@@ -303,32 +329,6 @@
 					>
 						<SyntheticDataset />
 						<div class="line-clamp-1">Synthetic dataset</div>
-					</DropdownMenu.Item>
-				</Tooltip>
-			{/if}
-
-			{#if directFileUploadEnabled}
-				<Tooltip
-					content={fileUploadCapableModels.length !== selectedModels.length
-						? $i18n.t('Model(s) do not support file direct upload')
-						: !directFileUploadEnabled
-							? $i18n.t('You do not have permission to direct upload files.')
-							: ''}
-					className="w-full"
-				>
-					<DropdownMenu.Item
-						class="flex gap-2 items-center px-3 py-2 text-sm font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl {!directFileUploadEnabled
-							? 'opacity-50'
-							: ''}"
-						on:click={() => {
-							if (directFileUploadEnabled) {
-								console.info('uploadDirectFilesHandler called..');
-								uploadDirectFilesHandler();
-							}
-						}}
-					>
-						<DocumentArrowUpSolid />
-						<div class="line-clamp-1">{$i18n.t('Direct Upload Files')}</div>
 					</DropdownMenu.Item>
 				</Tooltip>
 			{/if}
