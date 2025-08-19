@@ -199,8 +199,8 @@
 				{/if}
 				<hr class="border-black/5 dark:border-white/5 my-1" />
 			{/if}
-
-			{#if fileUploadEnabled}
+			<!-- remove capture and upload due to TTD-202 -->
+			<!-- {#if fileUploadEnabled}
 				<Tooltip
 					content={fileUploadCapableModels.length !== selectedModels.length
 						? $i18n.t('Model(s) do not support file upload')
@@ -256,7 +256,7 @@
 						<div class="line-clamp-1">{$i18n.t('Upload Files')}</div>
 					</DropdownMenu.Item>
 				</Tooltip>
-			{/if}
+			{/if} -->
 
 			<Tooltip
 				content={fileUploadCapableModels.length !== selectedModels.length
