@@ -42,7 +42,7 @@
 	export let onClose: Function;
 
 	let tools = {};
-	let show = false;
+	let show = true;
 	let showAllTools = false;
 
 	$: if (show) {
@@ -131,7 +131,7 @@
 			class="w-full max-w-[200px] rounded-xl px-1 py-1 border border-gray-300/30 dark:border-gray-700/50 z-50 bg-white dark:bg-gray-850 dark:text-white shadow-sm"
 			sideOffset={10}
 			alignOffset={-8}
-			side="top"
+			side="bottom"
 			align="start"
 			transition={flyAndScale}
 		>
