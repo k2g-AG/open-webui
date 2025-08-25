@@ -35,90 +35,85 @@ export const uploadFile = async (token: string, file: File, metadata?: object | 
 	return res;
 };
 
-let currentTUSUpload = null; // global or scoped appropriately
+const tusUploads = new Map<string, tus.Upload>(); // itemId -> upload
 
-export async function uploadFileTUS(file: File, metadata?: object | null) {
-	return new Promise((resolve, reject) => {
-		let chunkSize = 20 * 1024 * 1024; // 20MB
+type TusCallbacks = {
+	itemId: string; // <-- connect to the UI item
+	onProgress?: (pct: number, sent: number, total: number) => void;
+	onRegister?: (upload: tus.Upload) => void; // optional hook
+};
+
+export function uploadFileTUS(file: File, metadata?: object | null, cbs?: TusCallbacks) {
+	return new Promise<string>((resolve, reject) => {
 		let percentageView = 0;
 
 		const upload = new tus.Upload(file, {
 			endpoint: `${WEBUI_BASE_URL}${WEBUI_API_BASE_URL}/files/tus`,
 			headers: { Authorization: `Bearer ${localStorage.token}` },
 			retryDelays: [0, 3000, 5000, 10000, 20000],
-			chunkSize: chunkSize,
+			chunkSize: 20 * 1024 * 1024, // 20MB
 			metadata: {
 				filename: file.name,
 				filetype: file.type,
-				filesize: file.size,
+				filesize: String(file.size),
 				uploadType: 'direct',
-				metadata: JSON.stringify(metadata)
+				metadata: JSON.stringify(metadata ?? {})
 			},
 			onError: (error) => {
-				console.error('Upload error:', error);
+				tusUploads.delete(cbs?.itemId ?? '');
 				reject(error);
 			},
 			onProgress: (bytesSent, bytesTotal) => {
-				const percentage = ((bytesSent / bytesTotal) * 100).toFixed(2);
-				if (Math.abs(percentageView - parseFloat(percentage)) >= 1) {
-					console.info(bytesSent, bytesTotal, percentage + '%');
-					percentageView = parseFloat(percentage);
+				const pct = Number(((bytesSent / bytesTotal) * 100).toFixed(2));
+				if (Math.abs(percentageView - pct) >= 1) {
+					percentageView = pct;
+					cbs?.onProgress?.(pct, bytesSent, bytesTotal);
 				}
 			},
 			onSuccess: () => {
-				console.info('Upload finished:', upload.url);
-				resolve(upload.url);
+				const url = upload.url!;
+				tusUploads.delete(cbs?.itemId ?? '');
+				resolve(url);
 			}
 		});
 
-		currentTUSUpload = upload; // assign the instance for control
+		// Save / expose instance so we can cancel per file
+		if (cbs?.itemId) tusUploads.set(cbs.itemId, upload);
+		cbs?.onRegister?.(upload);
 
-		upload.findPreviousUploads().then((previousUploads) => {
-			if (previousUploads.length) {
-				upload.resumeFromPreviousUpload(previousUploads[0]);
-				console.info('Resuming previous upload:', previousUploads[0]);
-			}
+		upload.findPreviousUploads().then((prev) => {
+			if (prev.length) upload.resumeFromPreviousUpload(prev[0]);
 			upload.start();
 		});
 	});
 }
 
-export function cancelCurrentUpload() {
-	if (currentTUSUpload) {
-		currentTUSUpload.abort(true); // true = abort and remove URL storage
-		console.warn('Upload cancelled.');
-		currentTUSUpload = null;
+export function cancelUploadByItemId(itemId: string) {
+	const up = tusUploads.get(itemId);
+	if (up) {
+		up.abort(true);
+		tusUploads.delete(itemId);
+		console.warn('Upload cancelled for item:', itemId);
 	}
 }
 
-export const uploadDirectFile = async (file: File, metadata?: object | null) => {
-	let error = null;
+export const uploadDirectFile = async (
+	file: File,
+	metadata?: object | null,
+	cbs?: TusCallbacks
+) => {
 	let uploadedUrl = '';
-
-	if (file) {
-		// const upload = new Upload(file, {
-		try {
-			console.info('File uploaded successfully to:', uploadedUrl);
-			uploadedUrl = await uploadFileTUS(file, metadata);
-		} catch (err) {
-			console.error('Upload failed:', err);
-			error = err;
-		}
-		console.info('Upload finished 2:', uploadedUrl);
-	} else {
-		console.warn('No file selected.');
+	try {
+		uploadedUrl = await uploadFileTUS(file, metadata, cbs);
+	} catch (err) {
+		throw err;
 	}
 
-	if (error) {
-		console.error(error);
-		throw error;
-	}
-
-	const fileMetadata = {
+	const body = {
 		filename: file.name,
 		filetype: file.type,
 		filesize: file.size,
-		data: JSON.stringify(metadata),
+		data: JSON.stringify(metadata ?? {}),
 		fileURL: uploadedUrl
 	};
 
@@ -129,27 +124,11 @@ export const uploadDirectFile = async (file: File, metadata?: object | null) => 
 			'Content-Type': 'application/json',
 			authorization: `Bearer ${localStorage.token}`
 		},
-		body: JSON.stringify(fileMetadata)
-	})
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
-		.then((json) => {
-			return json;
-		})
-		.catch((err) => {
-			error = err.detail;
-			console.error(err);
-			return null;
-		});
+		body: JSON.stringify(body)
+	});
 
-	if (error) {
-		throw error;
-	}
-
-	console.info('res: ', res);
-	return res;
+	if (!res.ok) throw await res.json();
+	return res.json();
 };
 
 export const uploadDirectFileOld = async (token: string, file: File, metadata?: object | null) => {

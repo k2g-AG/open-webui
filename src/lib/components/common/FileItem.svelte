@@ -23,6 +23,7 @@
 	export let item = null;
 	export let edit = false;
 	export let small = false;
+	export let progress = null;
 
 	export let name: string;
 	export let type: string;
@@ -31,6 +32,10 @@
 	import { deleteFileById } from '$lib/apis/files';
 
 	let showModal = false;
+	$: if (progress != null) {
+		// fires on every update
+		console.info('PROGRESS:', progress);
+	}
 
 	const decodeString = (str: string) => {
 		try {
