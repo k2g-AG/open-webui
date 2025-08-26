@@ -86,6 +86,7 @@
 						stroke="currentColor"
 						stroke-opacity="0.15"
 						stroke-width="3"
+						class="text-[#79C1AE]"
 					/>
 					<circle
 						cx="16"
@@ -171,11 +172,11 @@
 
 	{#if dismissible}
 		<!-- keep inside the card; visible on hover OR focus -->
-		<div class="absolute top-1.5 right-1.5">
+		<div class="absolute !right-[calc(var(--spacing)*-2)] !top-[calc(var(--spacing)*-2)]">
 			<button
 				aria-label={$i18n.t('Remove File')}
 				class="size-7 rounded-full bg-white text-black dark:bg-gray-900 dark:text-white border border-gray-100 dark:border-white/10 shadow-sm
-					   outline-hidden focus-visible:ring-2 focus-visible:ring-emerald-500/60
+					   outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60
 					   group-hover:opacity-100 group-focus-within:opacity-100 opacity-0 transition"
 				type="button"
 				on:click|stopPropagation={() => dispatch('dismiss')}
@@ -187,12 +188,13 @@
 
 	<!-- bottom progress bar -->
 	{#if pct != null}
+		<!-- expose pct as a CSS var and use a Tailwind arbitrary value class with !priority -->
 		<div
-			class="absolute left-0 bottom-0 w-full h-1 bg-black/10 dark:bg-white/10 overflow-hidden rounded-b-{small
-				? 'xl'
-				: '2xl'}"
+			class="absolute left-2 bottom-0 h-0.5 w-[calc(100%-8px)] max-w-[224px] bg-black/10 dark:bg-white/10 overflow-hidden {small
+				? 'rounded-b-xl'
+				: 'rounded-b-2xl'}"
 		>
-			<div class="h-full bg-emerald-500" style="width: {pct}%;"></div>
+			<div class="h-full bg-emerald-500 !w-[var(--pct)]" style="--pct:{pct}%;" />
 		</div>
 	{/if}
 </button>
