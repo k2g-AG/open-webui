@@ -59,7 +59,7 @@
 <button
 	class="relative group p-1.5 {className} flex items-center gap-1 {colorClassName} {small
 		? 'rounded-xl'
-		: 'rounded-2xl'} text-left overflow-hidden"
+		: 'rounded-2xl'} text-left"
 	type="button"
 	on:click={async () => {
 		if (item?.file?.data?.content || modal) {
@@ -74,11 +74,10 @@
 	{#if !small}
 		<!-- Left icon / circular progress -->
 		<div
-			class="p-3 bg-black/5 dark:bg-white/10 text-white rounded-xl w-10 h-10 flex items-center justify-center"
+			class="p-3 bg-black/5 dark:bg-white/10 text-white rounded-xl w-10 h-10 flex items-center justify-center shrink-0"
 		>
 			{#if pct != null}
 				<svg viewBox="0 0 32 32" class="w-6 h-6">
-					<!-- track -->
 					<circle
 						cx="16"
 						cy="16"
@@ -88,7 +87,6 @@
 						stroke-opacity="0.15"
 						stroke-width="3"
 					/>
-					<!-- progress -->
 					<circle
 						cx="16"
 						cy="16"
@@ -104,6 +102,7 @@
 					/>
 				</svg>
 			{:else if !loading}
+				<!-- file icon -->
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
 					viewBox="0 0 24 24"
@@ -126,12 +125,12 @@
 	{/if}
 
 	{#if !small}
-		<div class="flex flex-col justify-center px-2.5 w-full">
+		<div class="flex flex-col justify-center px-2.5 w-full min-w-0">
+			<!-- min-w-0 fixes text overflow in flex -->
 			<div class="dark:text-gray-100 text-sm font-medium line-clamp-1 mb-1">
 				{decodeString(name)}
 			</div>
 
-			<!-- When uploading: show `32%` on left and size on right; otherwise show type + size -->
 			{#if pct != null}
 				<div class="flex justify-between text-xs text-gray-600 dark:text-gray-300">
 					<span>{Math.round(pct)}%</span>
@@ -158,12 +157,12 @@
 		</div>
 	{:else}
 		<Tooltip content={decodeString(name)} className="flex flex-col w-full" placement="top-start">
-			<div class="flex flex-col justify-center px-2.5 w-full">
-				<div class="dark:text-gray-100 text-sm flex justify-between items-center">
+			<div class="flex flex-col justify-center px-2.5 w-full min-w-0">
+				<div class="dark:text-gray-100 text-sm flex justify-between items-center gap-2">
 					{#if loading}
-						<div class="shrink-0 mr-2"><Spinner className="size-4" /></div>
+						<div class="shrink-0"><Spinner className="size-4" /></div>
 					{/if}
-					<div class="font-medium line-clamp-1 flex-1">{decodeString(name)}</div>
+					<div class="font-medium line-clamp-1 flex-1 min-w-0">{decodeString(name)}</div>
 					<div class="text-gray-500 text-xs capitalize shrink-0">{formatFileSize(size)}</div>
 				</div>
 			</div>
@@ -171,24 +170,28 @@
 	{/if}
 
 	{#if dismissible}
-		<div class="absolute -top-1 -right-1">
+		<!-- keep inside the card; visible on hover OR focus -->
+		<div class="absolute top-1.5 right-1.5">
 			<button
 				aria-label={$i18n.t('Remove File')}
-				class="bg-white text-black border border-gray-50 rounded-full {($settings?.highContrastMode ??
-				false)
-					? ''
-					: 'outline-hidden focus:outline-hidden group-hover:visible invisible transition'}"
+				class="size-7 rounded-full bg-white text-black dark:bg-gray-900 dark:text-white border border-gray-100 dark:border-white/10 shadow-sm
+					   outline-hidden focus-visible:ring-2 focus-visible:ring-emerald-500/60
+					   group-hover:opacity-100 group-focus-within:opacity-100 opacity-0 transition"
 				type="button"
 				on:click|stopPropagation={() => dispatch('dismiss')}
 			>
-				<XMark className="size-4" />
+				<XMark className="m-auto size-4" />
 			</button>
 		</div>
 	{/if}
 
 	<!-- bottom progress bar -->
 	{#if pct != null}
-		<div class="absolute left-0 bottom-0 w-full h-1 bg-black/10 dark:bg-white/10">
+		<div
+			class="absolute left-0 bottom-0 w-full h-1 bg-black/10 dark:bg-white/10 overflow-hidden rounded-b-{small
+				? 'xl'
+				: '2xl'}"
+		>
 			<div class="h-full bg-emerald-500" style="width: {pct}%;"></div>
 		</div>
 	{/if}
