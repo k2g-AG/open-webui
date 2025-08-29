@@ -293,6 +293,12 @@ class TusRouter(APIRouter):
                 if mime_type:
                     return StreamingResponse(read_file(), media_type=mime_type, headers=headers)
                 
+                filetype = info.metadata.get("filetype", "")
+                if filetype:
+                    return StreamingResponse(read_file(), media_type=filetype, headers=headers)
+
+                return StreamingResponse(read_file(), headers=headers)
+
             return StreamingResponse(read_file(), media_type="video/mp4")
 
         async def _write_chunk(request: Request, info: FileInfo) -> FileInfo:
