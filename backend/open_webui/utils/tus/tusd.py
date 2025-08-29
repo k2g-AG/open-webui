@@ -284,10 +284,15 @@ class TusRouter(APIRouter):
                 f = self.datastore.open(uuid=uuid, mode="rb")
                 yield from f
 
-            import mimetypes
-            mime_type, _ = mimetypes.guess_type(info.metadata.get("filename", ""))
-            if mime_type:
-                return StreamingResponse(read_file(), media_type=mime_type)
+            filename = info.metadata.get("filename", "")
+            if filename:
+                headers={"Content-Disposition": f"attachment; filename=\"{filename}\""}
+
+                import mimetypes
+                mime_type, _ = mimetypes.guess_type(filename)
+                if mime_type:
+                    return StreamingResponse(read_file(), media_type=mime_type, headers=headers)
+                
             return StreamingResponse(read_file(), media_type="video/mp4")
 
         async def _write_chunk(request: Request, info: FileInfo) -> FileInfo:
