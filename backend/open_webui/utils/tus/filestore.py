@@ -61,8 +61,8 @@ class FileStore():
     def file_bin_path(self, uuid: str) -> str:
         return os.path.join(self.path, uuid)
 
-    def open(self, uuid: str, mode="ab") -> BinaryIO:
-        fs = open(self.file_bin_path(uuid=uuid), mode)
+    def open(self, uuid: str, mode="ab", buffering=10*1024*1024) -> BinaryIO:
+        fs = open(self.file_bin_path(uuid=uuid), mode, buffering=buffering)
         return fs
     
     def file_info_path(self, uuid: str) -> str:
