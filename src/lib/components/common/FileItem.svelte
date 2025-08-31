@@ -24,6 +24,9 @@
 	export let edit = false;
 	export let small = false;
 
+	// progress can be 0–1 or 0–100
+	export let progress: number | null = null;
+
 	export let name: string;
 	export let type: string;
 	export let size: number;
@@ -39,6 +42,15 @@
 			return str;
 		}
 	};
+
+	// normalized percentage for UI
+	$: pct =
+		progress == null ? null : Math.max(0, Math.min(100, progress <= 1 ? progress * 100 : progress));
+
+	// circular progress arc math
+	const CIRC = 2 * Math.PI * 12; // r=12
+	$: dash = pct == null ? CIRC : (CIRC * pct) / 100;
+	$: isLoading = loading && (pct == null || pct < 100);
 </script>
 
 {#if item}
@@ -53,28 +65,76 @@
 	on:click={async () => {
 		if (item?.file?.data?.content || modal) {
 			showModal = !showModal;
-		} else {
-			if (url) {
-				if (type === 'file') {
-					window.open(`${url}/content`, '_blank').focus();
-				} else {
-					window.open(`${url}`, '_blank').focus();
-				}
-			}
+		} else if (url) {
+			if (type === 'file') window.open(`${url}/content`, '_blank')?.focus();
+			else window.open(`${url}`, '_blank')?.focus();
 		}
-
 		dispatch('click');
 	}}
 >
 	{#if !small}
-		<div class="p-3 bg-black/20 dark:bg-white/10 text-white rounded-xl">
-			{#if !loading}
-				<svg
+		<!-- Left icon / circular progress -->
+		<div
+			class="p-3 bg-black/5 dark:bg-white/10 text-white rounded-xl w-10 h-10 flex items-center justify-center shrink-0"
+		>
+			{#if pct != null && pct < 100}
+				<svg viewBox="0 0 32 32" class="w-6 h-6">
+					<circle
+						cx="16"
+						cy="16"
+						r="12"
+						fill="none"
+						stroke="currentColor"
+						stroke-opacity="0.15"
+						stroke-width="3"
+						class="text-[#79C1AE]"
+					/>
+					<circle
+						cx="16"
+						cy="16"
+						r="12"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="3"
+						stroke-linecap="round"
+						stroke-dasharray={CIRC}
+						stroke-dashoffset={CIRC - dash}
+						transform="rotate(-90 16 16)"
+						class="text-emerald-500"
+					/>
+				</svg>
+			{:else if !isLoading}
+				<!-- file icon -->
+				<svg class="size-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+					<path
+						d="M4.5 10.2C4.5 6.80589 4.5 5.10883 5.47631 4.05442C6.45262 3 8.02397 3 11.1667 3H12.8333C15.976 3 17.5474 3 18.5237 4.05442C19.5 5.10883 19.5 6.80589 19.5 10.2V13.8C19.5 17.1941 19.5 18.8912 18.5237 19.9456C17.5474 21 15.976 21 12.8333 21H11.1667C8.02397 21 6.45262 21 5.47631 19.9456C4.5 18.8912 4.5 17.1941 4.5 13.8V10.2Z"
+						stroke="#60C3AD"
+						stroke-width="1.5"
+					/>
+					<path
+						d="M8.66406 12H15.3307"
+						stroke="#60C3AD"
+						stroke-width="1.5"
+						stroke-linecap="round"
+					/>
+					<path
+						d="M8.66406 8.40039H15.3307"
+						stroke="#60C3AD"
+						stroke-width="1.5"
+						stroke-linecap="round"
+					/>
+					<path
+						d="M8.66406 15.5996H12.8307"
+						stroke="#60C3AD"
+						stroke-width="1.5"
+						stroke-linecap="round"
+					/>
+				</svg>
+				<!-- <svg
 					xmlns="http://www.w3.org/2000/svg"
 					viewBox="0 0 24 24"
 					fill="currentColor"
-					aria-hidden="true"
-					class=" size-5"
+					class="size-5 text-gray-700 dark:text-gray-200"
 				>
 					<path
 						fill-rule="evenodd"
@@ -84,7 +144,7 @@
 					<path
 						d="M12.971 1.816A5.23 5.23 0 0 1 14.25 5.25v1.875c0 .207.168.375.375.375H16.5a5.23 5.23 0 0 1 3.434 1.279 9.768 9.768 0 0 0-6.963-6.963Z"
 					/>
-				</svg>
+				</svg> -->
 			{:else}
 				<Spinner />
 			{/if}
@@ -92,40 +152,44 @@
 	{/if}
 
 	{#if !small}
-		<div class="flex flex-col justify-center -space-y-0.5 px-2.5 w-full">
-			<div class=" dark:text-gray-100 text-sm font-medium line-clamp-1 mb-1">
+		<div class="flex flex-col justify-center px-2.5 w-full min-w-0">
+			<!-- min-w-0 fixes text overflow in flex -->
+			<div class="dark:text-gray-100 text-sm font-medium line-clamp-1 mb-1">
 				{decodeString(name)}
 			</div>
 
-			<div
-				class=" flex justify-between text-xs line-clamp-1 {($settings?.highContrastMode ?? false)
-					? 'text-gray-800 dark:text-gray-100'
-					: 'text-gray-500'}"
-			>
-				{#if type === 'file'}
-					{$i18n.t('File')}
-				{:else if type === 'doc'}
-					{$i18n.t('Document')}
-				{:else if type === 'collection'}
-					{$i18n.t('Collection')}
-				{:else}
-					<span class=" capitalize line-clamp-1">{type}</span>
-				{/if}
-				{#if size}
-					<span class="capitalize">{formatFileSize(size)}</span>
-				{/if}
-			</div>
+			{#if pct != null && pct < 100}
+				<div class="flex justify-between text-xs text-gray-600 dark:text-gray-300">
+					<span>{Math.round(pct)}%</span>
+					{#if size}<span class="capitalize">{formatFileSize(size)}</span>{/if}
+				</div>
+			{:else}
+				<div
+					class="flex justify-between text-xs {($settings?.highContrastMode ?? false)
+						? 'text-gray-800 dark:text-gray-100'
+						: 'text-gray-500'}"
+				>
+					{#if type === 'file'}
+						{$i18n.t('File')}
+					{:else if type === 'doc'}
+						{$i18n.t('Document')}
+					{:else if type === 'collection'}
+						{$i18n.t('Collection')}
+					{:else}
+						<span class="capitalize line-clamp-1">{type}</span>
+					{/if}
+					{#if size}<span class="capitalize">{formatFileSize(size)}</span>{/if}
+				</div>
+			{/if}
 		</div>
 	{:else}
 		<Tooltip content={decodeString(name)} className="flex flex-col w-full" placement="top-start">
-			<div class="flex flex-col justify-center -space-y-0.5 px-2.5 w-full">
-				<div class=" dark:text-gray-100 text-sm flex justify-between items-center">
-					{#if loading}
-						<div class=" shrink-0 mr-2">
-							<Spinner className="size-4" />
-						</div>
+			<div class="flex flex-col justify-center px-2.5 w-full min-w-0">
+				<div class="dark:text-gray-100 text-sm flex justify-between items-center gap-2">
+					{#if isLoading}
+						<div class="shrink-0"><Spinner className="size-4" /></div>
 					{/if}
-					<div class="font-medium line-clamp-1 flex-1">{decodeString(name)}</div>
+					<div class="font-medium line-clamp-1 flex-1 min-w-0">{decodeString(name)}</div>
 					<div class="text-gray-500 text-xs capitalize shrink-0">{formatFileSize(size)}</div>
 				</div>
 			</div>
@@ -133,29 +197,30 @@
 	{/if}
 
 	{#if dismissible}
-		<div class=" absolute -top-1 -right-1">
+		<!-- keep inside the card; visible on hover OR focus -->
+		<div class="absolute !right-[calc(var(--spacing)*-2)] !top-[calc(var(--spacing)*-2)]">
 			<button
 				aria-label={$i18n.t('Remove File')}
-				class=" bg-white text-black border border-gray-50 rounded-full {($settings?.highContrastMode ??
-				false)
-					? ''
-					: 'outline-hidden focus:outline-hidden group-hover:visible invisible transition'}"
+				class="size-7 rounded-full bg-white text-black dark:bg-gray-900 dark:text-white border border-gray-100 dark:border-white/10 shadow-sm
+					   outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60
+					   group-hover:opacity-100 group-focus-within:opacity-100 opacity-0 transition"
 				type="button"
-				on:click|stopPropagation={() => {
-					dispatch('dismiss');
-				}}
+				on:click|stopPropagation={() => dispatch('dismiss')}
 			>
-				<XMark className={'size-4'} />
+				<XMark className="m-auto size-4" />
 			</button>
+		</div>
+	{/if}
 
-			<!-- <button
-				class=" p-1 dark:text-gray-300 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 rounded-full group-hover:visible invisible transition"
-				type="button"
-				on:click={() => {
-				}}
-			>
-				<GarbageBin />
-			</button> -->
+	<!-- bottom progress bar -->
+	{#if pct != null && pct < 100}
+		<!-- expose pct as a CSS var and use a Tailwind arbitrary value class with !priority -->
+		<div
+			class="absolute left-2 bottom-0 h-0.5 w-[calc(100%-8px)] max-w-[224px] bg-black/10 dark:bg-white/10 overflow-hidden {small
+				? 'rounded-b-xl'
+				: 'rounded-b-2xl'}"
+		>
+			<div class="h-full bg-emerald-500 !w-[var(--pct)]" style="--pct:{pct}%;" />
 		</div>
 	{/if}
 </button>

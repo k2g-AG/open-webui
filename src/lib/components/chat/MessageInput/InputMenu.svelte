@@ -18,6 +18,7 @@
 	import PhotoSolid from '$lib/components/icons/PhotoSolid.svelte';
 	import CommandLineSolid from '$lib/components/icons/CommandLineSolid.svelte';
 	import SyntheticDataset from '$lib/components/icons/SyntheticDataset.svelte';
+	import DownloadMinimalistic from '$lib/components/icons/DownloadMinimalistic.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -41,7 +42,7 @@
 	export let onClose: Function;
 
 	let tools = {};
-	let show = false;
+	let show = true;
 	let showAllTools = false;
 
 	$: if (show) {
@@ -130,7 +131,7 @@
 			class="w-full max-w-[240px] rounded-xl px-1 py-1 border border-gray-300/30 dark:border-gray-700/50 z-50 bg-white dark:bg-gray-850 dark:text-white shadow-sm"
 			sideOffset={10}
 			alignOffset={-8}
-			side="top"
+			side="bottom"
 			align="start"
 			transition={flyAndScale}
 		>
@@ -199,60 +200,90 @@
 				{/if}
 				<hr class="border-black/5 dark:border-white/5 my-1" />
 			{/if}
+			<!-- remove capture and upload due to TTD-202 -->
+			<!-- {#if fileUploadEnabled}
+				<Tooltip
+					content={fileUploadCapableModels.length !== selectedModels.length
+						? $i18n.t('Model(s) do not support file upload')
+						: !fileUploadEnabled
+							? $i18n.t('You do not have permission to upload files.')
+							: ''}
+					className="w-full"
+				>
+					<DropdownMenu.Item
+						class="flex gap-2 items-center px-3 py-2 text-sm  font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800  rounded-xl {!fileUploadEnabled
+							? 'opacity-50'
+							: ''}"
+						on:click={() => {
+							if (fileUploadEnabled) {
+								if (!detectMobile()) {
+									screenCaptureHandler();
+								} else {
+									const cameraInputElement = document.getElementById('camera-input');
 
-			<Tooltip
-				content={fileUploadCapableModels.length !== selectedModels.length
-					? $i18n.t('Model(s) do not support file upload')
-					: !fileUploadEnabled
-						? $i18n.t('You do not have permission to upload files.')
-						: ''}
-				className="w-full"
-			>
-				<DropdownMenu.Item
-					class="flex gap-2 items-center px-3 py-2 text-sm  font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800  rounded-xl {!fileUploadEnabled
-						? 'opacity-50'
-						: ''}"
-					on:click={() => {
-						if (fileUploadEnabled) {
-							if (!detectMobile()) {
-								screenCaptureHandler();
-							} else {
-								const cameraInputElement = document.getElementById('camera-input');
-
-								if (cameraInputElement) {
-									cameraInputElement.click();
+									if (cameraInputElement) {
+										cameraInputElement.click();
+									}
 								}
 							}
-						}
-					}}
+						}}
+					>
+						<CameraSolid />
+						<div class=" line-clamp-1">{$i18n.t('Capture')}</div>
+					</DropdownMenu.Item>
+				</Tooltip>
+			{/if}
+			
+			{#if fileUploadEnabled}
+				<Tooltip
+					content={fileUploadCapableModels.length !== selectedModels.length
+						? $i18n.t('Model(s) do not support file upload')
+						: !fileUploadEnabled
+							? $i18n.t('You do not have permission to upload files.')
+							: ''}
+					className="w-full"
 				>
-					<CameraSolid />
-					<div class=" line-clamp-1">{$i18n.t('Capture')}</div>
-				</DropdownMenu.Item>
-			</Tooltip>
+					<DropdownMenu.Item
+						class="flex gap-2 items-center px-3 py-2 text-sm font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl {!fileUploadEnabled
+							? 'opacity-50'
+							: ''}"
+						on:click={() => {
+							if (fileUploadEnabled) {
+								uploadFilesHandler();
+							}
+						}}
+					>
+						<DocumentArrowUpSolid />
+						<div class="line-clamp-1">{$i18n.t('Upload Files')}</div>
+					</DropdownMenu.Item>
+				</Tooltip>
+			{/if} -->
+			{#if directFileUploadEnabled}
+				<Tooltip
+					content={fileUploadCapableModels.length !== selectedModels.length
+						? $i18n.t('Model(s) do not support file direct upload')
+						: !directFileUploadEnabled
+							? $i18n.t('You do not have permission to direct upload files.')
+							: ''}
+					className="w-full"
+				>
+					<DropdownMenu.Item
+						class="flex gap-2 items-center px-3 py-2 text-sm font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl {!directFileUploadEnabled
+							? 'opacity-50'
+							: ''}"
+						on:click={() => {
+							if (directFileUploadEnabled) {
+								console.info('uploadDirectFilesHandler called..');
+								uploadDirectFilesHandler();
+							}
+						}}
+					>
+						<DownloadMinimalistic />
+						<div class="line-clamp-1">{$i18n.t('Direct Upload Files')}</div>
+					</DropdownMenu.Item>
+				</Tooltip>
+			{/if}
 
-			<Tooltip
-				content={fileUploadCapableModels.length !== selectedModels.length
-					? $i18n.t('Model(s) do not support file upload')
-					: !fileUploadEnabled
-						? $i18n.t('You do not have permission to upload files.')
-						: ''}
-				className="w-full"
-			>
-				<DropdownMenu.Item
-					class="flex gap-2 items-center px-3 py-2 text-sm font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl {!fileUploadEnabled
-						? 'opacity-50'
-						: ''}"
-					on:click={() => {
-						if (fileUploadEnabled) {
-							uploadFilesHandler();
-						}
-					}}
-				>
-					<DocumentArrowUpSolid />
-					<div class="line-clamp-1">{$i18n.t('Upload Files')}</div>
-				</DropdownMenu.Item>
-			</Tooltip>
 			<Tooltip
 				content={fileUploadCapableModels.length !== selectedModels.length
 					? $i18n.t('Model(s) do not support file upload')
@@ -272,10 +303,11 @@
 						}
 					}}
 				>
-					<DocumentArrowUpSolid />
+					<DownloadMinimalistic />
 					<div class="line-clamp-1">Uploaded datasets</div>
 				</DropdownMenu.Item>
 			</Tooltip>
+
 			{#if syntheticFilesEnabled}
 				<Tooltip
 					content={fileUploadCapableModels.length !== selectedModels.length
@@ -300,29 +332,6 @@
 					</DropdownMenu.Item>
 				</Tooltip>
 			{/if}
-			<Tooltip
-				content={fileUploadCapableModels.length !== selectedModels.length
-					? $i18n.t('Model(s) do not support file direct upload')
-					: !directFileUploadEnabled
-						? $i18n.t('You do not have permission to direct upload files.')
-						: ''}
-				className="w-full"
-			>
-				<DropdownMenu.Item
-					class="flex gap-2 items-center px-3 py-2 text-sm font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl {!directFileUploadEnabled
-						? 'opacity-50'
-						: ''}"
-					on:click={() => {
-						if (directFileUploadEnabled) {
-							console.info('uploadDirectFilesHandler called..');
-							uploadDirectFilesHandler();
-						}
-					}}
-				>
-					<DocumentArrowUpSolid />
-					<div class="line-clamp-1">{$i18n.t('Direct Upload Files')}</div>
-				</DropdownMenu.Item>
-			</Tooltip>
 
 			{#if directSyntheticFileUploadEnabled}
 				<Tooltip content={''} className="w-full">

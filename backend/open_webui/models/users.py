@@ -36,6 +36,7 @@ class User(Base):
     info = Column(JSONField, nullable=True)
 
     oauth_sub = Column(Text, unique=True)
+    stripe_customer_id = Column(String, nullable=True)
 
 
 class UserSettings(BaseModel):
@@ -60,6 +61,7 @@ class UserModel(BaseModel):
     info: Optional[dict] = None
 
     oauth_sub: Optional[str] = None
+    stripe_customer_id: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -107,10 +109,10 @@ class UserRoleUpdateForm(BaseModel):
 
 
 class UserUpdateForm(BaseModel):
-    role: str
-    name: str
-    email: str
-    profile_image_url: str
+    role: Optional[str] = None
+    name: Optional[str] = None
+    email: Optional[str] = None
+    profile_image_url: Optional[str] = None
     password: Optional[str] = None
 
 
@@ -123,6 +125,7 @@ class UsersTable:
         profile_image_url: str = "/user.png",
         role: str = "pending",
         oauth_sub: Optional[str] = None,
+        stripe_customer_id: Optional[str] = None,
     ) -> Optional[UserModel]:
         with get_db() as db:
             user = UserModel(
@@ -136,6 +139,7 @@ class UsersTable:
                     "created_at": int(time.time()),
                     "updated_at": int(time.time()),
                     "oauth_sub": oauth_sub,
+                    "stripe_customer_id": stripe_customer_id,
                 }
             )
             result = User(**user.model_dump())

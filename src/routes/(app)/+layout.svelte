@@ -19,7 +19,7 @@
 	import { getBanners } from '$lib/apis/configs';
 	import { getUserSettings } from '$lib/apis/users';
 
-	import { WEBUI_BASE_URL, WEBUI_VERSION } from '$lib/constants';
+	import { WEBUI_BASE_URL, WEBUI_VERSION, PRIVILEGED_ROLES } from '$lib/constants';
 	import { compareVersion } from '$lib/utils';
 
 	import {
@@ -62,7 +62,8 @@
 		if ($user === undefined || $user === null) {
 			console.log({user: $user})
 			// keycloak.logout()
-		} else if (['user', 'admin'].includes($user?.role)) {
+		} else if (PRIVILEGED_ROLES.includes($user?.role)) {
+			// Initialize app data for users with privileged roles
 			try {
 				// Check if IndexedDB exists
 				DB = await openDB('Chats', 1);
@@ -280,7 +281,9 @@
 		<div
 			class=" text-gray-700 dark:text-gray-100 bg-white dark:bg-gray-900 h-screen max-h-[100dvh] overflow-auto flex flex-row justify-end"
 		>
-			{#if !['user', 'admin'].includes($user?.role)}
+			{#if !PRIVILEGED_ROLES.includes($user?.role)}
+				<!-- Show account pending overlay for users without privileged roles -->
+				<!-- Privileged roles: user, admin, paid -->
 				<AccountPending />
 			{:else}
 				{#if localDBChats.length > 0}

@@ -24,8 +24,7 @@ from opentelemetry import trace
 from open_webui.utils.jwt_keycloak_validate import decodeAndValidateToken
 from open_webui.models.users import Users
 
-from open_webui.constants import ERROR_MESSAGES
-
+from open_webui.constants import ERROR_MESSAGES, PRIVILEGED_ROLES, ADMIN_ROLES
 from open_webui.env import (
     KEYCLOAK_ISSUER,
     OFFLINE_MODE,
@@ -375,7 +374,9 @@ def get_current_user_by_api_key(api_key: str):
 
 
 def get_verified_user(user=Depends(get_current_user)):
-    if user.role not in {"user", "admin"}:
+    # Allow access for users with privileged roles (user, admin, paid)
+    # All privileged roles have the same basic access permissions
+    if user.role not in PRIVILEGED_ROLES:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
@@ -384,7 +385,7 @@ def get_verified_user(user=Depends(get_current_user)):
 
 
 def get_admin_user(user=Depends(get_current_user)):
-    if user.role != "admin":
+    if user.role not in ADMIN_ROLES:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=ERROR_MESSAGES.ACCESS_PROHIBITED,

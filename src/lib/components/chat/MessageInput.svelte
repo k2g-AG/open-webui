@@ -50,7 +50,7 @@
 		uploadFile,
 		uploadDirectFile,
 		deleteFileById,
-		cancelCurrentUpload
+		cancelUploadByItemId
 	} from '$lib/apis/files';
 	import { generateAutoCompletion } from '$lib/apis';
 
@@ -904,6 +904,7 @@
 			size: file.size,
 			error: '',
 			itemId: tempItemId,
+			progress: 0,
 			...(fullContext ? { context: 'full' } : {})
 		};
 
@@ -915,40 +916,32 @@
 		files = [...files, fileItem];
 
 		try {
-			// If the file is an audio file, provide the language for STT.
-			let metadata = synthetic
-				? { uploadType: 'direct', synthetic: true }
-				: { uploadType: 'direct' };
-			console.info('synthetic:', synthetic, 'metadata:', metadata);
-			// During the file upload, file content is automatically extracted.
-			const uploadedFile = await uploadDirectFile(file, metadata);
-
-			if (uploadedFile) {
-				console.info('File upload completed:', {
-					id: uploadedFile.id,
-					name: fileItem.name,
-					collection: uploadedFile?.meta?.collection_name
-				});
-
-				if (uploadedFile.error) {
-					console.warn('File direct upload warning:', uploadedFile.error);
-					toast.warning(uploadedFile.error);
+			const uploadedFile = await uploadDirectFile(
+				file,
+				synthetic ? { uploadType: 'direct', synthetic: true } : { uploadType: 'direct' },
+				{
+					itemId: tempItemId,
+					onProgress: (pct) => {
+						// mutate the exact object we already pushed
+						fileItem.progress = pct;
+						files = files; // trigger Svelte reactivity
+					}
 				}
+			);
 
-				fileItem.status = 'uploaded';
-				fileItem.file = uploadedFile;
-				fileItem.id = uploadedFile.id;
-				fileItem.collection_name =
-					uploadedFile?.meta?.collection_name || uploadedFile?.collection_name;
-				fileItem.url = `${WEBUI_API_BASE_URL}/files/${uploadedFile.id}`;
+			fileItem.status = 'uploaded';
+			fileItem.file = uploadedFile;
+			fileItem.id = uploadedFile.id;
+			fileItem.collection_name =
+				uploadedFile?.meta?.collection_name || uploadedFile?.collection_name;
+			fileItem.url = `${WEBUI_API_BASE_URL}/files/${uploadedFile.id}`;
+			fileItem.progress = 100;
 
-				files = files;
-			} else {
-				files = files.filter((item) => item?.itemId !== tempItemId);
-			}
+			files = files;
 		} catch (e) {
 			toast.error(`${e}`);
-			files = files.filter((item) => item?.itemId !== tempItemId);
+			// Remove failed placeholder
+			files = files.filter((it) => it?.itemId !== tempItemId);
 		}
 	};
 
@@ -1012,22 +1005,24 @@
 
 	const onDrop = async (e) => {
 		e.preventDefault();
-		console.info(e);
 		let filsDropProcessed = false;
 
 		if (e.dataTransfer?.files) {
 			const inputFiles = Array.from(e.dataTransfer?.files);
 			if (inputFiles && inputFiles.length > 0) {
-				console.info(inputFiles);
-				if ($user?.permissions?.chat?.file_direct_upload) {
+				console.info('inputFiles:', inputFiles);
+				if ($_user?.permissions?.chat?.file_direct_upload) {
 					console.info('drop files for direct upload...');
 					inputDirectFilesHandler(inputFiles);
 					filsDropProcessed = true;
 				} else {
-					if ($user?.permissions?.chat?.file_upload) {
+					console.info('no permission drop files for direct upload...');
+					if ($_user?.permissions?.chat?.file_upload) {
 						console.info('drop files for vector upload...');
 						inputFilesHandler(inputFiles);
 						filsDropProcessed = true;
+					} else {
+						console.info('no permission drop files for vector upload...');
 					}
 				}
 			}
@@ -1378,7 +1373,7 @@
 															on:click={() => {
 																console.info('files:', files);
 																console.info('fileIdx:', fileIdx);
-																cancelCurrentUpload();
+																cancelUploadByItemId(file.itemId);
 																// deleteFileById();
 																files.splice(fileIdx, 1);
 																files = files;
@@ -1405,11 +1400,12 @@
 													type={file.type || file?.meta?.content_type}
 													size={file?.size || file?.meta?.size}
 													loading={file.status === 'uploading'}
+													progress={file.progress}
 													dismissible={true}
 													edit={true}
 													modal={['file', 'collection'].includes(file?.type)}
 													on:dismiss={async () => {
-														cancelCurrentUpload();
+														cancelUploadByItemId(file.itemId);
 														// Remove from UI state
 														files.splice(fileIdx, 1);
 														files = files;

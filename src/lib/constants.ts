@@ -17,6 +17,10 @@ export const WEBUI_VERSION = APP_VERSION;
 export const WEBUI_BUILD_HASH = APP_BUILD_HASH;
 export const REQUIRED_OLLAMA_VERSION = '0.1.16';
 
+// Constants for Stripe payment success polling
+export const PAYMENT_POLLING_INTERVAL_MS = 2000; // Interval in milliseconds to poll for token refresh
+export const PAYMENT_MAX_POLLING_ATTEMPTS = 15; // Maximum number of polling attempts before giving up
+
 export const SUPPORTED_FILE_TYPE = [
 	'application/epub+zip',
 	'application/pdf',
@@ -96,6 +100,20 @@ export const SUPPORTED_FILE_EXTENSIONS = [
 ];
 
 export const PASTED_TEXT_CHARACTER_LIMIT = 1000;
+
+// User Roles Constants
+export const USER_ROLES = {
+	ADMIN: 'admin',
+	USER: 'user',
+	PAID: 'paid',
+	PENDING: 'pending'
+} as const;
+
+// Privileged roles that have access to the main application
+export const PRIVILEGED_ROLES = [USER_ROLES.USER, USER_ROLES.ADMIN, USER_ROLES.PAID];
+
+// Roles that can access admin-only endpoints
+export const ADMIN_ROLES = [USER_ROLES.ADMIN];
 
 // Source: https://kit.svelte.dev/docs/modules#$env-static-public
 // This feature, akin to $env/static/private, exclusively incorporates environment variables
