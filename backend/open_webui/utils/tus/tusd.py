@@ -280,9 +280,14 @@ class TusRouter(APIRouter):
         async def get_file(request: Request, response: Response, uuid: str):
             info = self.datastore.read_file_info(uuid=uuid)
 
-            def read_file():
-                f = self.datastore.open(uuid=uuid, mode="rb")
-                yield from f
+            def read_file(buffering=10*1024*1024):
+                f = self.datastore.open(uuid=uuid, mode="rb", buffering=buffering)
+                # yield from f
+                while True:
+                    chunk = f.read(buffering)
+                    if not chunk:
+                        break
+                    yield chunk
 
             filename = info.metadata.get("filename", "")
             if filename:
