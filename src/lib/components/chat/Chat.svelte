@@ -37,18 +37,14 @@
 		showArtifacts,
 		tools,
 		toolServers,
-		selectedFolder
+		selectedFolder,
+		pinnedChats
 	} from '$lib/stores';
 	import {
 		convertMessagesToHistory,
 		copyToClipboard,
 		getMessageContentParts,
 		createMessagesList,
-		extractSentencesForAudio,
-		promptTemplate,
-		splitStream,
-		sleep,
-		removeDetails,
 		getPromptVariables,
 		processDetails,
 		removeAllDetails
@@ -60,8 +56,10 @@
 		getAllTags,
 		getChatById,
 		getChatList,
+		getPinnedChatList,
 		getTagsById,
-		updateChatById
+		updateChatById,
+		updateChatFolderIdById
 	} from '$lib/apis/chats';
 	import { generateOpenAIChatCompletion } from '$lib/apis/openai';
 	import { processWeb, processWebSearch, processYoutubeVideo } from '$lib/apis/retrieval';
@@ -93,6 +91,7 @@
 	import { getFiles } from '$lib/apis/files';
 	import Tooltip from '../common/Tooltip.svelte';
 	import Sidebar from '../icons/Sidebar.svelte';
+	import { uploadFile } from '$lib/apis/files';
 
 	export let chatIdProp = '';
 
@@ -337,6 +336,8 @@
 					message.content = data.content;
 				} else if (type === 'chat:message:files' || type === 'files') {
 					message.files = data.files;
+				} else if (type === 'chat:message:error') {
+					message.error = data.error;
 				} else if (type === 'chat:message:follow_ups') {
 					message.followUps = data.follow_ups;
 
@@ -769,6 +770,15 @@
 	const initNewChat = async () => {
 		if ($user?.role !== 'admin' && $user?.permissions?.chat?.temporary_enforced) {
 			await temporaryChatEnabled.set(true);
+		}
+
+		if ($settings?.temporaryChatByDefault ?? false) {
+			if ($temporaryChatEnabled === false) {
+				await temporaryChatEnabled.set(true);
+			} else if ($temporaryChatEnabled === null) {
+				// if set to null set to false; refer to temp chat toggle click handler
+				await temporaryChatEnabled.set(false);
+			}
 		}
 
 		const availableModels = $models
@@ -1453,6 +1463,7 @@
 		}
 
 		messageInput?.setText('');
+		prompt = '';
 
 		// Reset chat input textarea
 		if (!($settings?.richTextInput ?? true)) {
@@ -1680,6 +1691,14 @@
 		);
 		await tick();
 
+		let userLocation;
+		if ($settings?.userLocation) {
+			userLocation = await getAndUpdateUserLocation(localStorage.token).catch((err) => {
+				console.error(err);
+				return undefined;
+			});
+		}
+
 		const stream =
 			model?.info?.params?.stream_response ??
 			$settings?.params?.stream_response ??
@@ -1690,16 +1709,7 @@
 			params?.system || $settings.system
 				? {
 						role: 'system',
-						content: `${promptTemplate(
-							params?.system ?? $settings?.system ?? '',
-							$user?.name,
-							$settings?.userLocation
-								? await getAndUpdateUserLocation(localStorage.token).catch((err) => {
-										console.error(err);
-										return undefined;
-									})
-								: undefined
-						)}`
+						content: `${params?.system ?? $settings?.system ?? ''}`
 					}
 				: undefined,
 			..._messages.map((message) => ({
@@ -1777,15 +1787,7 @@
 					memory: $settings?.memory ?? false
 				},
 				variables: {
-					...getPromptVariables(
-						$user?.name,
-						$settings?.userLocation
-							? await getAndUpdateUserLocation(localStorage.token).catch((err) => {
-									console.error(err);
-									return undefined;
-								})
-							: undefined
-					)
+					...getPromptVariables($user?.name, $settings?.userLocation ? userLocation : undefined)
 				},
 				model_item: $models.find((m) => m.id === model.id),
 
@@ -2160,6 +2162,27 @@
 		}
 		await sessionStorage.removeItem(`chat-input${chatId ? `-${chatId}` : ''}`);
 	};
+
+	const moveChatHandler = async (chatId, folderId) => {
+		if (chatId && folderId) {
+			const res = await updateChatFolderIdById(localStorage.token, chatId, folderId).catch(
+				(error) => {
+					toast.error(`${error}`);
+					return null;
+				}
+			);
+
+			if (res) {
+				currentChatPage.set(1);
+				await chats.set(await getChatList(localStorage.token, $currentChatPage));
+				await pinnedChats.set(await getPinnedChatList(localStorage.token));
+
+				toast.success($i18n.t('Chat moved successfully'));
+			}
+		} else {
+			toast.error($i18n.t('Failed to move chat'));
+		}
+	};
 </script>
 
 <svelte:head>
@@ -2234,6 +2257,44 @@
 						shareEnabled={!!history.currentId}
 						{initNewChat}
 						showBanners={!showCommands}
+						archiveChatHandler={() => {}}
+						{moveChatHandler}
+						onSaveTempChat={async () => {
+							try {
+								if (!history?.currentId || !Object.keys(history.messages).length) {
+									toast.error($i18n.t('No conversation to save'));
+									return;
+								}
+								const messages = createMessagesList(history, history.currentId);
+								const title =
+									messages.find((m) => m.role === 'user')?.content ?? $i18n.t('New Chat');
+
+								const savedChat = await createNewChat(
+									localStorage.token,
+									{
+										id: uuidv4(),
+										title: title.length > 50 ? `${title.slice(0, 50)}...` : title,
+										models: selectedModels,
+										history: history,
+										messages: messages,
+										timestamp: Date.now()
+									},
+									null
+								);
+
+								if (savedChat) {
+									temporaryChatEnabled.set(false);
+									chatId.set(savedChat.id);
+									chats.set(await getChatList(localStorage.token, $currentChatPage));
+
+									await goto(`/c/${savedChat.id}`);
+									toast.success($i18n.t('Conversation saved successfully'));
+								}
+							} catch (error) {
+								console.error('Error saving conversation:', error);
+								toast.error($i18n.t('Failed to save conversation'));
+							}
+						}}
 					/>
 
 					<div class="flex flex-col flex-auto z-10 w-full @container overflow-auto">
@@ -2319,6 +2380,7 @@
 										clearDraft();
 										if (e.detail || files.length > 0) {
 											await tick();
+
 											submitPrompt(
 												($settings?.richTextInput ?? true)
 													? e.detail.replaceAll('\n\n', '\n')

@@ -313,3 +313,9 @@ dist
 cypress/videos
 cypress/screenshots
 .vscode/settings.json
+
+.tmp/
+.temp/
+
+tmp/
+temp/

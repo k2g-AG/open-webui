@@ -63,7 +63,7 @@
 		: 'rounded-2xl'} text-left"
 	type="button"
 	on:click={async () => {
-		if (item?.file?.data?.content || modal) {
+		if (item?.file?.data?.content || item?.type === 'file' || modal) {
 			showModal = !showModal;
 		} else if (url) {
 			if (type === 'file') window.open(`${url}/content`, '_blank')?.focus();
@@ -134,7 +134,8 @@
 					xmlns="http://www.w3.org/2000/svg"
 					viewBox="0 0 24 24"
 					fill="currentColor"
-					class="size-5 text-gray-700 dark:text-gray-200"
+					aria-hidden="true"
+					class=" size-4.5"
 				>
 					<path
 						fill-rule="evenodd"

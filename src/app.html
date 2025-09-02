@@ -87,9 +87,11 @@
 
 				document.addEventListener('DOMContentLoaded', function () {
 					const splash = document.getElementById('splash-screen');
-					if (splash) {
-						splash.prepend(logo);
+					if (document.documentElement.classList.contains('her')) {
+						return;
 					}
+
+					if (splash) splash.prepend(logo);
 				});
 			})();
 		</script>
@@ -172,6 +174,7 @@
 <style type="text/css" nonce="">
 	html {
 		overflow-y: hidden !important;
+		overscroll-behavior-y: none;
 	}
 
 	#splash-screen {

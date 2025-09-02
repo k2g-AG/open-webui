@@ -125,7 +125,13 @@ class OAuthManager:
                 nested_claims = oauth_claim.split(".")
                 for nested_claim in nested_claims:
                     claim_data = claim_data.get(nested_claim, {})
-                oauth_roles = claim_data if isinstance(claim_data, list) else []
+
+                oauth_roles = []
+
+                if isinstance(claim_data, list):
+                    oauth_roles = claim_data
+                if isinstance(claim_data, str) or isinstance(claim_data, int):
+                    oauth_roles = [str(claim_data)]
 
             log.debug(f"Oauth Roles claim: {oauth_claim}")
             log.debug(f"User roles from oauth: {oauth_roles}")
@@ -368,7 +374,11 @@ class OAuthManager:
         log.info(f"handle_login: OAuth callback received token: {token}")
 
         user_data: UserInfo = token.get("userinfo")
-        if not user_data or auth_manager_config.OAUTH_EMAIL_CLAIM not in user_data:
+        if (
+            (not user_data)
+            or (auth_manager_config.OAUTH_EMAIL_CLAIM not in user_data)
+            or (auth_manager_config.OAUTH_USERNAME_CLAIM not in user_data)
+        ):
             user_data: UserInfo = await client.userinfo(token=token)
         if not user_data:
             log.warning(f"OAuth callback failed, user data is missing: {token}")
@@ -539,7 +549,7 @@ class OAuthManager:
                 )
 
                 if auth_manager_config.WEBHOOK_URL:
-                    post_webhook(
+                    await post_webhook(
                         WEBUI_NAME,
                         auth_manager_config.WEBHOOK_URL,
                         WEBHOOK_MESSAGES.USER_SIGNUP(user.name),
@@ -579,7 +589,15 @@ class OAuthManager:
                 default_permissions=request.app.state.config.USER_PERMISSIONS,
             )
 
+        redirect_base_url = str(request.app.state.config.WEBUI_URL or request.base_url)
+        if redirect_base_url.endswith("/"):
+            redirect_base_url = redirect_base_url[:-1]
+        redirect_url = f"{redirect_base_url}/auth"
+
+        response = RedirectResponse(url=redirect_url, headers=response.headers)
+
         # Set the cookie token
+        # Redirect back to the frontend with the JWT token
         response.set_cookie(
             key="token",
             value=jwt_token,
@@ -605,14 +623,7 @@ class OAuthManager:
                 samesite=WEBUI_AUTH_COOKIE_SAME_SITE,
                 secure=WEBUI_AUTH_COOKIE_SECURE,
             )
-        # Redirect back to the frontend with the JWT token
-
-        redirect_base_url = str(request.app.state.config.WEBUI_URL or request.base_url)
-        if redirect_base_url.endswith("/"):
-            redirect_base_url = redirect_base_url[:-1]
-        redirect_url = f"{redirect_base_url}/auth"
-
-        return RedirectResponse(url=redirect_url, headers=response.headers)
+        return response
 
     # ------------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------------

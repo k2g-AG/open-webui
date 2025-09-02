@@ -150,6 +150,10 @@ class ChatPermissions(BaseModel):
     file_direct_upload: bool = True
     file_synthetic_enable: bool = True
     delete: bool = True
+    delete_message: bool = True
+    continue_response: bool = True
+    regenerate_response: bool = True
+    rate_response: bool = True
     edit: bool = True
     share: bool = True
     export: bool = True
