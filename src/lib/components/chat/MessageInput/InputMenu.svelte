@@ -40,9 +40,9 @@
 	export let uploadOneDriveHandler: Function;
 
 	export let onClose: Function;
+	export let show;
 
 	let tools = {};
-	let show = true;
 	let showAllTools = false;
 
 	$: if (show) {

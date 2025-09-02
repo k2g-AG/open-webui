@@ -220,13 +220,14 @@
 								profileImageUrl = url;
 							}}>{$i18n.t('Use Gravatar')}</button
 						>
-
-						<button
-							class=" text-xs text-center text-gray-800 dark:text-gray-400 rounded-lg px-2 py-1"
-							on:click={async () => {
-								profileImageUrl = `${WEBUI_BASE_URL}/user.png`;
-							}}>{$i18n.t('Remove')}</button
-						>
+						{#if $user?.role === 'admin'}
+							<button
+								class=" text-xs text-center text-gray-800 dark:text-gray-400 rounded-lg px-2 py-1"
+								on:click={async () => {
+									profileImageUrl = `${WEBUI_BASE_URL}/user.png`;
+								}}>{$i18n.t('Remove')}</button
+							>
+						{/if}
 					</div>
 				</div>
 			</div>
@@ -267,12 +268,13 @@
 		</div>
 
 		<hr class="border-gray-50 dark:border-gray-850 my-2" />
+		{#if $user?.role === 'admin'}
+			<div class="my-2">
+				<UpdatePassword />
+			</div>
+		{/if}
 
-		<div class="my-2">
-			<UpdatePassword />
-		</div>
-
-		{#if ($config?.features?.enable_api_key ?? true) || $user?.role === 'admin'}
+		{#if $user?.role === 'admin'}
 			<div class="flex justify-between items-center text-sm mb-2">
 				<div class="  font-medium">{$i18n.t('API keys')}</div>
 				<button

@@ -96,7 +96,7 @@
 
 	let show = false;
 	let loading = true;
-
+	let showInputMenu = false;
 	const eventTarget = new EventTarget();
 	let controlPane;
 	let controlPaneComponent;
@@ -555,6 +555,9 @@
 		chatInput?.focus();
 
 		chats.subscribe(() => {});
+		if (Object.keys(history.messages).length) {
+			showInputMenu = true;
+		}
 	});
 
 	onDestroy(() => {
@@ -2192,6 +2195,7 @@
 							<div class=" pb-2">
 								<MessageInput
 									bind:this={messageInput}
+									{showInputMenu}
 									{history}
 									{taskIds}
 									{selectedModels}
@@ -2262,6 +2266,7 @@
 								<Placeholder
 									{history}
 									{selectedModels}
+									{showInputMenu}
 									bind:messageInput
 									bind:files
 									bind:prompt

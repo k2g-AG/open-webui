@@ -21,6 +21,7 @@
 	export let item: any = {};
 	export let index: number = -1;
 	export let value: string = '';
+	export let disabled = false;
 
 	export let unloadModelHandler: (modelValue: string) => void = () => {};
 	export let pinModelHandler: (modelId: string) => void = () => {};
@@ -50,7 +51,9 @@
 		: ''}"
 	data-arrow-selected={index === selectedModelIdx}
 	data-value={item.value}
+	{disabled}
 	on:click={() => {
+		if (disabled) return;
 		onClick();
 	}}
 >

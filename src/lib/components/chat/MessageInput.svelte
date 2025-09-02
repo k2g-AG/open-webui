@@ -81,6 +81,7 @@
 	const i18n = getContext('i18n');
 
 	export let transparentBackground = false;
+	export let showInputMenu = false;
 
 	export let onChange: Function = () => {};
 	export let createMessagePair: Function;
@@ -380,7 +381,9 @@
 	let command = '';
 
 	export let showCommands = false;
-	$: showCommands = ['/', '#', '@'].includes(command?.charAt(0)) || '\\#' === command?.slice(0, 2);
+	$: showCommands =
+		($_user?.role === 'admin' ? ['/', '#', '@'] : ['/', '#']).includes(command?.charAt(0)) ||
+		'\\#' === command?.slice(0, 2);
 
 	let showTools = false;
 
@@ -1909,6 +1912,7 @@
 											selectedModels={atSelectedModel ? [atSelectedModel.id] : selectedModels}
 											{fileUploadCapableModels}
 											{screenCaptureHandler}
+											show={showInputMenu}
 											{inputFilesHandler}
 											{inputDirectFilesHandler}
 											{getFilesHandler}
