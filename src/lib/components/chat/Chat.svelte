@@ -197,6 +197,8 @@
 
 			const chatInput = document.getElementById('chat-input');
 			chatInput?.focus();
+			// Open only if this chat currently has no messages
+			showInputMenu = Object.keys(history?.messages ?? {}).length === 0;
 		} else {
 			await goto('/');
 		}
@@ -555,9 +557,9 @@
 		chatInput?.focus();
 
 		chats.subscribe(() => {});
-		if (Object.keys(history.messages).length) {
-			showInputMenu = true;
-		}
+		console.info('mounted', { history });
+		// Open the input menu only when mounting and there are no messages yet
+		showInputMenu = Object.keys(history?.messages ?? {}).length === 0;
 	});
 
 	onDestroy(() => {
@@ -847,6 +849,8 @@
 			messages: {},
 			currentId: null
 		};
+		// New chat starts empty → open the input menu
+		showInputMenu = true;
 
 		chatFiles = [];
 		params = {};
