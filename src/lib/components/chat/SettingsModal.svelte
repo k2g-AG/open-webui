@@ -637,11 +637,12 @@
 								<div class=" self-center">{$i18n.t('General')}</div>
 							</button>
 						{:else if tabId === 'interface'}
-							<button
-								role="tab"
-								aria-controls="tab-interface"
-								aria-selected={selectedTab === 'interface'}
-								class={`px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-left transition
+							{#if $user?.role === 'admin'}
+								<button
+									role="tab"
+									aria-controls="tab-interface"
+									aria-selected={selectedTab === 'interface'}
+									class={`px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-left transition
 								${
 									selectedTab === 'interface'
 										? ($settings?.highContrastMode ?? false)
@@ -651,27 +652,28 @@
 											? 'hover:bg-gray-200 dark:hover:bg-gray-800'
 											: 'text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'
 								}`}
-								on:click={() => {
-									selectedTab = 'interface';
-								}}
-							>
-								<div class=" self-center mr-2">
-									<svg
-										xmlns="http://www.w3.org/2000/svg"
-										aria-hidden="true"
-										viewBox="0 0 16 16"
-										fill="currentColor"
-										class="w-4 h-4"
-									>
-										<path
-											fill-rule="evenodd"
-											d="M2 4.25A2.25 2.25 0 0 1 4.25 2h7.5A2.25 2.25 0 0 1 14 4.25v5.5A2.25 2.25 0 0 1 11.75 12h-1.312c.1.128.21.248.328.36a.75.75 0 0 1 .234.545v.345a.75.75 0 0 1-.75.75h-4.5a.75.75 0 0 1-.75-.75v-.345a.75.75 0 0 1 .234-.545c.118-.111.228-.232.328-.36H4.25A2.25 2.25 0 0 1 2 9.75v-5.5Zm2.25-.75a.75.75 0 0 0-.75.75v4.5c0 .414.336.75.75.75h7.5a.75.75 0 0 0 .75-.75v-4.5a.75.75 0 0 0-.75-.75h-7.5Z"
-											clip-rule="evenodd"
-										/>
-									</svg>
-								</div>
-								<div class=" self-center">{$i18n.t('Interface')}</div>
-							</button>
+									on:click={() => {
+										selectedTab = 'interface';
+									}}
+								>
+									<div class=" self-center mr-2">
+										<svg
+											xmlns="http://www.w3.org/2000/svg"
+											aria-hidden="true"
+											viewBox="0 0 16 16"
+											fill="currentColor"
+											class="w-4 h-4"
+										>
+											<path
+												fill-rule="evenodd"
+												d="M2 4.25A2.25 2.25 0 0 1 4.25 2h7.5A2.25 2.25 0 0 1 14 4.25v5.5A2.25 2.25 0 0 1 11.75 12h-1.312c.1.128.21.248.328.36a.75.75 0 0 1 .234.545v.345a.75.75 0 0 1-.75.75h-4.5a.75.75 0 0 1-.75-.75v-.345a.75.75 0 0 1 .234-.545c.118-.111.228-.232.328-.36H4.25A2.25 2.25 0 0 1 2 9.75v-5.5Zm2.25-.75a.75.75 0 0 0-.75.75v4.5c0 .414.336.75.75.75h7.5a.75.75 0 0 0 .75-.75v-4.5a.75.75 0 0 0-.75-.75h-7.5Z"
+												clip-rule="evenodd"
+											/>
+										</svg>
+									</div>
+									<div class=" self-center">{$i18n.t('Interface')}</div>
+								</button>
+							{/if}
 						{:else if tabId === 'connections'}
 							{#if $user?.role === 'admin' || ($user?.role === 'user' && $config?.features?.enable_direct_connections)}
 								<button
@@ -747,11 +749,12 @@
 								</button>
 							{/if}
 						{:else if tabId === 'personalization'}
-							<button
-								role="tab"
-								aria-controls="tab-personalization"
-								aria-selected={selectedTab === 'personalization'}
-								class={`px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-left transition
+							{#if $user?.role === 'admin'}
+								<button
+									role="tab"
+									aria-controls="tab-personalization"
+									aria-selected={selectedTab === 'personalization'}
+									class={`px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-left transition
 								${
 									selectedTab === 'personalization'
 										? ($settings?.highContrastMode ?? false)
@@ -761,21 +764,23 @@
 											? 'hover:bg-gray-200 dark:hover:bg-gray-800'
 											: 'text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'
 								}`}
-								on:click={() => {
-									selectedTab = 'personalization';
-								}}
-							>
-								<div class=" self-center mr-2">
-									<User />
-								</div>
-								<div class=" self-center">{$i18n.t('Personalization')}</div>
-							</button>
+									on:click={() => {
+										selectedTab = 'personalization';
+									}}
+								>
+									<div class=" self-center mr-2">
+										<User />
+									</div>
+									<div class=" self-center">{$i18n.t('Personalization')}</div>
+								</button>
+							{/if}
 						{:else if tabId === 'audio'}
-							<button
-								role="tab"
-								aria-controls="tab-audio"
-								aria-selected={selectedTab === 'audio'}
-								class={`px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-left transition
+							{#if $user?.role === 'admin'}
+								<button
+									role="tab"
+									aria-controls="tab-audio"
+									aria-selected={selectedTab === 'audio'}
+									class={`px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-left transition
 								${
 									selectedTab === 'audio'
 										? ($settings?.highContrastMode ?? false)
@@ -785,28 +790,29 @@
 											? 'hover:bg-gray-200 dark:hover:bg-gray-800'
 											: 'text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'
 								}`}
-								on:click={() => {
-									selectedTab = 'audio';
-								}}
-							>
-								<div class=" self-center mr-2">
-									<svg
-										xmlns="http://www.w3.org/2000/svg"
-										aria-hidden="true"
-										viewBox="0 0 16 16"
-										fill="currentColor"
-										class="w-4 h-4"
-									>
-										<path
-											d="M7.557 2.066A.75.75 0 0 1 8 2.75v10.5a.75.75 0 0 1-1.248.56L3.59 11H2a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h1.59l3.162-2.81a.75.75 0 0 1 .805-.124ZM12.95 3.05a.75.75 0 1 0-1.06 1.06 5.5 5.5 0 0 1 0 7.78.75.75 0 1 0 1.06 1.06 7 7 0 0 0 0-9.9Z"
-										/>
-										<path
-											d="M10.828 5.172a.75.75 0 1 0-1.06 1.06 2.5 2.5 0 0 1 0 3.536.75.75 0 1 0 1.06 1.06 4 4 0 0 0 0-5.656Z"
-										/>
-									</svg>
-								</div>
-								<div class=" self-center">{$i18n.t('Audio')}</div>
-							</button>
+									on:click={() => {
+										selectedTab = 'audio';
+									}}
+								>
+									<div class=" self-center mr-2">
+										<svg
+											xmlns="http://www.w3.org/2000/svg"
+											aria-hidden="true"
+											viewBox="0 0 16 16"
+											fill="currentColor"
+											class="w-4 h-4"
+										>
+											<path
+												d="M7.557 2.066A.75.75 0 0 1 8 2.75v10.5a.75.75 0 0 1-1.248.56L3.59 11H2a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h1.59l3.162-2.81a.75.75 0 0 1 .805-.124ZM12.95 3.05a.75.75 0 1 0-1.06 1.06 5.5 5.5 0 0 1 0 7.78.75.75 0 1 0 1.06 1.06 7 7 0 0 0 0-9.9Z"
+											/>
+											<path
+												d="M10.828 5.172a.75.75 0 1 0-1.06 1.06 2.5 2.5 0 0 1 0 3.536.75.75 0 1 0 1.06 1.06 4 4 0 0 0 0-5.656Z"
+											/>
+										</svg>
+									</div>
+									<div class=" self-center">{$i18n.t('Audio')}</div>
+								</button>
+							{/if}
 						{:else if tabId === 'chats'}
 							<button
 								role="tab"
@@ -880,11 +886,12 @@
 								<div class=" self-center">{$i18n.t('Account')}</div>
 							</button>
 						{:else if tabId === 'about'}
-							<button
-								role="tab"
-								aria-controls="tab-about"
-								aria-selected={selectedTab === 'about'}
-								class={`px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-left transition
+							{#if $user?.role === 'admin'}
+								<button
+									role="tab"
+									aria-controls="tab-about"
+									aria-selected={selectedTab === 'about'}
+									class={`px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-left transition
 								${
 									selectedTab === 'about'
 										? ($settings?.highContrastMode ?? false)
@@ -894,27 +901,28 @@
 											? 'hover:bg-gray-200 dark:hover:bg-gray-800'
 											: 'text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'
 								}`}
-								on:click={() => {
-									selectedTab = 'about';
-								}}
-							>
-								<div class=" self-center mr-2">
-									<svg
-										xmlns="http://www.w3.org/2000/svg"
-										aria-hidden="true"
-										viewBox="0 0 20 20"
-										fill="currentColor"
-										class="w-4 h-4"
-									>
-										<path
-											fill-rule="evenodd"
-											d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z"
-											clip-rule="evenodd"
-										/>
-									</svg>
-								</div>
-								<div class=" self-center">{$i18n.t('About')}</div>
-							</button>
+									on:click={() => {
+										selectedTab = 'about';
+									}}
+								>
+									<div class=" self-center mr-2">
+										<svg
+											xmlns="http://www.w3.org/2000/svg"
+											aria-hidden="true"
+											viewBox="0 0 20 20"
+											fill="currentColor"
+											class="w-4 h-4"
+										>
+											<path
+												fill-rule="evenodd"
+												d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z"
+												clip-rule="evenodd"
+											/>
+										</svg>
+									</div>
+									<div class=" self-center">{$i18n.t('About')}</div>
+								</button>
+							{/if}
 						{/if}
 					{/each}
 				{:else}

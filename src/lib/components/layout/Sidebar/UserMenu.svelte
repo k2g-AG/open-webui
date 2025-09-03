@@ -152,17 +152,18 @@
 				<hr class=" border-gray-50 dark:border-gray-800 my-1 p-0" />
 
 				<!-- {$i18n.t('Help')} -->
-
-				{#if $user?.role === 'admin'}
+				{#if role === 'admin'}
+					<!-- Documentation -->
 					<DropdownMenu.Item
 						as="a"
 						class="flex gap-2 items-center py-1.5 px-3 text-sm select-none w-full cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition"
 						id="chat-share-button"
 						on:click={() => {
+							// window.open('https://docs.openwebui.com', '_blank');
 							show = false;
 						}}
 						href="https://docs.openwebui.com"
-					>
+
 						<QuestionMarkCircle className="size-5" />
 						<div class="flex items-center">{$i18n.t('Documentation')}</div>
 					</DropdownMenu.Item>

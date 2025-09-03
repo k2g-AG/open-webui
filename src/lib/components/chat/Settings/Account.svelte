@@ -255,8 +255,16 @@
 								const url = await getGravatarUrl(localStorage.token, $user?.email);
 
 								profileImageUrl = url;
-							}}>{$i18n.t('Gravatar')}</button
+							}}>{$i18n.t('Use Gravatar')}</button
 						>
+						{#if $user?.role === 'admin'}
+							<button
+								class=" text-xs text-center text-gray-800 dark:text-gray-400 rounded-lg px-2 py-1"
+								on:click={async () => {
+									profileImageUrl = `${WEBUI_BASE_URL}/user.png`;
+								}}>{$i18n.t('Remove')}</button
+							>
+						{/if}
 					</div>
 				</div>
 				<div class="flex flex-1 flex-col">
@@ -360,24 +368,27 @@
 		{/if}
 
 		<hr class="border-gray-50 dark:border-gray-850 my-4" />
-
-		{#if $config?.features.enable_login_form}
-			<div class="mt-2">
-				<UpdatePassword />
-			</div>
+		{#if $user?.role === 'admin'}
+			{#if $config?.features.enable_login_form}
+				<div class="mt-2">
+					<UpdatePassword />
+				</div>
+			{/if}
 		{/if}
 
-		{#if ($config?.features?.enable_api_key ?? true) || $user?.role === 'admin'}
-			<div class="flex justify-between items-center text-sm mt-2">
-				<div class="  font-medium">{$i18n.t('API keys')}</div>
-				<button
-					class=" text-xs font-medium text-gray-500"
-					type="button"
-					on:click={() => {
-						showAPIKeys = !showAPIKeys;
-					}}>{showAPIKeys ? $i18n.t('Hide') : $i18n.t('Show')}</button
-				>
-			</div>
+		{#if $user?.role === 'admin'}
+			{#if ($config?.features?.enable_api_key ?? true) || $user?.role === 'admin'}
+				<div class="flex justify-between items-center text-sm mt-2">
+					<div class="  font-medium">{$i18n.t('API keys')}</div>
+					<button
+						class=" text-xs font-medium text-gray-500"
+						type="button"
+						on:click={() => {
+							showAPIKeys = !showAPIKeys;
+						}}>{showAPIKeys ? $i18n.t('Hide') : $i18n.t('Show')}</button
+					>
+				</div>
+			{/if}
 
 			{#if showAPIKeys}
 				<div class="flex flex-col py-2.5">

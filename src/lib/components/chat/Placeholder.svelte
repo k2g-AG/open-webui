@@ -42,6 +42,7 @@
 	export let prompt = '';
 	export let files = [];
 	export let messageInput = null;
+	export let showInputMenu = false;
 
 	export let selectedToolIds = [];
 	export let selectedFilterIds = [];
@@ -207,6 +208,7 @@
 			<div class="text-base font-normal @md:max-w-3xl w-full py-3 {atSelectedModel ? 'mt-2' : ''}">
 				<MessageInput
 					bind:this={messageInput}
+					{showInputMenu}
 					{history}
 					{getFilesHandler}
 					{selectedModels}

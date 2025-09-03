@@ -44,6 +44,8 @@
 	export let placeholder = $i18n.t('Select a model');
 	export let searchEnabled = true;
 	export let searchPlaceholder = $i18n.t('Search a model');
+	export let disabled = false;
+	export let showTemporaryChatControl = false;
 
 	export let items: {
 		label: string;
@@ -519,6 +521,7 @@
 						{index}
 						{value}
 						{pinModelHandler}
+						{disabled}
 						{unloadModelHandler}
 						onClick={() => {
 							value = item.value;

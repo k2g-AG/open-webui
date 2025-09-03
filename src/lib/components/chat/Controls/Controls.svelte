@@ -61,13 +61,14 @@
 
 				<hr class="my-2 border-gray-50 dark:border-gray-700/10" />
 			{/if}
-
+		<!-- remove block for non-admin TTD-301 -->
+		{#if $user?.role === 'admin'}
 			{#if $user?.role === 'admin' || ($user?.permissions.chat?.valves ?? true)}
-				<Collapsible bind:open={showValves} title={$i18n.t('Valves')} buttonClassName="w-full">
-					<div class="text-sm" slot="content">
-						<Valves show={showValves} />
-					</div>
-				</Collapsible>
+					<Collapsible bind:open={showValves} title={$i18n.t('Valves')} buttonClassName="w-full">
+						<div class="text-sm" slot="content">
+							<Valves show={showValves} />
+						</div>
+					</Collapsible>
 
 				<hr class="my-2 border-gray-50 dark:border-gray-700/10" />
 			{/if}
@@ -98,6 +99,7 @@
 					</div>
 				</Collapsible>
 			{/if}
+		{/if}
 		</div>
 	{/if}
 </div>

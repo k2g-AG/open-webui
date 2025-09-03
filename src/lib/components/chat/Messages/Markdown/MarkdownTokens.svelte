@@ -101,7 +101,7 @@
 		{#if token.raw.includes('```')}
 			<CodeBlock
 				id={`${id}-${tokenIdx}`}
-				collapsed={$settings?.collapseCodeBlocks ?? false}
+				collapsed={$settings?.collapseCodeBlocks ?? true}
 				{token}
 				lang={token?.lang ?? ''}
 				code={token?.text ?? ''}

@@ -97,7 +97,7 @@
 
 	let show = false;
 	let loading = true;
-
+	let showInputMenu = false;
 	const eventTarget = new EventTarget();
 	let controlPane;
 	let controlPaneComponent;
@@ -201,6 +201,8 @@
 
 			const chatInput = document.getElementById('chat-input');
 			chatInput?.focus();
+			// Open only if this chat currently has no messages
+			showInputMenu = Object.keys(history?.messages ?? {}).length === 0;
 		} else {
 			await goto('/');
 		}
@@ -561,6 +563,9 @@
 		chatInput?.focus();
 
 		chats.subscribe(() => {});
+		console.info('mounted', { history });
+		// Open the input menu only when mounting and there are no messages yet
+		showInputMenu = Object.keys(history?.messages ?? {}).length === 0;
 	});
 
 	onDestroy(() => {
@@ -859,6 +864,8 @@
 			messages: {},
 			currentId: null
 		};
+		// New chat starts empty → open the input menu
+		showInputMenu = true;
 
 		chatFiles = [];
 		params = {};
@@ -2338,6 +2345,7 @@
 							<div class=" pb-2">
 								<MessageInput
 									bind:this={messageInput}
+									{showInputMenu}
 									{history}
 									{taskIds}
 									{selectedModels}
@@ -2401,6 +2409,7 @@
 								<Placeholder
 									{history}
 									{selectedModels}
+									{showInputMenu}
 									bind:messageInput
 									bind:files
 									bind:prompt

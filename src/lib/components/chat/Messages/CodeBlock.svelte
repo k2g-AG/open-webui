@@ -33,7 +33,7 @@
 	export let save = false;
 	export let run = true;
 	export let preview = false;
-	export let collapsed = false;
+	export let collapsed = true;
 
 	export let token;
 	export let lang = '';
