@@ -202,12 +202,13 @@
 			const chatInput = document.getElementById('chat-input');
 			chatInput?.focus();
 			// Open only if this chat currently has no messages
+			console.info('navigateHandler', history);
 			showInputMenu = Object.keys(history?.messages ?? {}).length === 0;
 		} else {
 			await goto('/');
 		}
 	};
-	console.info({ files });
+
 	const onSelect = async (e) => {
 		const { type, data } = e;
 
@@ -563,7 +564,7 @@
 		chatInput?.focus();
 
 		chats.subscribe(() => {});
-		console.info('mounted', { history });
+		console.info('onMount', history);
 		// Open the input menu only when mounting and there are no messages yet
 		showInputMenu = Object.keys(history?.messages ?? {}).length === 0;
 	});
@@ -865,6 +866,7 @@
 			currentId: null
 		};
 		// New chat starts empty → open the input menu
+		console.info('newChatHandle', history);
 		showInputMenu = true;
 
 		chatFiles = [];
@@ -1432,6 +1434,11 @@
 
 	const submitPrompt = async (userPrompt, { _raw = false } = {}) => {
 		console.info('submitPrompt', userPrompt, $chatId);
+
+		// Close the input menu once the user sends the first message
+		// It should only be open when a brand new chat has zero messages
+		console.info('submit', history);
+		showInputMenu = false;
 
 		const messages = createMessagesList(history, history.currentId);
 		const _selectedModels = selectedModels.map((modelId) =>

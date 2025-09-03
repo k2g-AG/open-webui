@@ -103,7 +103,11 @@
 			"
 				>
 					{#if showModelSelector}
-						<ModelSelector bind:selectedModels showSetDefault={!shareEnabled} />
+						<ModelSelector
+							bind:selectedModels
+							showSetDefault={!shareEnabled}
+							disabled={Object.keys(history?.messages ?? {}).length > 0}
+						/>
 					{/if}
 				</div>
 

@@ -58,7 +58,7 @@
 							label: model.name,
 							model: model
 						}))}
-						disabled={$user?.role !== 'admin'}
+						disabled={$user?.role !== 'admin' && disabled}
 						showTemporaryChatControl={$user?.role === 'user'
 							? ($user?.permissions?.chat?.temporary ?? true) &&
 								!($user?.permissions?.chat?.temporary_enforced ?? false)
