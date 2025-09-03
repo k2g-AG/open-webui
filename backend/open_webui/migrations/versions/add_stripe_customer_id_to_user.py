@@ -1,7 +1,7 @@
 """Add stripe_customer_id to user table
 
 Revision ID: d9e4f8b2c1a3
-Revises: d31026856c01
+Revises: 018012973d35
 Create Date: 2025-01-14 10:00:00.000000
 
 """
@@ -13,7 +13,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "d9e4f8b2c1a3"
-down_revision: Union[str, None] = "d31026856c01"
+down_revision: Union[str, None] = "018012973d35"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

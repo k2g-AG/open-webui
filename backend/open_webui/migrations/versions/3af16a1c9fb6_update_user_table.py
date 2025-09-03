@@ -1,7 +1,7 @@
 """update user table
 
 Revision ID: 3af16a1c9fb6
-Revises: 018012973d35
+Revises: d9e4f8b2c1a3
 Create Date: 2025-08-21 02:07:18.078283
 
 """
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = "3af16a1c9fb6"
-down_revision: Union[str, None] = "018012973d35"
+down_revision: Union[str, None] = "d9e4f8b2c1a3"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
