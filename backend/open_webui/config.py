@@ -288,7 +288,7 @@ class AppConfig:
 ENABLE_API_KEY = PersistentConfig(
     "ENABLE_API_KEY",
     "auth.api_key.enable",
-    os.environ.get("ENABLE_API_KEY", "True").lower() == "true",
+    os.environ.get("ENABLE_API_KEY", "False").lower() == "true",
 )
 
 ENABLE_API_KEY_ENDPOINT_RESTRICTIONS = PersistentConfig(
@@ -312,7 +312,7 @@ JWT_EXPIRES_IN = PersistentConfig(
 ####################################
 
 ENABLE_OAUTH_PERSISTENT_CONFIG = (
-    os.environ.get("ENABLE_OAUTH_PERSISTENT_CONFIG", "True").lower() == "true"
+    os.environ.get("ENABLE_OAUTH_PERSISTENT_CONFIG", "False").lower() == "true"
 )
 
 ENABLE_OAUTH_SIGNUP = PersistentConfig(
@@ -833,10 +833,10 @@ S3_BUCKET_NAME = os.environ.get("S3_BUCKET_NAME", None)
 S3_KEY_PREFIX = os.environ.get("S3_KEY_PREFIX", None)
 S3_ENDPOINT_URL = os.environ.get("S3_ENDPOINT_URL", None)
 S3_USE_ACCELERATE_ENDPOINT = (
-    os.environ.get("S3_USE_ACCELERATE_ENDPOINT", "false").lower() == "true"
+    os.environ.get("S3_USE_ACCELERATE_ENDPOINT", "False").lower() == "true"
 )
 S3_ADDRESSING_STYLE = os.environ.get("S3_ADDRESSING_STYLE", None)
-S3_ENABLE_TAGGING = os.getenv("S3_ENABLE_TAGGING", "false").lower() == "true"
+S3_ENABLE_TAGGING = os.getenv("S3_ENABLE_TAGGING", "False").lower() == "true"
 
 GCS_BUCKET_NAME = os.environ.get("GCS_BUCKET_NAME", None)
 GOOGLE_APPLICATION_CREDENTIALS_JSON = os.environ.get(
@@ -880,7 +880,7 @@ ENABLE_DIRECT_CONNECTIONS = PersistentConfig(
 ENABLE_OLLAMA_API = PersistentConfig(
     "ENABLE_OLLAMA_API",
     "ollama.enable",
-    os.environ.get("ENABLE_OLLAMA_API", "True").lower() == "true",
+    os.environ.get("ENABLE_OLLAMA_API", "False").lower() == "true",
 )
 
 OLLAMA_API_BASE_URL = os.environ.get(
@@ -939,7 +939,7 @@ OLLAMA_API_CONFIGS = PersistentConfig(
 ENABLE_OPENAI_API = PersistentConfig(
     "ENABLE_OPENAI_API",
     "openai.enable",
-    os.environ.get("ENABLE_OPENAI_API", "True").lower() == "true",
+    os.environ.get("ENABLE_OPENAI_API", "False").lower() == "true",
 )
 
 
@@ -1038,14 +1038,14 @@ ENABLE_SIGNUP = PersistentConfig(
     (
         False
         if not WEBUI_AUTH
-        else os.environ.get("ENABLE_SIGNUP", "True").lower() == "true"
+        else os.environ.get("ENABLE_SIGNUP", "False").lower() == "true"
     ),
 )
 
 ENABLE_LOGIN_FORM = PersistentConfig(
     "ENABLE_LOGIN_FORM",
     "ui.ENABLE_LOGIN_FORM",
-    os.environ.get("ENABLE_LOGIN_FORM", "True").lower() == "true",
+    os.environ.get("ENABLE_LOGIN_FORM", "False").lower() == "true",
 )
 
 
@@ -1184,86 +1184,88 @@ USER_PERMISSIONS_WORKSPACE_TOOLS_ALLOW_PUBLIC_SHARING = (
 
 
 USER_PERMISSIONS_CHAT_CONTROLS = (
-    os.environ.get("USER_PERMISSIONS_CHAT_CONTROLS", "True").lower() == "true"
+    os.environ.get("USER_PERMISSIONS_CHAT_CONTROLS", "False").lower() == "true"
 )
 
 USER_PERMISSIONS_CHAT_VALVES = (
-    os.environ.get("USER_PERMISSIONS_CHAT_VALVES", "True").lower() == "true"
+    os.environ.get("USER_PERMISSIONS_CHAT_VALVES", "False").lower() == "true"
 )
 
 USER_PERMISSIONS_CHAT_SYSTEM_PROMPT = (
-    os.environ.get("USER_PERMISSIONS_CHAT_SYSTEM_PROMPT", "True").lower() == "true"
+    os.environ.get("USER_PERMISSIONS_CHAT_SYSTEM_PROMPT", "False").lower() == "true"
 )
 
 USER_PERMISSIONS_CHAT_PARAMS = (
-    os.environ.get("USER_PERMISSIONS_CHAT_PARAMS", "True").lower() == "true"
+    os.environ.get("USER_PERMISSIONS_CHAT_PARAMS", "False").lower() == "true"
 )
 
 USER_PERMISSIONS_CHAT_FILE_UPLOAD = (
-    os.environ.get("USER_PERMISSIONS_CHAT_FILE_UPLOAD", "True").lower() == "true"
+    os.environ.get("USER_PERMISSIONS_CHAT_FILE_UPLOAD", "False").lower() == "true"
 )
 
 
 USER_PERMISSIONS_CHAT_FILE_DIRECT_UPLOAD = (
-    os.environ.get("USER_PERMISSIONS_CHAT_FILE_DIRECT_UPLOAD", "True").lower() == "true"
+    os.environ.get("USER_PERMISSIONS_CHAT_FILE_DIRECT_UPLOAD", "False").lower()
+    == "true"
 )
 
 USER_PERMISSIONS_CHAT_FILE_SYNTHETIC_ENABLE = (
-    os.environ.get("USER_PERMISSIONS_CHAT_FILE_SYNTHETIC_ENABLE", "True").lower() == "true"
+    os.environ.get("USER_PERMISSIONS_CHAT_FILE_SYNTHETIC_ENABLE", "False").lower()
+    == "true"
 )
 
 
 USER_PERMISSIONS_CHAT_DELETE = (
-    os.environ.get("USER_PERMISSIONS_CHAT_DELETE", "True").lower() == "true"
+    os.environ.get("USER_PERMISSIONS_CHAT_DELETE", "False").lower() == "true"
 )
 
 USER_PERMISSIONS_CHAT_DELETE_MESSAGE = (
-    os.environ.get("USER_PERMISSIONS_CHAT_DELETE_MESSAGE", "True").lower() == "true"
+    os.environ.get("USER_PERMISSIONS_CHAT_DELETE_MESSAGE", "False").lower() == "true"
 )
 
 USER_PERMISSIONS_CHAT_CONTINUE_RESPONSE = (
-    os.environ.get("USER_PERMISSIONS_CHAT_CONTINUE_RESPONSE", "True").lower() == "true"
+    os.environ.get("USER_PERMISSIONS_CHAT_CONTINUE_RESPONSE", "False").lower() == "true"
 )
 
 USER_PERMISSIONS_CHAT_REGENERATE_RESPONSE = (
-    os.environ.get("USER_PERMISSIONS_CHAT_REGENERATE_RESPONSE", "True").lower()
+    os.environ.get("USER_PERMISSIONS_CHAT_REGENERATE_RESPONSE", "False").lower()
     == "true"
 )
 
 USER_PERMISSIONS_CHAT_RATE_RESPONSE = (
-    os.environ.get("USER_PERMISSIONS_CHAT_RATE_RESPONSE", "True").lower() == "true"
+    os.environ.get("USER_PERMISSIONS_CHAT_RATE_RESPONSE", "False").lower() == "true"
 )
 
 USER_PERMISSIONS_CHAT_EDIT = (
-    os.environ.get("USER_PERMISSIONS_CHAT_EDIT", "True").lower() == "true"
+    os.environ.get("USER_PERMISSIONS_CHAT_EDIT", "False").lower() == "true"
 )
 
 USER_PERMISSIONS_CHAT_SHARE = (
-    os.environ.get("USER_PERMISSIONS_CHAT_SHARE", "True").lower() == "true"
+    os.environ.get("USER_PERMISSIONS_CHAT_SHARE", "False").lower() == "true"
 )
 
 USER_PERMISSIONS_CHAT_EXPORT = (
-    os.environ.get("USER_PERMISSIONS_CHAT_EXPORT", "True").lower() == "true"
+    os.environ.get("USER_PERMISSIONS_CHAT_EXPORT", "False").lower() == "true"
 )
 
 USER_PERMISSIONS_CHAT_STT = (
-    os.environ.get("USER_PERMISSIONS_CHAT_STT", "True").lower() == "true"
+    os.environ.get("USER_PERMISSIONS_CHAT_STT", "False").lower() == "true"
 )
 
 USER_PERMISSIONS_CHAT_TTS = (
-    os.environ.get("USER_PERMISSIONS_CHAT_TTS", "True").lower() == "true"
+    os.environ.get("USER_PERMISSIONS_CHAT_TTS", "False").lower() == "true"
 )
 
 USER_PERMISSIONS_CHAT_CALL = (
-    os.environ.get("USER_PERMISSIONS_CHAT_CALL", "True").lower() == "true"
+    os.environ.get("USER_PERMISSIONS_CHAT_CALL", "False").lower() == "true"
 )
 
 USER_PERMISSIONS_CHAT_MULTIPLE_MODELS = (
-    os.environ.get("USER_PERMISSIONS_CHAT_MULTIPLE_MODELS", "True").lower() == "true"
+    os.environ.get("USER_PERMISSIONS_CHAT_MULTIPLE_MODELS", "False").lower() == "true"
 )
 
 USER_PERMISSIONS_CHAT_TEMPORARY = (
-    os.environ.get("USER_PERMISSIONS_CHAT_TEMPORARY", "True").lower() == "true"
+    os.environ.get("USER_PERMISSIONS_CHAT_TEMPORARY", "False").lower() == "true"
 )
 
 USER_PERMISSIONS_CHAT_TEMPORARY_ENFORCED = (
@@ -1278,21 +1280,21 @@ USER_PERMISSIONS_FEATURES_DIRECT_TOOL_SERVERS = (
 )
 
 USER_PERMISSIONS_FEATURES_WEB_SEARCH = (
-    os.environ.get("USER_PERMISSIONS_FEATURES_WEB_SEARCH", "True").lower() == "true"
+    os.environ.get("USER_PERMISSIONS_FEATURES_WEB_SEARCH", "False").lower() == "true"
 )
 
 USER_PERMISSIONS_FEATURES_IMAGE_GENERATION = (
-    os.environ.get("USER_PERMISSIONS_FEATURES_IMAGE_GENERATION", "True").lower()
+    os.environ.get("USER_PERMISSIONS_FEATURES_IMAGE_GENERATION", "False").lower()
     == "true"
 )
 
 USER_PERMISSIONS_FEATURES_CODE_INTERPRETER = (
-    os.environ.get("USER_PERMISSIONS_FEATURES_CODE_INTERPRETER", "True").lower()
+    os.environ.get("USER_PERMISSIONS_FEATURES_CODE_INTERPRETER", "False").lower()
     == "true"
 )
 
 USER_PERMISSIONS_FEATURES_NOTES = (
-    os.environ.get("USER_PERMISSIONS_FEATURES_NOTES", "True").lower() == "true"
+    os.environ.get("USER_PERMISSIONS_FEATURES_NOTES", "False").lower() == "true"
 )
 
 
@@ -1356,13 +1358,13 @@ ENABLE_CHANNELS = PersistentConfig(
 ENABLE_NOTES = PersistentConfig(
     "ENABLE_NOTES",
     "notes.enable",
-    os.environ.get("ENABLE_NOTES", "True").lower() == "true",
+    os.environ.get("ENABLE_NOTES", "False").lower() == "true",
 )
 
 ENABLE_EVALUATION_ARENA_MODELS = PersistentConfig(
     "ENABLE_EVALUATION_ARENA_MODELS",
     "evaluation.arena.enable",
-    os.environ.get("ENABLE_EVALUATION_ARENA_MODELS", "True").lower() == "true",
+    os.environ.get("ENABLE_EVALUATION_ARENA_MODELS", "False").lower() == "true",
 )
 EVALUATION_ARENA_MODELS = PersistentConfig(
     "EVALUATION_ARENA_MODELS",
@@ -1405,19 +1407,19 @@ ENABLE_ADMIN_CHAT_ACCESS = (
 ENABLE_COMMUNITY_SHARING = PersistentConfig(
     "ENABLE_COMMUNITY_SHARING",
     "ui.enable_community_sharing",
-    os.environ.get("ENABLE_COMMUNITY_SHARING", "True").lower() == "true",
+    os.environ.get("ENABLE_COMMUNITY_SHARING", "False").lower() == "true",
 )
 
 ENABLE_MESSAGE_RATING = PersistentConfig(
     "ENABLE_MESSAGE_RATING",
     "ui.enable_message_rating",
-    os.environ.get("ENABLE_MESSAGE_RATING", "True").lower() == "true",
+    os.environ.get("ENABLE_MESSAGE_RATING", "False").lower() == "true",
 )
 
 ENABLE_USER_WEBHOOKS = PersistentConfig(
     "ENABLE_USER_WEBHOOKS",
     "ui.enable_user_webhooks",
-    os.environ.get("ENABLE_USER_WEBHOOKS", "True").lower() == "true",
+    os.environ.get("ENABLE_USER_WEBHOOKS", "False").lower() == "true",
 )
 
 # FastAPI / AnyIO settings
@@ -1469,7 +1471,8 @@ else:
     # Doing both will result in CORS errors in the browser.
     for origin in CORS_ALLOW_ORIGIN:
         validate_cors_origin(origin)
-    log.info(f'CORS_ALLOW_ORIGIN set to: {CORS_ALLOW_ORIGIN}')
+    log.info(f"CORS_ALLOW_ORIGIN set to: {CORS_ALLOW_ORIGIN}")
+
 
 class BannerModel(BaseModel):
     id: str
@@ -1626,32 +1629,32 @@ JSON format: { "follow_ups": ["Question 1?", "Question 2?", "Question 3?"] }
 ENABLE_FOLLOW_UP_GENERATION = PersistentConfig(
     "ENABLE_FOLLOW_UP_GENERATION",
     "task.follow_up.enable",
-    os.environ.get("ENABLE_FOLLOW_UP_GENERATION", "True").lower() == "true",
+    os.environ.get("ENABLE_FOLLOW_UP_GENERATION", "False").lower() == "true",
 )
 
 ENABLE_TAGS_GENERATION = PersistentConfig(
     "ENABLE_TAGS_GENERATION",
     "task.tags.enable",
-    os.environ.get("ENABLE_TAGS_GENERATION", "True").lower() == "true",
+    os.environ.get("ENABLE_TAGS_GENERATION", "False").lower() == "true",
 )
 
 ENABLE_TITLE_GENERATION = PersistentConfig(
     "ENABLE_TITLE_GENERATION",
     "task.title.enable",
-    os.environ.get("ENABLE_TITLE_GENERATION", "True").lower() == "true",
+    os.environ.get("ENABLE_TITLE_GENERATION", "False").lower() == "true",
 )
 
 
 ENABLE_SEARCH_QUERY_GENERATION = PersistentConfig(
     "ENABLE_SEARCH_QUERY_GENERATION",
     "task.query.search.enable",
-    os.environ.get("ENABLE_SEARCH_QUERY_GENERATION", "True").lower() == "true",
+    os.environ.get("ENABLE_SEARCH_QUERY_GENERATION", "False").lower() == "true",
 )
 
 ENABLE_RETRIEVAL_QUERY_GENERATION = PersistentConfig(
     "ENABLE_RETRIEVAL_QUERY_GENERATION",
     "task.query.retrieval.enable",
-    os.environ.get("ENABLE_RETRIEVAL_QUERY_GENERATION", "True").lower() == "true",
+    os.environ.get("ENABLE_RETRIEVAL_QUERY_GENERATION", "False").lower() == "true",
 )
 
 
@@ -1795,7 +1798,7 @@ Responses from models: {{responses}}"""
 ENABLE_CODE_EXECUTION = PersistentConfig(
     "ENABLE_CODE_EXECUTION",
     "code_execution.enable",
-    os.environ.get("ENABLE_CODE_EXECUTION", "True").lower() == "true",
+    os.environ.get("ENABLE_CODE_EXECUTION", "False").lower() == "true",
 )
 
 CODE_EXECUTION_ENGINE = PersistentConfig(
@@ -1838,7 +1841,7 @@ CODE_EXECUTION_JUPYTER_TIMEOUT = PersistentConfig(
 ENABLE_CODE_INTERPRETER = PersistentConfig(
     "ENABLE_CODE_INTERPRETER",
     "code_interpreter.enable",
-    os.environ.get("ENABLE_CODE_INTERPRETER", "True").lower() == "true",
+    os.environ.get("ENABLE_CODE_INTERPRETER", "False").lower() == "true",
 )
 
 CODE_INTERPRETER_ENGINE = PersistentConfig(

@@ -20,19 +20,19 @@
 			public_tools: false
 		},
 		chat: {
-			controls: true,
-			valves: true,
-			system_prompt: true,
-			params: true,
+			controls: false,
+			valves: false,
+			system_prompt: false,
+			params: false,
 			file_upload: false,
 			file_direct_upload: false,
     		file_synthetic_enable: false,
-			delete: true,
-			delete_message: true,
-			continue_response: true,
-			regenerate_response: true,
-			rate_response: true,
-			edit: true,
+			delete: false,
+			delete_message: false,
+			continue_response: false,
+			regenerate_response: false,
+			rate_response: false,
+			edit: false,
 			share: false,
 			export: false,
 			stt: false,
@@ -47,7 +47,7 @@
 			web_search: false,
 			image_generation: false,
 			code_interpreter: false,
-			notes: true
+			notes: false
 		}
 	};
 
