@@ -1418,6 +1418,10 @@
 	const submitPrompt = async (userPrompt, { _raw = false } = {}) => {
 		console.info('submitPrompt', userPrompt, $chatId);
 
+		// Close the input menu once the user sends the first message
+		// It should only be open when a brand new chat has zero messages
+		showInputMenu = false;
+
 		const messages = createMessagesList(history, history.currentId);
 		const _selectedModels = selectedModels.map((modelId) =>
 			$models.map((m) => m.id).includes(modelId) ? modelId : ''
