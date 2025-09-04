@@ -8,6 +8,7 @@ from typing import Optional
 from urllib.parse import quote
 import asyncio
 
+from open_webui.utils.tus.get_file_stream import get_file
 from open_webui.utils.tus.tusd import TusRouter
 
 from open_webui.config import (
@@ -295,7 +296,7 @@ def upload_file_handler(
                     user,
                 )
                 return {"status": True, **file_item.model_dump()}
-            
+
         else:
             if file_item:
                 return file_item
@@ -311,6 +312,7 @@ def upload_file_handler(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=ERROR_MESSAGES.DEFAULT("Error uploading file"),
         )
+
 
 ############################
 # TUS Upload File
@@ -486,6 +488,7 @@ async def upload_file_tus(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=ERROR_MESSAGES.DEFAULT("Error uploading file"),
         )
+
 
 ############################
 # List Files
@@ -791,7 +794,12 @@ async def get_file_content_by_id(
                             f"attachment; filename*=UTF-8''{encoded_filename}"
                         )
 
-                return FileResponse(file_path, headers=headers, media_type=content_type)
+                log.debug(f"-----> filename: {filename}")
+                log.debug(f"-----> file_path: {file_path}")
+                log.debug(f"-----> headers: {headers}")
+                log.debug(f"-----> content_type: {content_type}")
+                return await get_file(file, file_path, headers, content_type)
+                # return FileResponse(file_path, headers=headers, media_type=content_type)
 
             else:
                 raise HTTPException(
@@ -806,6 +814,7 @@ async def get_file_content_by_id(
                 detail=ERROR_MESSAGES.DEFAULT("Error getting file content"),
             )
     else:
+        log.error("file not found")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=ERROR_MESSAGES.NOT_FOUND,
