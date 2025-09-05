@@ -114,10 +114,15 @@ KEYCLOAK_ISSUER = os.environ.get("KEYCLOAK_ISSUER", "")
 KEYCLOAK_ENABLE = os.environ.get("KEYCLOAK_ENABLE", "false").lower() == "true"
 
 WEBUI_NAME = os.environ.get("WEBUI_NAME", "Open WebUI")
-if WEBUI_NAME != "Open WebUI":
-    WEBUI_NAME += " (Open WebUI)"
+# if WEBUI_NAME != "Open WebUI":
+# WEBUI_NAME += " (Open WebUI)"
 
-WEBUI_FAVICON_URL = "https://openwebui.com/favicon.png"
+# WEBUI_FAVICON_URL = "https://openwebui.com/favicon.png"
+WEBUI_URL = os.environ.get("WEBUI_URL", "")
+if WEBUI_URL:
+    WEBUI_FAVICON_URL = f"{WEBUI_URL}/static/android-chrome-512x512.png"
+else:
+    WEBUI_FAVICON_URL = "https://openwebui.com/favicon.png"
 
 TRUSTED_SIGNATURE_KEY = os.environ.get("TRUSTED_SIGNATURE_KEY", "")
 
@@ -800,7 +805,7 @@ EXTERNAL_PWA_MANIFEST_URL = os.environ.get("EXTERNAL_PWA_MANIFEST_URL")
 # STRIPE
 ####################################
 
-STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY')
-STRIPE_TRIAL_PRICE_ID = os.environ.get('STRIPE_TRIAL_PRICE_ID')
-STRIPE_TRIAL_PERIOD_DAYS = os.environ.get('STRIPE_TRIAL_PERIOD_DAYS')
-STRIPE_CHECKOUT_PRICE_ID = os.environ.get('STRIPE_CHECKOUT_PRICE_ID')
+STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY")
+STRIPE_TRIAL_PRICE_ID = os.environ.get("STRIPE_TRIAL_PRICE_ID")
+STRIPE_TRIAL_PERIOD_DAYS = os.environ.get("STRIPE_TRIAL_PERIOD_DAYS")
+STRIPE_CHECKOUT_PRICE_ID = os.environ.get("STRIPE_CHECKOUT_PRICE_ID")

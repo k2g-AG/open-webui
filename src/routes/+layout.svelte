@@ -313,9 +313,9 @@
 							console.info("notification event:", event);
 							console.info("notification data:", data);
 
-							new Notification(`${title} • Open WebUI`, {
+							new Notification(`${title} • {$WEBUI_NAME}`, {
 								body: content,
-								icon: `${WEBUI_BASE_URL}/static/favicon.png`
+								icon: `${WEBUI_BASE_URL}/static/android-chrome-512x512.png`
 							});
 						}
 					}
@@ -462,9 +462,9 @@
 			if (type === 'message') {
 				if ($isLastActiveTab) {
 					if ($settings?.notificationEnabled ?? false) {
-						new Notification(`${data?.user?.name} (#${event?.channel?.name}) • Open WebUI`, {
+						new Notification(`${data?.user?.name} (#${event?.channel?.name}) • {$WEBUI_NAME}`, {
 							body: data?.content,
-							icon: data?.user?.profile_image_url ?? `${WEBUI_BASE_URL}/static/favicon.png`
+							icon: data?.user?.profile_image_url ?? `${WEBUI_BASE_URL}/static/android-chrome-512x512.png`
 						});
 					}
 				}
@@ -755,7 +755,7 @@
 
 <svelte:head>
 	<title>{$WEBUI_NAME}</title>
-	<link crossorigin="anonymous" rel="icon" href="{WEBUI_BASE_URL}/static/favicon.png" />
+	<link crossorigin="anonymous" rel="icon" href="{WEBUI_BASE_URL}/static/android-chrome-512x512.png" />
 </svelte:head>
 
 {#if showRefresh}
