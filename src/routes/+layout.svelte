@@ -73,7 +73,7 @@
 	// let authenticated = false;
 	// let keycloakPromise = keycloak.init({ onLoad: 'login-required' }).then((auth) => {
 	// 	authenticated = auth;
-	// 	console.log({ authenticated });
+	// 	console.debug({ authenticated });
 	// 	if (authenticated) {
 	// 		console.info('Authenticated');
 	// 		localStorage.setItem('token', keycloak.token || '');
@@ -107,11 +107,11 @@
 		await socket.set(_socket);
 
 		_socket.on('connect_error', (err) => {
-			console.log('connect_error', err);
+			console.debug('connect_error', err);
 		});
 
 		_socket.on('connect', () => {
-			console.log('connected', _socket.id);
+			console.debug('connected', _socket.id);
 			if (localStorage.getItem('token')) {
 				// Emit user-join event with auth token
 				_socket.emit('user-join', { auth: { token: localStorage.token } });
@@ -121,17 +121,17 @@
 		});
 
 		_socket.on('reconnect_attempt', (attempt) => {
-			console.log('reconnect_attempt', attempt);
+			console.debug('reconnect_attempt', attempt);
 		});
 
 		_socket.on('reconnect_failed', () => {
-			console.log('reconnect_failed');
+			console.debug('reconnect_failed');
 		});
 
 		_socket.on('disconnect', (reason, details) => {
-			console.log(`Socket ${_socket.id} disconnected due to ${reason}`);
+			console.debug(`Socket ${_socket.id} disconnected due to ${reason}`);
 			if (details) {
-				console.log('Additional details:', details);
+				console.debug('Additional details:', details);
 			}
 		});
 	};
@@ -189,10 +189,10 @@
 		}, 60000);
 
 		pyodideWorker.onmessage = (event) => {
-			console.log('pyodideWorker.onmessage', event);
+			console.debug('pyodideWorker.onmessage', event);
 			const { id, ...data } = event.data;
 
-			console.log(id, data);
+			console.debug(id, data);
 
 			data['stdout'] && (stdout = data['stdout']);
 			data['stderr'] && (stderr = data['stderr']);
@@ -217,7 +217,7 @@
 		};
 
 		pyodideWorker.onerror = (event) => {
-			console.log('pyodideWorker.onerror', event);
+			console.debug('pyodideWorker.onerror', event);
 
 			if (cb) {
 				cb(
@@ -241,10 +241,10 @@
 		const toolServer = $settings?.toolServers?.find((server) => server.url === data.server?.url);
 		const toolServerData = $toolServers?.find((server) => server.url === data.server?.url);
 
-		console.log('executeTool', data, toolServer);
+		console.debug('executeTool', data, toolServer);
 
 		if (toolServer) {
-			console.log(toolServer);
+			console.debug(toolServer);
 			const res = await executeToolServer(
 				(toolServer?.auth_type ?? 'bearer') === 'bearer' ? toolServer?.key : localStorage.token,
 				toolServer.url,
@@ -253,7 +253,7 @@
 				toolServerData
 			);
 
-			console.log('executeToolServer', res);
+			console.debug('executeToolServer', res);
 			if (cb) {
 				cb(JSON.parse(JSON.stringify(res)));
 			}
@@ -304,6 +304,15 @@
 
 					if ($isLastActiveTab) {
 						if ($settings?.notificationEnabled ?? false) {
+
+							console.debug("notification settings:", $settings);
+							console.debug("notification config:", $config);
+							console.debug("notification chats:", $chats);
+							console.debug("notification models:", $_models);
+							
+							console.debug("notification event:", event);
+							console.debug("notification data:", data);
+
 							new Notification(`${title} • Open WebUI`, {
 								body: content,
 								icon: `${WEBUI_BASE_URL}/static/favicon.png`
@@ -331,13 +340,13 @@
 			}
 		} else if (data?.session_id === $socket.id) {
 			if (type === 'execute:python') {
-				console.log('execute:python', data);
+				console.debug('execute:python', data);
 				executePythonAsWorker(data.id, data.code, cb);
 			} else if (type === 'execute:tool') {
-				console.log('execute:tool', data);
+				console.debug('execute:tool', data);
 				executeTool(data, cb);
 			} else if (type === 'request:chat:completion') {
-				console.log(data, $socket.id);
+				console.debug(data, $socket.id);
 				const { session_id, channel, form_data, model } = data;
 
 				try {
@@ -372,7 +381,7 @@
 									cb({
 										status: true
 									});
-									console.log({ status: true });
+									console.debug({ status: true });
 
 									// res will either be SSE or JSON
 									const reader = res.body.getReader();
@@ -393,7 +402,7 @@
 											const lines = chunk.split('\n').filter((line) => line.trim() !== '');
 
 											for (const line of lines) {
-												console.log(line);
+												console.debug(line);
 												$socket?.emit(channel, line);
 											}
 										}
@@ -422,7 +431,7 @@
 					});
 				}
 			} else {
-				console.log('chatEventHandler', event);
+				console.debug('chatEventHandler', event);
 			}
 		}
 	};
@@ -647,7 +656,7 @@
 		let backendConfig = null;
 		try {
 			backendConfig = await getBackendConfig();
-			console.log('Backend config:', backendConfig);
+			console.debug('Backend config:', backendConfig);
 		} catch (error) {
 			console.error('Error loading backend config:', error);
 		}
@@ -683,7 +692,7 @@
 						toast.error(`${error}`);
 						return null;
 					});
-					console.log({ sessionUser });
+					console.debug({ sessionUser });
 					if (sessionUser) {
 						await user.set(sessionUser);
 						await config.set(await getBackendConfig());
