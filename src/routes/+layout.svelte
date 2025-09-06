@@ -315,7 +315,7 @@
 
 							new Notification(`${title} • {$WEBUI_NAME}`, {
 								body: content,
-								icon: `${WEBUI_BASE_URL}/static/android-chrome-512x512.png`
+								icon: `${WEBUI_BASE_URL}/static/favicon.png`
 							});
 						}
 					}
@@ -464,7 +464,7 @@
 					if ($settings?.notificationEnabled ?? false) {
 						new Notification(`${data?.user?.name} (#${event?.channel?.name}) • {$WEBUI_NAME}`, {
 							body: data?.content,
-							icon: data?.user?.profile_image_url ?? `${WEBUI_BASE_URL}/static/android-chrome-512x512.png`
+							icon: data?.user?.profile_image_url ?? `${WEBUI_BASE_URL}/static/favicon.png`
 						});
 					}
 				}
@@ -755,7 +755,7 @@
 
 <svelte:head>
 	<title>{$WEBUI_NAME}</title>
-	<link crossorigin="anonymous" rel="icon" href="{WEBUI_BASE_URL}/static/android-chrome-512x512.png" />
+	<link crossorigin="anonymous" rel="icon" href="{WEBUI_BASE_URL}/static/favicon.png" />
 </svelte:head>
 
 {#if showRefresh}

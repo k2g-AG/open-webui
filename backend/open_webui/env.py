@@ -120,7 +120,7 @@ WEBUI_NAME = os.environ.get("WEBUI_NAME", "Open WebUI")
 # WEBUI_FAVICON_URL = "https://openwebui.com/favicon.png"
 WEBUI_URL = os.environ.get("WEBUI_URL", "")
 if WEBUI_URL:
-    WEBUI_FAVICON_URL = f"{WEBUI_URL}/static/android-chrome-512x512.png"
+    WEBUI_FAVICON_URL = f"{WEBUI_URL}/static/favicon.png"
 else:
     WEBUI_FAVICON_URL = "https://openwebui.com/favicon.png"
 
