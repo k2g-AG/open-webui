@@ -581,8 +581,11 @@ async def lifespan(app: FastAPI):
         app.state.redis_task_command_listener.cancel()
 
 
+fast_api_name = "Open WebUI"
+if WEBUI_NAME:
+    fast_api_name = WEBUI_NAME
 app = FastAPI(
-    title="Open WebUI",
+    title=fast_api_name,
     docs_url="/docs" if ENV == "dev" else None,
     openapi_url="/openapi.json" if ENV == "dev" else None,
     redoc_url=None,
