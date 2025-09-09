@@ -61,6 +61,7 @@
 	import { beforeNavigate } from '$app/navigation';
 	import { updated } from '$app/state';
 	import keycloak from '$lib/keycloak';
+	import Spinner from '$lib/components/common/Spinner.svelte';
 
 	// handle frontend updates (https://svelte.dev/docs/kit/configuration#version)
 	beforeNavigate(({ willUnload, to }) => {
@@ -72,7 +73,7 @@
 	// let authenticated = false;
 	// let keycloakPromise = keycloak.init({ onLoad: 'login-required' }).then((auth) => {
 	// 	authenticated = auth;
-	// 	console.log({ authenticated });
+	// 	console.info({ authenticated });
 	// 	if (authenticated) {
 	// 		console.info('Authenticated');
 	// 		localStorage.setItem('token', keycloak.token || '');
@@ -87,6 +88,8 @@
 
 	let loaded = false;
 	let tokenTimer = null;
+
+	let showRefresh = false;
 
 	const BREAKPOINT = 768;
 
@@ -104,11 +107,11 @@
 		await socket.set(_socket);
 
 		_socket.on('connect_error', (err) => {
-			console.log('connect_error', err);
+			console.info('connect_error', err);
 		});
 
 		_socket.on('connect', () => {
-			console.log('connected', _socket.id);
+			console.info('connected', _socket.id);
 			if (localStorage.getItem('token')) {
 				// Emit user-join event with auth token
 				_socket.emit('user-join', { auth: { token: localStorage.token } });
@@ -118,17 +121,17 @@
 		});
 
 		_socket.on('reconnect_attempt', (attempt) => {
-			console.log('reconnect_attempt', attempt);
+			console.info('reconnect_attempt', attempt);
 		});
 
 		_socket.on('reconnect_failed', () => {
-			console.log('reconnect_failed');
+			console.info('reconnect_failed');
 		});
 
 		_socket.on('disconnect', (reason, details) => {
-			console.log(`Socket ${_socket.id} disconnected due to ${reason}`);
+			console.info(`Socket ${_socket.id} disconnected due to ${reason}`);
 			if (details) {
-				console.log('Additional details:', details);
+				console.info('Additional details:', details);
 			}
 		});
 	};
@@ -186,10 +189,10 @@
 		}, 60000);
 
 		pyodideWorker.onmessage = (event) => {
-			console.log('pyodideWorker.onmessage', event);
+			console.info('pyodideWorker.onmessage', event);
 			const { id, ...data } = event.data;
 
-			console.log(id, data);
+			console.info(id, data);
 
 			data['stdout'] && (stdout = data['stdout']);
 			data['stderr'] && (stderr = data['stderr']);
@@ -214,7 +217,7 @@
 		};
 
 		pyodideWorker.onerror = (event) => {
-			console.log('pyodideWorker.onerror', event);
+			console.info('pyodideWorker.onerror', event);
 
 			if (cb) {
 				cb(
@@ -238,10 +241,10 @@
 		const toolServer = $settings?.toolServers?.find((server) => server.url === data.server?.url);
 		const toolServerData = $toolServers?.find((server) => server.url === data.server?.url);
 
-		console.log('executeTool', data, toolServer);
+		console.info('executeTool', data, toolServer);
 
 		if (toolServer) {
-			console.log(toolServer);
+			console.info(toolServer);
 			const res = await executeToolServer(
 				(toolServer?.auth_type ?? 'bearer') === 'bearer' ? toolServer?.key : localStorage.token,
 				toolServer.url,
@@ -250,7 +253,7 @@
 				toolServerData
 			);
 
-			console.log('executeToolServer', res);
+			console.info('executeToolServer', res);
 			if (cb) {
 				cb(JSON.parse(JSON.stringify(res)));
 			}
@@ -301,7 +304,16 @@
 
 					if ($isLastActiveTab) {
 						if ($settings?.notificationEnabled ?? false) {
-							new Notification(`${title} • Open WebUI`, {
+
+							console.info("notification settings:", $settings);
+							console.info("notification config:", $config);
+							console.info("notification chats:", $chats);
+							console.info("notification models:", $_models);
+							
+							console.info("notification event:", event);
+							console.info("notification data:", data);
+
+							new Notification(`${title} • {$WEBUI_NAME}`, {
 								body: content,
 								icon: `${WEBUI_BASE_URL}/static/favicon.png`
 							});
@@ -328,13 +340,13 @@
 			}
 		} else if (data?.session_id === $socket.id) {
 			if (type === 'execute:python') {
-				console.log('execute:python', data);
+				console.info('execute:python', data);
 				executePythonAsWorker(data.id, data.code, cb);
 			} else if (type === 'execute:tool') {
-				console.log('execute:tool', data);
+				console.info('execute:tool', data);
 				executeTool(data, cb);
 			} else if (type === 'request:chat:completion') {
-				console.log(data, $socket.id);
+				console.info(data, $socket.id);
 				const { session_id, channel, form_data, model } = data;
 
 				try {
@@ -369,7 +381,7 @@
 									cb({
 										status: true
 									});
-									console.log({ status: true });
+									console.info({ status: true });
 
 									// res will either be SSE or JSON
 									const reader = res.body.getReader();
@@ -390,7 +402,7 @@
 											const lines = chunk.split('\n').filter((line) => line.trim() !== '');
 
 											for (const line of lines) {
-												console.log(line);
+												console.info(line);
 												$socket?.emit(channel, line);
 											}
 										}
@@ -419,7 +431,7 @@
 					});
 				}
 			} else {
-				console.log('chatEventHandler', event);
+				console.info('chatEventHandler', event);
 			}
 		}
 	};
@@ -450,7 +462,7 @@
 			if (type === 'message') {
 				if ($isLastActiveTab) {
 					if ($settings?.notificationEnabled ?? false) {
-						new Notification(`${data?.user?.name} (#${event?.channel?.name}) • Open WebUI`, {
+						new Notification(`${data?.user?.name} (#${event?.channel?.name}) • {$WEBUI_NAME}`, {
 							body: data?.content,
 							icon: data?.user?.profile_image_url ?? `${WEBUI_BASE_URL}/static/favicon.png`
 						});
@@ -532,6 +544,36 @@
 		const res = await userSignRefreshToken(localStorage.token);
 		console.info('onMount userSignRefreshToken result:', res);
 		console.info('Parsed', keycloak.tokenParsed);
+		let touchstartY = 0;
+
+		function isNavOrDescendant(el) {
+			const nav = document.querySelector('nav'); // change selector if needed
+			return nav && (el === nav || nav.contains(el));
+		}
+
+		document.addEventListener('touchstart', (e) => {
+			if (!isNavOrDescendant(e.target)) return;
+			touchstartY = e.touches[0].clientY;
+		});
+
+		document.addEventListener('touchmove', (e) => {
+			if (!isNavOrDescendant(e.target)) return;
+			const touchY = e.touches[0].clientY;
+			const touchDiff = touchY - touchstartY;
+			if (touchDiff > 50 && window.scrollY === 0) {
+				showRefresh = true;
+				e.preventDefault();
+			}
+		});
+
+		document.addEventListener('touchend', (e) => {
+			if (!isNavOrDescendant(e.target)) return;
+			if (showRefresh) {
+				showRefresh = false;
+				location.reload();
+			}
+		});
+
 		if (typeof window !== 'undefined' && window.applyTheme) {
 			window.applyTheme();
 		}
@@ -614,7 +656,7 @@
 		let backendConfig = null;
 		try {
 			backendConfig = await getBackendConfig();
-			console.log('Backend config:', backendConfig);
+			console.info('Backend config:', backendConfig);
 		} catch (error) {
 			console.error('Error loading backend config:', error);
 		}
@@ -650,7 +692,7 @@
 						toast.error(`${error}`);
 						return null;
 					});
-					console.log({ sessionUser });
+					console.info({ sessionUser });
 					if (sessionUser) {
 						await user.set(sessionUser);
 						await config.set(await getBackendConfig());
@@ -714,12 +756,13 @@
 <svelte:head>
 	<title>{$WEBUI_NAME}</title>
 	<link crossorigin="anonymous" rel="icon" href="{WEBUI_BASE_URL}/static/favicon.png" />
-
-	<!-- rosepine themes have been disabled as it's not up to date with our latest version. -->
-	<!-- feel free to make a PR to fix if anyone wants to see it return -->
-	<!-- <link rel="stylesheet" type="text/css" href="/themes/rosepine.css" />
-	<link rel="stylesheet" type="text/css" href="/themes/rosepine-dawn.css" /> -->
 </svelte:head>
+
+{#if showRefresh}
+	<div class=" py-5">
+		<Spinner className="size-5" />
+	</div>
+{/if}
 
 {#if loaded}
 	{#if $isApp}

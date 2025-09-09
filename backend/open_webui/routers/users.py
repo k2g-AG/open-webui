@@ -1,5 +1,13 @@
 import logging
 from typing import Optional
+import base64
+import io
+
+
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi.responses import Response, StreamingResponse, FileResponse
+from pydantic import BaseModel
+
 
 from open_webui.models.auths import Auths
 from open_webui.models.groups import Groups
@@ -21,11 +29,15 @@ from open_webui.socket.main import (
     get_user_active_status,
 )
 from open_webui.constants import ERROR_MESSAGES
-from open_webui.env import SRC_LOG_LEVELS
-from fastapi import APIRouter, Depends, HTTPException, Request, status
-from pydantic import BaseModel
+from open_webui.env import SRC_LOG_LEVELS, STATIC_DIR
 
-from open_webui.utils.auth import get_admin_user, get_password_hash, get_verified_user, get_current_user
+
+from open_webui.utils.auth import (
+    get_admin_user,
+    get_password_hash,
+    get_verified_user,
+    get_current_user,
+)
 from open_webui.utils.access_control import get_permissions, has_permission
 from open_webui.utils.integrations.stripe.service import StripeService
 from open_webui.env import STRIPE_CHECKOUT_PRICE_ID
@@ -128,36 +140,42 @@ class WorkspacePermissions(BaseModel):
 
 
 class SharingPermissions(BaseModel):
-    public_models: bool = True
-    public_knowledge: bool = True
-    public_prompts: bool = True
-    public_tools: bool = True
+    public_models: bool = False
+    public_knowledge: bool = False
+    public_prompts: bool = False
+    public_tools: bool = False
 
 
 class ChatPermissions(BaseModel):
-    controls: bool = True
-    system_prompt: bool = True
-    file_upload: bool = True
-    file_direct_upload: bool = True
-    file_synthetic_enable: bool = True
-    delete: bool = True
-    edit: bool = True
-    share: bool = True
-    export: bool = True
-    stt: bool = True
-    tts: bool = True
-    call: bool = True
-    multiple_models: bool = True
-    temporary: bool = True
+    controls: bool = False
+    valves: bool = False
+    system_prompt: bool = False
+    params: bool = False
+    file_upload: bool = False
+    file_direct_upload: bool = False
+    file_synthetic_enable: bool = False
+    delete: bool = False
+    delete_message: bool = False
+    continue_response: bool = False
+    regenerate_response: bool = False
+    rate_response: bool = False
+    edit: bool = False
+    share: bool = False
+    export: bool = False
+    stt: bool = False
+    tts: bool = False
+    call: bool = False
+    multiple_models: bool = False
+    temporary: bool = False
     temporary_enforced: bool = False
 
 
 class FeaturesPermissions(BaseModel):
     direct_tool_servers: bool = False
-    web_search: bool = True
-    image_generation: bool = True
-    code_interpreter: bool = True
-    notes: bool = True
+    web_search: bool = False
+    image_generation: bool = False
+    code_interpreter: bool = False
+    notes: bool = False
 
 
 class UserPermissions(BaseModel):
@@ -332,6 +350,43 @@ async def get_user_by_id(user_id: str, user=Depends(get_verified_user)):
 
 
 ############################
+# GetUserProfileImageById
+############################
+
+
+@router.get("/{user_id}/profile/image")
+async def get_user_profile_image_by_id(user_id: str, user=Depends(get_verified_user)):
+    user = Users.get_user_by_id(user_id)
+    if user:
+        if user.profile_image_url:
+            # check if it's url or base64
+            if user.profile_image_url.startswith("http"):
+                return Response(
+                    status_code=status.HTTP_302_FOUND,
+                    headers={"Location": user.profile_image_url},
+                )
+            elif user.profile_image_url.startswith("data:image"):
+                try:
+                    header, base64_data = user.profile_image_url.split(",", 1)
+                    image_data = base64.b64decode(base64_data)
+                    image_buffer = io.BytesIO(image_data)
+
+                    return StreamingResponse(
+                        image_buffer,
+                        media_type="image/png",
+                        headers={"Content-Disposition": "inline; filename=image.png"},
+                    )
+                except Exception as e:
+                    pass
+        return FileResponse(f"{STATIC_DIR}/user.png")
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ERROR_MESSAGES.USER_NOT_FOUND,
+        )
+
+
+############################
 # GetUserActiveStatusById
 ############################
 
@@ -354,8 +409,10 @@ async def update_user_by_id(
     form_data: UserUpdateForm,
     session_user=Depends(get_admin_user),
 ):
-    log.info(f"User update request: user_id={user_id}, admin={session_user.id}, fields={list(form_data.model_dump(exclude_none=True).keys())}")
-    
+    log.info(
+        f"User update request: user_id={user_id}, admin={session_user.id}, fields={list(form_data.model_dump(exclude_none=True).keys())}"
+    )
+
     # Prevent modification of the primary admin user by other admins
     try:
         first_user = Users.get_first_user()
@@ -363,7 +420,9 @@ async def update_user_by_id(
             if user_id == first_user.id:
                 if session_user.id != user_id:
                     # If the user trying to update is the primary admin, and they are not the primary admin themselves
-                    log.warning(f"Unauthorized attempt to modify primary admin: admin={session_user.id}, target={user_id}")
+                    log.warning(
+                        f"Unauthorized attempt to modify primary admin: admin={session_user.id}, target={user_id}"
+                    )
                     raise HTTPException(
                         status_code=status.HTTP_403_FORBIDDEN,
                         detail=ERROR_MESSAGES.ACTION_PROHIBITED,
@@ -371,7 +430,9 @@ async def update_user_by_id(
 
                 if form_data.role and form_data.role != "admin":
                     # If the primary admin is trying to change their own role, prevent it
-                    log.warning(f"Primary admin attempted to change own role: admin={session_user.id}, new_role={form_data.role}")
+                    log.warning(
+                        f"Primary admin attempted to change own role: admin={session_user.id}, new_role={form_data.role}"
+                    )
                     raise HTTPException(
                         status_code=status.HTTP_403_FORBIDDEN,
                         detail=ERROR_MESSAGES.ACTION_PROHIBITED,
@@ -392,13 +453,15 @@ async def update_user_by_id(
             detail=ERROR_MESSAGES.USER_NOT_FOUND,
         )
 
-    log.debug(f"Current user data: name={user.name}, email={user.email}, role={user.role}")
+    log.debug(
+        f"Current user data: name={user.name}, email={user.email}, role={user.role}"
+    )
 
     # Collect only provided fields for update
     update_data = {}
     email_to_update = None
     password_to_update = None
-    
+
     # Check email if provided and not empty
     if form_data.email is not None and form_data.email.strip():
         email_lower = form_data.email.lower().strip()
@@ -406,7 +469,9 @@ async def update_user_by_id(
             # Only check for conflicts if email actually changed
             email_user = Users.get_user_by_email(email_lower)
             if email_user:
-                log.warning(f"Email conflict during update: user_id={user_id}, email={email_lower}")
+                log.warning(
+                    f"Email conflict during update: user_id={user_id}, email={email_lower}"
+                )
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail=ERROR_MESSAGES.EMAIL_TAKEN,
@@ -414,54 +479,73 @@ async def update_user_by_id(
             # Prepare email for update after successful user update
             update_data["email"] = email_lower
             email_to_update = email_lower
-            log.info(f"Email change prepared: user_id={user_id}, old_email={user.email}, new_email={email_lower}")
+            log.info(
+                f"Email change prepared: user_id={user_id}, old_email={user.email}, new_email={email_lower}"
+            )
         else:
-            log.debug(f"Email unchanged, skipping update: user_id={user_id}, email={email_lower}")
+            log.debug(
+                f"Email unchanged, skipping update: user_id={user_id}, email={email_lower}"
+            )
     elif form_data.email is not None and not form_data.email.strip():
         log.warning(f"Empty email provided, ignoring: user_id={user_id}")
-    
+
     # Prepare password for update if provided and not empty
     if form_data.password and form_data.password.strip():
         password_to_update = get_password_hash(form_data.password)
         log.debug(f"Password prepared for update: user_id={user_id}")
     elif form_data.password is not None and not form_data.password.strip():
         log.warning(f"Empty password provided, ignoring: user_id={user_id}")
-    
+
     # Add other fields if provided and not empty
     if form_data.role is not None and form_data.role.strip():
         new_role = form_data.role.strip()
         if new_role != user.role:
             update_data["role"] = new_role
-            log.info(f"Role change prepared: user_id={user_id}, old_role={user.role}, new_role={new_role}")
+            log.info(
+                f"Role change prepared: user_id={user_id}, old_role={user.role}, new_role={new_role}"
+            )
         else:
-            log.debug(f"Role unchanged, skipping update: user_id={user_id}, role={new_role}")
+            log.debug(
+                f"Role unchanged, skipping update: user_id={user_id}, role={new_role}"
+            )
     elif form_data.role is not None and not form_data.role.strip():
         log.warning(f"Empty role provided, ignoring: user_id={user_id}")
-    
+
     if form_data.name is not None and form_data.name.strip():
         new_name = form_data.name.strip()
         if new_name != user.name:
             update_data["name"] = new_name
-            log.info(f"Name change prepared: user_id={user_id}, old_name={user.name}, new_name={new_name}")
+            log.info(
+                f"Name change prepared: user_id={user_id}, old_name={user.name}, new_name={new_name}"
+            )
         else:
-            log.debug(f"Name unchanged, skipping update: user_id={user_id}, name={new_name}")
+            log.debug(
+                f"Name unchanged, skipping update: user_id={user_id}, name={new_name}"
+            )
     elif form_data.name is not None and not form_data.name.strip():
         log.warning(f"Empty name provided, ignoring: user_id={user_id}")
-    
+
     if form_data.profile_image_url is not None and form_data.profile_image_url.strip():
         new_image_url = form_data.profile_image_url.strip()
         if new_image_url != user.profile_image_url:
             update_data["profile_image_url"] = new_image_url
-            log.debug(f"Profile image change prepared: user_id={user_id}, old_url={user.profile_image_url}, new_url={new_image_url}")
+            log.debug(
+                f"Profile image change prepared: user_id={user_id}, old_url={user.profile_image_url}, new_url={new_image_url}"
+            )
         else:
             log.debug(f"Profile image unchanged, skipping update: user_id={user_id}")
-    elif form_data.profile_image_url is not None and not form_data.profile_image_url.strip():
+    elif (
+        form_data.profile_image_url is not None
+        and not form_data.profile_image_url.strip()
+    ):
         log.warning(f"Empty profile image URL provided, ignoring: user_id={user_id}")
 
     # Update user data first, then auth data if successful
     if update_data or password_to_update:
         if update_data:
-            log.info(f"Updating user fields: user_id={user_id}, fields={list(update_data.keys())}")
+            log.info(
+                f"Updating user fields: user_id={user_id}, fields={list(update_data.keys())}"
+            )
             updated_user = Users.update_user_by_id(user_id, update_data)
             if not updated_user:
                 log.error(f"Failed to update user in database: user_id={user_id}")
@@ -477,19 +561,27 @@ async def update_user_by_id(
         if email_to_update:
             try:
                 Auths.update_email_by_id(user_id, email_to_update)
-                log.info(f"Email updated in auth table: user_id={user_id}, new_email={email_to_update}")
+                log.info(
+                    f"Email updated in auth table: user_id={user_id}, new_email={email_to_update}"
+                )
             except Exception as e:
-                log.error(f"Failed to update email in auth table: user_id={user_id}, error={e}")
+                log.error(
+                    f"Failed to update email in auth table: user_id={user_id}, error={e}"
+                )
                 # Consider rolling back user update if auth update fails
-                
+
         if password_to_update:
             try:
                 Auths.update_user_password_by_id(user_id, password_to_update)
                 log.info(f"Password updated in auth table: user_id={user_id}")
             except Exception as e:
-                log.error(f"Failed to update password in auth table: user_id={user_id}, error={e}")
-                
-        log.info(f"User successfully updated: user_id={user_id}, admin={session_user.id}")
+                log.error(
+                    f"Failed to update password in auth table: user_id={user_id}, error={e}"
+                )
+
+        log.info(
+            f"User successfully updated: user_id={user_id}, admin={session_user.id}"
+        )
         return updated_user
     else:
         # If no fields to update, return existing user
@@ -514,8 +606,7 @@ class CreateCheckoutRequest(BaseModel):
 
 @router.post("/stripe/checkout")
 async def create_stripe_checkout_session(
-    request: CreateCheckoutRequest,
-    user=Depends(get_current_user)
+    request: CreateCheckoutRequest, user=Depends(get_current_user)
 ):
     """
     Create a Stripe checkout session for the current user.
@@ -526,37 +617,39 @@ async def create_stripe_checkout_session(
     if not user_details:
         log.error(f"User not found for checkout session: {user.id}")
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
-    
+
     if not user_details.stripe_customer_id:
         log.error(f"No Stripe customer ID found for user: {user.id}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No Stripe customer found for this user"
+            detail="No Stripe customer found for this user",
         )
-    
-    log.info(f"Creating checkout session for Stripe customer: {user_details.stripe_customer_id} with price_id: {STRIPE_CHECKOUT_PRICE_ID}")
+
+    log.info(
+        f"Creating checkout session for Stripe customer: {user_details.stripe_customer_id} with price_id: {STRIPE_CHECKOUT_PRICE_ID}"
+    )
     session = StripeService.create_checkout_session(
         customer_id=user_details.stripe_customer_id,
         price_id=STRIPE_CHECKOUT_PRICE_ID,
         success_url=request.success_url,
-        cancel_url=request.cancel_url
+        cancel_url=request.cancel_url,
     )
-    
+
     if not session:
-        log.error(f"Failed to create Stripe checkout session for customer: {user_details.stripe_customer_id}")
+        log.error(
+            f"Failed to create Stripe checkout session for customer: {user_details.stripe_customer_id}"
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create checkout session"
+            detail="Failed to create checkout session",
         )
-    
-    log.info(f"Stripe checkout session created successfully for user: {user.id}, session_id: {session.id}")
-    return {
-        "checkout_url": session.url,
-        "session_id": session.id
-    }
+
+    log.info(
+        f"Stripe checkout session created successfully for user: {user.id}, session_id: {session.id}"
+    )
+    return {"checkout_url": session.url, "session_id": session.id}
 
 
 ############################
@@ -597,3 +690,13 @@ async def delete_user_by_id(user_id: str, user=Depends(get_admin_user)):
         status_code=status.HTTP_403_FORBIDDEN,
         detail=ERROR_MESSAGES.ACTION_PROHIBITED,
     )
+
+
+############################
+# GetUserGroupsById
+############################
+
+
+@router.get("/{user_id}/groups")
+async def get_user_groups_by_id(user_id: str, user=Depends(get_admin_user)):
+    return Groups.get_groups_by_member_id(user_id)

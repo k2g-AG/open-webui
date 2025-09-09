@@ -1,3 +1,5 @@
+x.py
+yarn.lock
 .DS_Store
 node_modules
 /build
@@ -12,10 +14,13 @@ vite.config.ts.timestamp-*
 __pycache__/
 *.py[cod]
 *$py.class
-
+.nvmrc
+CLAUDE.md
 # C extensions
 *.so
 /tmp
+
+build_docker.cmd
 
 # Pyodide distribution
 static/pyodide/*
@@ -308,3 +313,9 @@ dist
 cypress/videos
 cypress/screenshots
 .vscode/settings.json
+
+.tmp/
+.temp/
+
+tmp/
+temp/

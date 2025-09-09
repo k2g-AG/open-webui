@@ -65,28 +65,34 @@
 			public_tools: false
 		},
 		chat: {
-			controls: true,
-			system_prompt: true,
-			file_upload: true,
-			file_direct_upload: true,
-    		file_synthetic_enable: true,
-			delete: true,
-			edit: true,
-			share: true,
-			export: true,
-			stt: true,
-			tts: true,
-			call: true,
-			multiple_models: true,
+			controls: false,
+			valves: false,
+			system_prompt: false,
+			params: false,
+			file_upload: false,
+			file_direct_upload: false,
+    		file_synthetic_enable: false,
+			delete: false,
+			delete_message: false,
+			continue_response: false,
+			regenerate_response: false,
+			rate_response: false,
+			edit: false,
+			share: false,
+			export: false,
+			stt: false,
+			tts: false,
+			call: false,
+			multiple_models: false,
 			temporary: false,
 			temporary_enforced: false
 		},
 		features: {
 			direct_tool_servers: false,
-			web_search: true,
-			image_generation: true,
-			code_interpreter: true,
-			notes: true
+			web_search: false,
+			image_generation: false,
+			code_interpreter: false,
+			notes: false
 		}
 	};
 
@@ -213,9 +219,9 @@
 		{:else}
 			<div>
 				<div class=" flex items-center gap-3 justify-between text-xs uppercase px-1 font-bold">
-					<div class="w-full basis-3/5">Group</div>
+					<div class="w-full basis-3/5">{$i18n.t('Group')}</div>
 
-					<div class="w-full basis-2/5 text-right">Users</div>
+					<div class="w-full basis-2/5 text-right">{$i18n.t('Users')}</div>
 				</div>
 
 				<hr class="mt-1.5 border-gray-100 dark:border-gray-850" />

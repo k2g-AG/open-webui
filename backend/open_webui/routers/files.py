@@ -6,7 +6,9 @@ from fnmatch import fnmatch
 from pathlib import Path
 from typing import Optional
 from urllib.parse import quote
+import asyncio
 
+from open_webui.utils.tus.get_file_stream import get_file
 from open_webui.utils.tus.tusd import TusRouter
 
 from open_webui.config import (
@@ -14,6 +16,7 @@ from open_webui.config import (
 )
 
 from fastapi import (
+    BackgroundTasks,
     APIRouter,
     Depends,
     File,
@@ -24,6 +27,7 @@ from fastapi import (
     status,
     Query,
 )
+
 from fastapi.responses import FileResponse, StreamingResponse
 from open_webui.constants import ERROR_MESSAGES
 from open_webui.env import SRC_LOG_LEVELS
@@ -49,7 +53,6 @@ from pydantic import BaseModel
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MODELS"])
-
 
 router = APIRouter()
 
@@ -91,14 +94,86 @@ def has_access_to_file(
 ############################
 
 
+def process_uploaded_file(request, file, file_path, file_item, file_metadata, user):
+    try:
+        if file.content_type:
+            stt_supported_content_types = getattr(
+                request.app.state.config, "STT_SUPPORTED_CONTENT_TYPES", []
+            )
+
+            if any(
+                fnmatch(file.content_type, content_type)
+                for content_type in (
+                    stt_supported_content_types
+                    if stt_supported_content_types
+                    and any(t.strip() for t in stt_supported_content_types)
+                    else ["audio/*", "video/webm"]
+                )
+            ):
+                file_path = Storage.get_file(file_path)
+                result = transcribe(request, file_path, file_metadata)
+
+                process_file(
+                    request,
+                    ProcessFileForm(
+                        file_id=file_item.id, content=result.get("text", "")
+                    ),
+                    user=user,
+                )
+            elif (not file.content_type.startswith(("image/", "video/"))) or (
+                request.app.state.config.CONTENT_EXTRACTION_ENGINE == "external"
+            ):
+                process_file(request, ProcessFileForm(file_id=file_item.id), user=user)
+        else:
+            log.info(
+                f"File type {file.content_type} is not provided, but trying to process anyway"
+            )
+            process_file(request, ProcessFileForm(file_id=file_item.id), user=user)
+
+        Files.update_file_data_by_id(
+            file_item.id,
+            {"status": "completed"},
+        )
+    except Exception as e:
+        log.error(f"Error processing file: {file_item.id}")
+        Files.update_file_data_by_id(
+            file_item.id,
+            {
+                "status": "failed",
+                "error": str(e.detail) if hasattr(e, "detail") else str(e),
+            },
+        )
+
+
 @router.post("/", response_model=FileModelResponse)
 def upload_file(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+    metadata: Optional[dict | str] = Form(None),
+    process: bool = Query(True),
+    process_in_background: bool = Query(True),
+    user=Depends(get_verified_user),
+):
+    return upload_file_handler(
+        request,
+        file=file,
+        metadata=metadata,
+        process=process,
+        process_in_background=process_in_background,
+        user=user,
+        background_tasks=background_tasks,
+    )
+
+
+def upload_file_handler(
     request: Request,
     file: UploadFile = File(...),
     metadata: Optional[dict | str] = Form(None),
     process: bool = Query(True),
-    internal: bool = False,
+    process_in_background: bool = Query(True),
     user=Depends(get_verified_user),
+    background_tasks: Optional[BackgroundTasks] = None,
 ):
     log.info(f"file.content_type: {file.content_type}")
     log.info(f"request headers: {request.headers}")
@@ -131,9 +206,7 @@ def upload_file(
         file_extension = file_extension[1:] if file_extension else ""
 
         if direct:
-            if (
-                not internal
-            ) and request.app.state.config.ALLOWED_DIRECT_FILE_EXTENSIONS:
+            if process and request.app.state.config.ALLOWED_DIRECT_FILE_EXTENSIONS:
                 request.app.state.config.ALLOWED_DIRECT_FILE_EXTENSIONS = [
                     ext
                     for ext in request.app.state.config.ALLOWED_DIRECT_FILE_EXTENSIONS
@@ -150,7 +223,7 @@ def upload_file(
                             f"File type {file_extension} is not allowed for direct upload"
                         ),
                     )
-        elif (not internal) and request.app.state.config.ALLOWED_FILE_EXTENSIONS:
+        elif process and request.app.state.config.ALLOWED_FILE_EXTENSIONS:
             request.app.state.config.ALLOWED_FILE_EXTENSIONS = [
                 ext for ext in request.app.state.config.ALLOWED_FILE_EXTENSIONS if ext
             ]
@@ -167,18 +240,19 @@ def upload_file(
         id = str(uuid.uuid4())
         name = filename
         filename = f"{id}_{filename}"
-        tags = {
-            "OpenWebUI-User-Email": user.email,
-            "OpenWebUI-User-Id": user.id,
-            "OpenWebUI-User-Name": user.name,
-            "OpenWebUI-File-Id": id,
-            "OpenWebUI-Upload-Type": uploadType,
-        }
-
-        log.info(f"file tags: {tags}")
         log.info(f"file length: {file.size}")
 
-        _, file_path = Storage.upload_file(file.file, filename, tags)
+        contents, file_path = Storage.upload_file(
+            file.file,
+            filename,
+            {
+                "OpenWebUI-User-Email": user.email,
+                "OpenWebUI-User-Id": user.id,
+                "OpenWebUI-User-Name": user.name,
+                "OpenWebUI-File-Id": id,
+                "OpenWebUI-Upload-Type": uploadType,
+            },
+        )
 
         file_item = Files.insert_new_file(
             user.id,
@@ -187,6 +261,9 @@ def upload_file(
                     "id": id,
                     "filename": name,
                     "path": file_path,
+                    "data": {
+                        **({"status": "pending"} if process else {}),
+                    },
                     "meta": {
                         "name": name,
                         "content_type": file.content_type,
@@ -196,58 +273,38 @@ def upload_file(
                 }
             ),
         )
+
         if process:
-            try:
-                if file.content_type:
-                    stt_supported_content_types = getattr(
-                        request.app.state.config, "STT_SUPPORTED_CONTENT_TYPES", []
-                    )
-
-                    if any(
-                        fnmatch(file.content_type, content_type)
-                        for content_type in (
-                            stt_supported_content_types
-                            if stt_supported_content_types
-                            and any(t.strip() for t in stt_supported_content_types)
-                            else ["audio/*", "video/webm"]
-                        )
-                    ):
-                        file_path = Storage.get_file(file_path)
-                        result = transcribe(request, file_path, file_metadata)
-
-                        process_file(
-                            request,
-                            ProcessFileForm(file_id=id, content=result.get("text", "")),
-                            user=user,
-                        )
-                    elif (not file.content_type.startswith(("image/", "video/"))) or (
-                        request.app.state.config.CONTENT_EXTRACTION_ENGINE == "external"
-                    ):
-                        process_file(request, ProcessFileForm(file_id=id), user=user)
-                else:
-                    log.info(
-                        f"File type {file.content_type} is not provided, but trying to process anyway"
-                    )
-                    process_file(request, ProcessFileForm(file_id=id), user=user)
-
-                file_item = Files.get_file_by_id(id=id)
-            except Exception as e:
-                log.exception(e)
-                log.error(f"Error processing file: {file_item.id}")
-                file_item = FileModelResponse(
-                    **{
-                        **file_item.model_dump(),
-                        "error": str(e.detail) if hasattr(e, "detail") else str(e),
-                    }
+            if background_tasks and process_in_background:
+                background_tasks.add_task(
+                    process_uploaded_file,
+                    request,
+                    file,
+                    file_path,
+                    file_item,
+                    file_metadata,
+                    user,
                 )
+                return {"status": True, **file_item.model_dump()}
+            else:
+                process_uploaded_file(
+                    request,
+                    file,
+                    file_path,
+                    file_item,
+                    file_metadata,
+                    user,
+                )
+                return {"status": True, **file_item.model_dump()}
 
-        if file_item:
-            return file_item
         else:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=ERROR_MESSAGES.DEFAULT("Error uploading file"),
-            )
+            if file_item:
+                return file_item
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=ERROR_MESSAGES.DEFAULT("Error uploading file"),
+                )
 
     except Exception as e:
         log.exception(e)
@@ -556,6 +613,60 @@ async def get_file_by_id(id: str, user=Depends(get_verified_user)):
         )
 
 
+@router.get("/{id}/process/status")
+async def get_file_process_status(
+    id: str, stream: bool = Query(False), user=Depends(get_verified_user)
+):
+    file = Files.get_file_by_id(id)
+
+    if not file:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ERROR_MESSAGES.NOT_FOUND,
+        )
+
+    if (
+        file.user_id == user.id
+        or user.role == "admin"
+        or has_access_to_file(id, "read", user)
+    ):
+        if stream:
+            MAX_FILE_PROCESSING_DURATION = 3600 * 2
+
+            async def event_stream(file_item):
+                for _ in range(MAX_FILE_PROCESSING_DURATION):
+                    file_item = Files.get_file_by_id(file_item.id)
+                    if file_item:
+                        data = file_item.model_dump().get("data", {})
+                        status = data.get("status")
+
+                        if status:
+                            event = {"status": status}
+                            if status == "failed":
+                                event["error"] = data.get("error")
+
+                            yield f"data: {json.dumps(event)}\n\n"
+                            if status in ("completed", "failed"):
+                                break
+                        else:
+                            # Legacy
+                            break
+
+                    await asyncio.sleep(0.5)
+
+            return StreamingResponse(
+                event_stream(file),
+                media_type="text/event-stream",
+            )
+        else:
+            return {"status": file.data.get("status", "pending")}
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ERROR_MESSAGES.NOT_FOUND,
+        )
+
+
 ############################
 # Get File Data Content By Id
 ############################
@@ -683,7 +794,12 @@ async def get_file_content_by_id(
                             f"attachment; filename*=UTF-8''{encoded_filename}"
                         )
 
-                return FileResponse(file_path, headers=headers, media_type=content_type)
+                log.debug(f"-----> filename: {filename}")
+                log.debug(f"-----> file_path: {file_path}")
+                log.debug(f"-----> headers: {headers}")
+                log.debug(f"-----> content_type: {content_type}")
+                return await get_file(file, file_path, headers, content_type)
+                # return FileResponse(file_path, headers=headers, media_type=content_type)
 
             else:
                 raise HTTPException(
@@ -698,6 +814,7 @@ async def get_file_content_by_id(
                 detail=ERROR_MESSAGES.DEFAULT("Error getting file content"),
             )
     else:
+        log.error("file not found")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=ERROR_MESSAGES.NOT_FOUND,

@@ -30,6 +30,7 @@ from open_webui.config import (
     ENABLE_OAUTH_GROUP_CREATION,
     OAUTH_BLOCKED_GROUPS,
     OAUTH_ROLES_CLAIM,
+    OAUTH_SUB_CLAIM,
     OAUTH_GROUPS_CLAIM,
     OAUTH_EMAIL_CLAIM,
     OAUTH_PICTURE_CLAIM,
@@ -50,7 +51,12 @@ from open_webui.env import (
     WEBUI_AUTH_COOKIE_SECURE,
 )
 from open_webui.utils.misc import parse_duration
-from open_webui.utils.auth import decode_token, get_http_authorization_cred, get_password_hash, create_token
+from open_webui.utils.auth import (
+    decode_token,
+    get_http_authorization_cred,
+    get_password_hash,
+    create_token,
+)
 from open_webui.utils.webhook import post_webhook
 
 from open_webui.env import SRC_LOG_LEVELS, GLOBAL_LOG_LEVEL
@@ -70,6 +76,7 @@ auth_manager_config.ENABLE_OAUTH_GROUP_MANAGEMENT = ENABLE_OAUTH_GROUP_MANAGEMEN
 auth_manager_config.ENABLE_OAUTH_GROUP_CREATION = ENABLE_OAUTH_GROUP_CREATION
 auth_manager_config.OAUTH_BLOCKED_GROUPS = OAUTH_BLOCKED_GROUPS
 auth_manager_config.OAUTH_ROLES_CLAIM = OAUTH_ROLES_CLAIM
+auth_manager_config.OAUTH_SUB_CLAIM = OAUTH_SUB_CLAIM
 auth_manager_config.OAUTH_GROUPS_CLAIM = OAUTH_GROUPS_CLAIM
 auth_manager_config.OAUTH_EMAIL_CLAIM = OAUTH_EMAIL_CLAIM
 auth_manager_config.OAUTH_PICTURE_CLAIM = OAUTH_PICTURE_CLAIM
@@ -93,11 +100,12 @@ class OAuthManager:
         return self.oauth.create_client(provider_name)
 
     def get_user_role(self, user, user_data):
-        if user and Users.get_num_users() == 1:
+        user_count = Users.get_num_users()
+        if user and user_count == 1:
             # If the user is the only user, assign the role "admin" - actually repairs role for single user on login
             log.debug("Assigning the only user the admin role")
             return "admin"
-        if not user and Users.get_num_users() == 0:
+        if not user and user_count == 0:
             # If there are no users, assign the role "admin", as the first user will be an admin
             log.debug("Assigning the first user the admin role")
             return "admin"
@@ -117,7 +125,13 @@ class OAuthManager:
                 nested_claims = oauth_claim.split(".")
                 for nested_claim in nested_claims:
                     claim_data = claim_data.get(nested_claim, {})
-                oauth_roles = claim_data if isinstance(claim_data, list) else []
+
+                oauth_roles = []
+
+                if isinstance(claim_data, list):
+                    oauth_roles = claim_data
+                if isinstance(claim_data, str) or isinstance(claim_data, int):
+                    oauth_roles = [str(claim_data)]
 
             log.debug(f"Oauth Roles claim: {oauth_claim}")
             log.debug(f"User roles from oauth: {oauth_roles}")
@@ -349,32 +363,41 @@ class OAuthManager:
     async def handle_callback(self, request, provider, response):
         if provider not in OAUTH_PROVIDERS:
             raise HTTPException(404)
-        
-        client = self.get_client(provider)        
+
+        client = self.get_client(provider)
         try:
             token = await client.authorize_access_token(request)
         except Exception as e:
             log.warning(f"OAuth callback error: {e}")
             raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
-        
+
         log.info(f"handle_login: OAuth callback received token: {token}")
-        
+
         user_data: UserInfo = token.get("userinfo")
-        if not user_data or auth_manager_config.OAUTH_EMAIL_CLAIM not in user_data:
+        if (
+            (not user_data)
+            or (auth_manager_config.OAUTH_EMAIL_CLAIM not in user_data)
+            or (auth_manager_config.OAUTH_USERNAME_CLAIM not in user_data)
+        ):
             user_data: UserInfo = await client.userinfo(token=token)
         if not user_data:
             log.warning(f"OAuth callback failed, user data is missing: {token}")
             raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
 
-        sub = user_data.get(OAUTH_PROVIDERS[provider].get("sub_claim", "sub"))
+        if auth_manager_config.OAUTH_SUB_CLAIM:
+            sub = user_data.get(auth_manager_config.OAUTH_SUB_CLAIM)
+        else:
+            # Fallback to the default sub claim if not configured
+            sub = user_data.get(OAUTH_PROVIDERS[provider].get("sub_claim", "sub"))
+
         if not sub:
             log.warning(f"OAuth callback failed, sub is missing: {user_data}")
             raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
+
         provider_sub = f"{provider}@{sub}"
-        
-        
+
         # token_provier = token
-        
+
         email_claim = auth_manager_config.OAUTH_EMAIL_CLAIM
         email = user_data.get(email_claim, "")
         # We currently mandate that email addresses are provided
@@ -526,7 +549,7 @@ class OAuthManager:
                 )
 
                 if auth_manager_config.WEBHOOK_URL:
-                    post_webhook(
+                    await post_webhook(
                         WEBUI_NAME,
                         auth_manager_config.WEBHOOK_URL,
                         WEBHOOK_MESSAGES.USER_SIGNUP(user.name),
@@ -542,17 +565,22 @@ class OAuthManager:
                 )
 
         # jwt_token = token_provier
-        
+
         jwt_token_create = create_token(
-            data={"id": user.id, 'keycloak_token': token,},
+            data={
+                "id": user.id,
+                "keycloak_token": token,
+            },
             # expires_delta=parse_duration(auth_manager_config.JWT_EXPIRES_IN),
             expires_delta=parse_duration(JWT_EXPIRES_IN.env_value),
             source="oauth_callback",
         )
-        
+
         jwt_token = token.get("id_token", jwt_token_create)
-        
-        log.info(f'handle_callback Creating token for user {user.id} with JWT_EXPIRES_IN: {auth_manager_config.JWT_EXPIRES_IN}, JWT_EXPIRES_IN 2: {JWT_EXPIRES_IN.env_value}, expires_delta: {parse_duration(auth_manager_config.JWT_EXPIRES_IN)}, expires_delta2: {parse_duration(JWT_EXPIRES_IN.env_value)}')
+
+        log.info(
+            f"handle_callback Creating token for user {user.id} with JWT_EXPIRES_IN: {auth_manager_config.JWT_EXPIRES_IN}, JWT_EXPIRES_IN 2: {JWT_EXPIRES_IN.env_value}, expires_delta: {parse_duration(auth_manager_config.JWT_EXPIRES_IN)}, expires_delta2: {parse_duration(JWT_EXPIRES_IN.env_value)}"
+        )
 
         if auth_manager_config.ENABLE_OAUTH_GROUP_MANAGEMENT and user.role != "admin":
             self.update_user_groups(
@@ -561,11 +589,19 @@ class OAuthManager:
                 default_permissions=request.app.state.config.USER_PERMISSIONS,
             )
 
+        redirect_base_url = str(request.app.state.config.WEBUI_URL or request.base_url)
+        if redirect_base_url.endswith("/"):
+            redirect_base_url = redirect_base_url[:-1]
+        redirect_url = f"{redirect_base_url}/auth"
+
+        response = RedirectResponse(url=redirect_url, headers=response.headers)
+
         # Set the cookie token
+        # Redirect back to the frontend with the JWT token
         response.set_cookie(
             key="token",
             value=jwt_token,
-            httponly=True,  # Ensures the cookie is not accessible via JavaScript
+            httponly=False,  # Required for frontend access
             samesite=WEBUI_AUTH_COOKIE_SAME_SITE,
             secure=WEBUI_AUTH_COOKIE_SECURE,
         )
@@ -587,22 +623,17 @@ class OAuthManager:
                 samesite=WEBUI_AUTH_COOKIE_SAME_SITE,
                 secure=WEBUI_AUTH_COOKIE_SECURE,
             )
-        # Redirect back to the frontend with the JWT token
+        return response
 
-        redirect_base_url = str(request.app.state.config.WEBUI_URL or request.base_url)
-        if redirect_base_url.endswith("/"):
-            redirect_base_url = redirect_base_url[:-1]
-        redirect_url = f"{redirect_base_url}/auth#token={jwt_token}"
-
-        return RedirectResponse(url=redirect_url, headers=response.headers)
-
-# ------------------------------------------------------------------------------------
-# ------------------------------------------------------------------------------------
+    # ------------------------------------------------------------------------------------
+    # ------------------------------------------------------------------------------------
     async def oauth_refresh(self, request, provider, response):
         if provider not in OAUTH_PROVIDERS:
             raise HTTPException(404)
-                
-        log.info(f'oauth_refresh request.state.token.scheme = {request.state.token.scheme}, request.state.token.credentials = {request.state.token.credentials}')
+
+        log.info(
+            f"oauth_refresh request.state.token.scheme = {request.state.token.scheme}, request.state.token.credentials = {request.state.token.credentials}"
+        )
         data = decode_token(request.state.token.credentials)
 
         if not data:
@@ -610,14 +641,14 @@ class OAuthManager:
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail=ERROR_MESSAGES.INVALID_TOKEN,
             )
-        
+
         token = {
             "access_token": request.state.token.credentials,
             "userinfo": data,
         }
-                
+
         log.info(f"oauth_refresh: OAuth callback received token: {token}")
-        
+
         user_data: UserInfo = token.get("userinfo")
         if not user_data or auth_manager_config.OAUTH_EMAIL_CLAIM not in user_data:
             client = self.get_client(provider)
@@ -631,7 +662,7 @@ class OAuthManager:
             log.warning(f"OAuth callback failed, sub is missing: {user_data}")
             raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
         provider_sub = f"{provider}@{sub}"
-                
+
         email_claim = auth_manager_config.OAUTH_EMAIL_CLAIM
         email = user_data.get(email_claim, "")
         # We currently mandate that email addresses are provided
@@ -795,7 +826,7 @@ class OAuthManager:
                 raise HTTPException(
                     status.HTTP_403_FORBIDDEN, detail=ERROR_MESSAGES.ACCESS_PROHIBITED
                 )
-        
+
         if auth_manager_config.ENABLE_OAUTH_GROUP_MANAGEMENT and user.role != "admin":
             self.update_user_groups(
                 user=user,
@@ -808,7 +839,7 @@ class OAuthManager:
         # Set the cookie token
         response.set_cookie(
             key="token",
-            value=token['access_token'],
+            value=token["access_token"],
             httponly=True,  # Ensures the cookie is not accessible via JavaScript
             samesite=WEBUI_AUTH_COOKIE_SAME_SITE,
             secure=WEBUI_AUTH_COOKIE_SECURE,
@@ -835,9 +866,9 @@ class OAuthManager:
         #     )
 
         user_permissions = {}
-        
+
         expires_at = None
-        
+
         if data:
             expires_at = data.get("exp")
             if (expires_at is not None) and int(time.time()) > expires_at:
@@ -849,7 +880,7 @@ class OAuthManager:
             # Set the cookie token
             response.set_cookie(
                 key="token",
-                value=token['access_token'],
+                value=token["access_token"],
                 expires=(
                     datetime.datetime.fromtimestamp(expires_at, datetime.timezone.utc)
                     if expires_at
@@ -865,7 +896,7 @@ class OAuthManager:
         )
 
         user_info = {
-            "token": token['access_token'],
+            "token": token["access_token"],
             "token_type": "Bearer",
             "expires_at": expires_at,
             "id": user.id,
@@ -878,4 +909,3 @@ class OAuthManager:
         
         log.info(f'oauth_refresh Creating user info for user {user.id} user_info: {user_info}')
         return user_info
-    
