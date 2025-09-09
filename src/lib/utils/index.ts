@@ -78,6 +78,19 @@ export const replaceTokens = (content, sourceIds, char, user) => {
 	return content;
 };
 
+export function normalizeNewlines(s: string) {
+	// Only convert when the string literally contains backslash+n
+	return s.includes('\\n') && !s.includes('\n') ? s.replaceAll('\\n', '\n') : s;
+}
+
+export function stripSentinels(s: string) {
+	return s
+		.replace(/<\|[a-z]*$/i, '')
+		.replace(/<\|[a-z]+\|$/i, '')
+		.replace(/<\|[a-z]+\|>/gi, ' ')
+		.trim();
+}
+
 export const sanitizeResponseContent = (content: string) => {
 	return content
 		.replace(/<\|[a-z]*$/, '')

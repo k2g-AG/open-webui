@@ -16,8 +16,14 @@
 		chats,
 		currentChatPage
 	} from '$lib/stores';
-	import { sanitizeResponseContent, extractCurlyBraceWords } from '$lib/utils';
+	import {
+		sanitizeResponseContent,
+		extractCurlyBraceWords,
+		stripSentinels,
+		normalizeNewlines
+	} from '$lib/utils';
 	import { WEBUI_BASE_URL } from '$lib/constants';
+	import DOMPurify from 'dompurify';
 
 	import Suggestions from './Suggestions.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
@@ -167,10 +173,12 @@
 						{#if models[selectedModelIdx]?.info?.meta?.description ?? null}
 							<Tooltip
 								className=" w-fit"
-								content={marked.parse(
-									sanitizeResponseContent(
-										models[selectedModelIdx]?.info?.meta?.description ?? ''
-									).replaceAll('\n', '<br>')
+								content={DOMPurify.sanitize(
+									marked.parse(
+										stripSentinels(
+											normalizeNewlines(models[selectedModelIdx]?.info?.meta?.description)
+										)
+									)
 								)}
 								placement="top"
 							>
