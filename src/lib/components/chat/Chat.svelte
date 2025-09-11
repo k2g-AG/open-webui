@@ -240,6 +240,8 @@
 			resetInput();
 		}
 		oldSelectedModelIds = selectedModelIds;
+		// Show model description as a guide when switching models on an empty chat
+		insertModelGuideIfEmpty();
 	};
 	const getFilesHandler = () => {
 		getFilesReq();
@@ -275,6 +277,42 @@
 		} else {
 			selectedToolIds = [];
 		}
+	};
+
+	// Insert a non-persistent guide message from the selected model's description.
+	// Does not change currentId and does not create/save a chat.
+	const insertModelGuideIfEmpty = () => {
+		// Only for single model selection or when an "at" model is present
+		if ((selectedModels.length !== 1 && !atSelectedModel) || !$models) return;
+
+		// Avoid duplicates if a placeholder already exists
+		const hasPlaceholder = Object.values(history.messages).some(
+			(m: any) => m?.info?.placeholder === true
+		);
+		if (hasPlaceholder) return;
+
+		// Only when there are no messages yet
+		if (Object.keys(history.messages).length !== 0) return;
+
+		const model = atSelectedModel ?? $models.find((m) => m.id === selectedModels[0]);
+		const description = model?.info?.meta?.description?.trim?.();
+		if (!description) return;
+
+		const guideMessageId = uuidv4();
+		history.messages[guideMessageId] = {
+			id: guideMessageId,
+			parentId: null,
+			childrenIds: [],
+			role: 'assistant',
+			content: description,
+			done: true,
+			// Mark as placeholder so other logic can ignore it when needed
+			info: { placeholder: true },
+			timestamp: Math.floor(Date.now() / 1000)
+		};
+		// Set as current to render in the messages view. Will be replaced by first user message later.
+		history.currentId = guideMessageId;
+		history = history;
 	};
 
 	const showMessage = async (message) => {
@@ -868,6 +906,9 @@
 		// New chat starts empty → open the input menu
 		console.info('newChatHandle', history);
 		showInputMenu = true;
+
+		// Insert model guide if available
+		insertModelGuideIfEmpty();
 
 		chatFiles = [];
 		params = {};
@@ -1505,11 +1546,18 @@
 		files = [];
 		messageInput?.setText('');
 
-		// Create user message
+		// Create user message (ignore placeholder guide as parent)
 		let userMessageId = uuidv4();
+		const lastMessage = messages.length !== 0 ? messages.at(-1) : null;
+		const parentIdForUser =
+			lastMessage && lastMessage?.info?.placeholder === true && lastMessage.parentId === null
+				? null
+				: lastMessage
+					? lastMessage.id
+					: null;
 		let userMessage = {
 			id: userMessageId,
-			parentId: messages.length !== 0 ? messages.at(-1).id : null,
+			parentId: parentIdForUser,
 			childrenIds: [],
 			role: 'user',
 			content: userPrompt,
@@ -1525,8 +1573,8 @@
 		history.currentId = userMessageId;
 
 		// Append messageId to childrenIds of parent message
-		if (messages.length !== 0) {
-			history.messages[messages.at(-1).id].childrenIds.push(userMessageId);
+		if (parentIdForUser !== null) {
+			history.messages[parentIdForUser].childrenIds.push(userMessageId);
 		}
 
 		// focus on chat input
