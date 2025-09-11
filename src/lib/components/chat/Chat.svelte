@@ -308,6 +308,15 @@
 			done: true,
 			// Mark as placeholder so other logic can ignore it when needed
 			info: { placeholder: true },
+			followUps: (
+				model?.info?.meta?.suggestion_prompts ??
+				$config?.default_prompt_suggestions.map(i => i.title[0]) ?? [
+					'Calculate the main KPIs',
+					'KPIs across the age of the car',
+					'Show the chart Loss Ratio/Car make'
+				]
+			).filter((s) => typeof s === 'string' && s.trim()),
+			followUpsTitle: 'Suggested',
 			timestamp: Math.floor(Date.now() / 1000)
 		};
 		// Set as current to render in the messages view. Will be replaced by first user message later.

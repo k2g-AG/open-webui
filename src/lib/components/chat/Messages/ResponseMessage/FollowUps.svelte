@@ -2,16 +2,19 @@
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import ArrowTurnDownRight from '$lib/components/icons/ArrowTurnDownRight.svelte';
 	import { onMount, tick, getContext } from 'svelte';
+	import type { Writable } from 'svelte/store';
+	import type { i18n as i18nType } from 'i18next';
 
-	const i18n = getContext('i18n');
+	const i18n: Writable<i18nType> = getContext('i18n');
 
 	export let followUps: string[] = [];
 	export let onClick: (followUp: string) => void = () => {};
+	export let title: string | null = null;
 </script>
 
 <div class="mt-4">
 	<div class="text-sm font-medium">
-		{$i18n.t('Follow up')}
+		{title ?? $i18n.t('Follow up')}
 	</div>
 
 	<div class="flex flex-col text-left gap-1 mt-1.5">
