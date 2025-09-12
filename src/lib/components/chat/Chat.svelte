@@ -240,8 +240,32 @@
 			resetInput();
 		}
 		oldSelectedModelIds = selectedModelIds;
-		// Show model description as a guide when switching models on an empty chat
-		insertModelGuideIfEmpty();
+
+		// When switching models, handle placeholder visibility
+		const model = atSelectedModel ?? $models.find((m) => m.id === selectedModels[0]);
+		const description = model?.info?.meta?.description?.trim?.();
+
+		// If no description on the newly selected model, remove any existing placeholder
+		if (!description) {
+			const placeholderId = Object.keys(history.messages).find(
+				(id) => history.messages[id]?.info?.placeholder === true
+			);
+			if (placeholderId) {
+				const { [placeholderId]: _removed, ...rest } = history.messages;
+				history.messages = rest;
+				// If currentId pointed to placeholder, reset to last root if any
+				if (history.currentId === placeholderId) {
+					const rootIds = Object.keys(history.messages).filter(
+						(id) => history.messages[id].parentId === null
+					);
+					history.currentId = rootIds.at(-1) ?? null;
+				}
+				history = history;
+			}
+		} else {
+			// Otherwise, ensure a placeholder exists only if the chat is empty
+			insertModelGuideIfEmpty();
+		}
 	};
 	const getFilesHandler = () => {
 		getFilesReq();
