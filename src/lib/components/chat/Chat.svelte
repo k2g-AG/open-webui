@@ -245,25 +245,24 @@
 		const model = atSelectedModel ?? $models.find((m) => m.id === selectedModels[0]);
 		const description = model?.info?.meta?.description?.trim?.();
 
-		// If no description on the newly selected model, remove any existing placeholder
-		if (!description) {
-			const placeholderId = Object.keys(history.messages).find(
-				(id) => history.messages[id]?.info?.placeholder === true
-			);
-			if (placeholderId) {
-				const { [placeholderId]: _removed, ...rest } = history.messages;
-				history.messages = rest;
-				// If currentId pointed to placeholder, reset to last root if any
-				if (history.currentId === placeholderId) {
-					const rootIds = Object.keys(history.messages).filter(
-						(id) => history.messages[id].parentId === null
-					);
-					history.currentId = rootIds.at(-1) ?? null;
-				}
-				history = history;
+		// Remove any existing placeholder first
+		const placeholderId = Object.keys(history.messages).find(
+			(id) => history.messages[id]?.info?.placeholder === true
+		);
+		if (placeholderId) {
+			const { [placeholderId]: _removed, ...rest } = history.messages;
+			history.messages = rest;
+			// If currentId pointed to placeholder, reset to last root if any
+			if (history.currentId === placeholderId) {
+				const rootIds = Object.keys(history.messages).filter(
+					(id) => history.messages[id].parentId === null
+				);
+				history.currentId = rootIds.at(-1) ?? null;
 			}
-		} else {
-			// Otherwise, ensure a placeholder exists only if the chat is empty
+		}
+
+		// If new model has description, show it (regardless of chat state)
+		if (description) {
 			insertModelGuideIfEmpty();
 		}
 	};
@@ -314,9 +313,6 @@
 			(m: any) => m?.info?.placeholder === true
 		);
 		if (hasPlaceholder) return;
-
-		// Only when there are no messages yet
-		if (Object.keys(history.messages).length !== 0) return;
 
 		const model = atSelectedModel ?? $models.find((m) => m.id === selectedModels[0]);
 		const description = model?.info?.meta?.description?.trim?.();
