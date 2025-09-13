@@ -39,7 +39,7 @@
 
 	let highContrastMode = false;
 
-	let detectArtifacts = true;
+	let detectArtifacts = false;
 	let displayMultiModelResponsesInTabs = false;
 
 	let richTextInput = true;
@@ -62,7 +62,7 @@
 
 	let temporaryChatByDefault = false;
 	let chatFadeStreamingText = true;
-	let collapseCodeBlocks = false;
+	let collapseCodeBlocks = true;
 	let expandDetails = false;
 
 	let showFloatingActionButtons = true;
@@ -79,8 +79,8 @@
 	let stylizedPdfExport = true;
 
 	// Admin - Show Update Available Toast
-	let showUpdateToast = true;
-	let showChangelog = true;
+	let showUpdateToast = false;
+	let showChangelog = false;
 
 	let showEmojiInCall = false;
 	let voiceInterruption = false;
@@ -182,12 +182,12 @@
 
 		highContrastMode = $settings?.highContrastMode ?? false;
 
-		detectArtifacts = $settings?.detectArtifacts ?? true;
+		detectArtifacts = $settings?.detectArtifacts ?? false;
 		responseAutoCopy = $settings?.responseAutoCopy ?? false;
 
 		showUsername = $settings?.showUsername ?? false;
-		showUpdateToast = $settings?.showUpdateToast ?? true;
-		showChangelog = $settings?.showChangelog ?? true;
+		showUpdateToast = $settings?.showUpdateToast ?? false;
+		showChangelog = $settings?.showChangelog ?? false;
 
 		showEmojiInCall = $settings?.showEmojiInCall ?? false;
 		voiceInterruption = $settings?.voiceInterruption ?? false;
@@ -208,7 +208,7 @@
 		largeTextAsFile = $settings?.largeTextAsFile ?? false;
 		copyFormatted = $settings?.copyFormatted ?? false;
 
-		collapseCodeBlocks = $settings?.collapseCodeBlocks ?? false;
+		collapseCodeBlocks = $settings?.collapseCodeBlocks ?? true;
 		expandDetails = $settings?.expandDetails ?? false;
 
 		landingPageMode = $settings?.landingPageMode ?? '';

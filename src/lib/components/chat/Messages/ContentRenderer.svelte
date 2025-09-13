@@ -179,7 +179,7 @@
 			const { lang, text: code } = token;
 
 			if (
-				($settings?.detectArtifacts ?? true) &&
+				($settings?.detectArtifacts ?? false) &&
 				(['html', 'svg'].includes(lang) || (lang === 'xml' && code.includes('svg'))) &&
 				!$mobile &&
 				$chatId
