@@ -248,10 +248,7 @@
 								srcdoc={contents[selectedContentIdx].content}
 								class="w-full border-0 h-full rounded-none"
 								sandbox="allow-scripts allow-downloads{($settings?.iframeSandboxAllowForms ?? false)
-									? ' allow-forms'
-									: ''}{($settings?.iframeSandboxAllowSameOrigin ?? false)
-									? ' allow-same-origin'
-									: ''}"
+									? ' allow-forms' : ''}"
 								onload="this.style.height=(this.contentWindow.document.body.scrollHeight+20)+'px';"
 							></iframe>
 						{:else if contents[selectedContentIdx].type === 'svg'}
