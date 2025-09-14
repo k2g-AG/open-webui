@@ -243,12 +243,9 @@
 					<div class="max-w-full w-full h-full">
 						{#if contents[selectedContentIdx].type === 'iframe'}
 							<iframe
-								bind:this={iframeElement}
 								title="Content"
 								srcdoc={contents[selectedContentIdx].content}
 								class="w-full border-0 h-full rounded-none"
-								sandbox="allow-scripts allow-downloads{($settings?.iframeSandboxAllowForms ?? false)
-									? ' allow-forms' : ''}"
 								onload="this.style.height=(this.contentWindow.document.body.scrollHeight+20)+'px';"
 							></iframe>
 						{:else if contents[selectedContentIdx].type === 'svg'}
