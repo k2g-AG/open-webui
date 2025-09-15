@@ -315,7 +315,7 @@
 	};
 
 	const chatEventHandler = async (event, cb) => {
-		console.info(event);
+		// console.info(event);
 
 		if (event.chat_id === $chatId) {
 			await tick();
@@ -1420,7 +1420,7 @@
 			);
 		}
 
-		console.info(data);
+		// console.info(data);
 		await tick();
 
 		if (autoScroll) {
@@ -1489,12 +1489,12 @@
 			}
 		}
 
-		console.info('== files:', { files });
+		// console.info('== files:', { files });
 
 		const _files = JSON.parse(JSON.stringify(files));
 		chatFiles.push(..._files.filter((item) => ['doc', 'file', 'collection'].includes(item.type)));
 
-		console.info('== chatFiles:', { chatFiles });
+		// console.info('== chatFiles:', { chatFiles });
 
 		chatFiles = chatFiles.filter(
 			// Remove duplicates
@@ -1518,7 +1518,7 @@
 			models: selectedModels
 		};
 
-		console.info('== _files:', { _files });
+		// console.info('== _files:', { _files });
 
 		// Add message to history and Set currentId to messageId
 		history.messages[userMessageId] = userMessage;
@@ -1668,7 +1668,7 @@
 			.filter((message) => message.files)
 			.flatMap((message) => message.files);
 
-		console.info('-- chatMessageFiles:', { chatMessageFiles });
+		// console.info('-- chatMessageFiles:', { chatMessageFiles });
 
 		// Filter chatFiles to only include files that are in the chatMessageFiles
 		chatFiles = chatFiles.filter((item) => {
@@ -1676,7 +1676,7 @@
 			return fileExists;
 		});
 
-		console.info('-- chatFiles:', { chatFiles });
+		// console.info('-- chatFiles:', { chatFiles });
 
 		let files = JSON.parse(JSON.stringify(chatFiles));
 		files.push(
@@ -1685,7 +1685,7 @@
 			)
 		);
 
-		console.info('-- files:', { files });
+		// console.info('-- files:', { files });
 
 		// Remove duplicates
 		files = files.filter(
@@ -1693,7 +1693,7 @@
 				array.findIndex((i) => JSON.stringify(i) === JSON.stringify(item)) === index
 		);
 
-		console.info('-- files fin:', { files });
+		// console.info('-- files fin:', { files });
 
 		scrollToBottom();
 		eventTarget.dispatchEvent(
