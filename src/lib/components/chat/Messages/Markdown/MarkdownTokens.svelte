@@ -126,6 +126,8 @@
 			<ArtifactsInline 
 				inContent={token?.text ?? ''} 
 				inLang={token?.lang ?? ''}
+				inCollapsed={false}
+				expandTimeout={5}
 			/>
 
 		{:else}
