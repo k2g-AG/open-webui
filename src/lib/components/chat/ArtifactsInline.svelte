@@ -14,20 +14,24 @@
 
 	export let inContent;
 	export let inLang;
-	export let collapsed = true;
+	export let inCollapsed = true; // set to false if you want to expand after timeout
 	export let overlay = false;
+	export let expandTimeout = 5; // seconds timeout to auto expand from last data update
 
 	let contents: Array<{ type: string; content: string }> = [];
+	let iframeElement: HTMLIFrameElement;
+
 	let selectedContentIdx = 0;
 
 	let copied = false;
+	let collapsed = true;
 
 	let timeoutId;
 
 	function startTimer() {
 		timeoutId = setTimeout(() => {
-		collapsed = false;
-		}, 5000); // 5 seconds
+			collapsed = inCollapsed;
+		}, expandTimeout * 1000); // 5 seconds default
 	}
 
 	onDestroy(() => {
@@ -38,7 +42,9 @@
 	$: if (inContent && inLang) {
 		clearTimeout(timeoutId);
 		getContents();
-		startTimer();
+		if (!inCollapsed) {
+			startTimer();
+		}
 	}
 
 	const getContents = () => {
@@ -238,6 +244,7 @@
 						<div class="max-w-full w-full h-full">
 							{#if contents[selectedContentIdx].type === 'iframe'}
 								<iframe
+									bind:this={iframeElement}
 									title="Content"
 									srcdoc={contents[selectedContentIdx].content}
 									class="w-full border-0 h-full rounded-none"
