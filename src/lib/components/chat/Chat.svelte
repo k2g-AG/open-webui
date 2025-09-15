@@ -2033,9 +2033,12 @@
 		let userPrompt = prompt;
 		let userMessageId = uuidv4();
 
+		// Ignore placeholder guide messages as parent (same logic as submitPrompt)
+		const actualParentId = parentId && history.messages[parentId]?.info?.placeholder ? null : parentId;
+
 		let userMessage = {
 			id: userMessageId,
-			parentId: parentId,
+			parentId: actualParentId,
 			childrenIds: [],
 			role: 'user',
 			content: userPrompt,
@@ -2043,15 +2046,24 @@
 			timestamp: Math.floor(Date.now() / 1000) // Unix epoch
 		};
 
-		if (parentId !== null) {
-			history.messages[parentId].childrenIds = [
-				...history.messages[parentId].childrenIds,
+		if (actualParentId !== null) {
+			history.messages[actualParentId].childrenIds = [
+				...history.messages[actualParentId].childrenIds,
 				userMessageId
 			];
 		}
 
 		history.messages[userMessageId] = userMessage;
 		history.currentId = userMessageId;
+
+		// Remove any placeholder guide message when user submits their first real message
+		const placeholderId = Object.keys(history.messages).find(
+			(id) => history.messages[id]?.info?.placeholder === true
+		);
+		if (placeholderId) {
+			const { [placeholderId]: _removed, ...rest } = history.messages;
+			history.messages = rest;
+		}
 
 		await tick();
 
