@@ -1,31 +1,44 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
-	import { onMount, getContext, createEventDispatcher } from 'svelte';
+	import { onDestroy, onMount, getContext, createEventDispatcher } from 'svelte';
 	const i18n = getContext('i18n');
 	const dispatch = createEventDispatcher();
 
 	import { artifactCode, chatId, settings, showArtifacts, showControls } from '$lib/stores';
 	import { copyToClipboard, createMessagesList } from '$lib/utils';
 
-	import XMark from '../icons/XMark.svelte';
 	import ArrowsPointingOut from '../icons/ArrowsPointingOut.svelte';
 	import Tooltip from '../common/Tooltip.svelte';
 	import SvgPanZoom from '../common/SVGPanZoom.svelte';
-	import ArrowLeft from '../icons/ArrowLeft.svelte';
 	import ArrowDownTray from '../icons/ArrowDownTray.svelte';
 
-	export let overlay = false;
 	export let inContent;
-	export let inLang;	
+	export let inLang;
+	export let collapsed = true;
+	export let overlay = false;
 
 	let contents: Array<{ type: string; content: string }> = [];
 	let selectedContentIdx = 0;
 
 	let copied = false;
-	let iframeElement: HTMLIFrameElement;
+
+	let timeoutId;
+
+	function startTimer() {
+		timeoutId = setTimeout(() => {
+		collapsed = false;
+		}, 5000); // 5 seconds
+	}
+
+	onDestroy(() => {
+		clearTimeout(timeoutId); // Clear the timeout when the component is destroyed
+	});
+
 
 	$: if (inContent && inLang) {
+		clearTimeout(timeoutId);
 		getContents();
+		startTimer();
 	}
 
 	const getContents = () => {
@@ -124,35 +137,8 @@
 		selectedContentIdx = contents ? contents.length - 1 : 0;
 	};
 
-	const iframeLoadHandler = () => {
-		iframeElement.contentWindow.addEventListener(
-			'click',
-			function (e) {
-				const target = e.target.closest('a');
-				if (target && target.href) {
-					e.preventDefault();
-					const url = new URL(target.href, iframeElement.baseURI);
-					if (url.origin === window.location.origin) {
-						iframeElement.contentWindow.history.pushState(
-							null,
-							'',
-							url.pathname + url.search + url.hash
-						);
-					} else {
-						console.info('External navigation blocked:', url.href);
-					}
-				}
-			},
-			true
-		);
-
-		// Cancel drag when hovering over iframe
-		iframeElement.contentWindow.addEventListener('mouseenter', function (e) {
-			e.preventDefault();
-			iframeElement.contentWindow.addEventListener('dragstart', (event) => {
-				event.preventDefault();
-			});
-		});
+	const collapseIFrameBlock = () => {
+		collapsed = !collapsed;
 	};
 
 	const showFullScreen = () => {
@@ -200,6 +186,14 @@
 
 					<div class="flex items-center gap-1.5">
 						<button
+							class="bg-none border-none text-xs bg-gray-50 hover:bg-gray-100 dark:bg-gray-850 dark:hover:bg-gray-800 transition rounded-md p-0.5"
+							on:click={collapseIFrameBlock}
+						>
+							<div>
+								{collapsed ? $i18n.t('Expand') : $i18n.t('Collapse')}
+							</div>
+						</button>
+						<button
 							class="copy-code-button bg-none border-none text-xs bg-gray-50 hover:bg-gray-100 dark:bg-gray-850 dark:hover:bg-gray-800 transition rounded-md px-1.5 py-0.5"
 							on:click={() => {
 								copyToClipboard(contents[selectedContentIdx].content);
@@ -238,25 +232,28 @@
 				<div class=" absolute top-0 left-0 right-0 bottom-0 z-10"></div>
 			{/if}
 
-			<div class="flex-1 w-full h-full">
-				<div class=" h-full flex flex-col">
-					<div class="max-w-full w-full h-full">
-						{#if contents[selectedContentIdx].type === 'iframe'}
-							<iframe
-								title="Content"
-								srcdoc={contents[selectedContentIdx].content}
-								class="w-full border-0 h-full rounded-none"
-								onload="this.style.height=(this.contentWindow.document.body.scrollHeight+20)+'px';"
-							></iframe>
-						{:else if contents[selectedContentIdx].type === 'svg'}
-							<SvgPanZoom
-								className=" w-full h-full max-h-full overflow-hidden"
-								svg={contents[selectedContentIdx].content}
-							/>
-						{/if}
+			{#if !collapsed}
+				<div class="flex-1 w-full h-full">
+					<div class=" h-full flex flex-col">
+						<div class="max-w-full w-full h-full">
+							{#if contents[selectedContentIdx].type === 'iframe'}
+								<iframe
+									title="Content"
+									srcdoc={contents[selectedContentIdx].content}
+									class="w-full border-0 h-full rounded-none"
+									onload="this.style.height=(this.contentWindow.document.body.scrollHeight+20)+'px';"
+								></iframe>
+							{:else if contents[selectedContentIdx].type === 'svg'}
+								<SvgPanZoom
+									className=" w-full h-full max-h-full overflow-hidden"
+									svg={contents[selectedContentIdx].content}
+								/>
+							{/if}
+						</div>
 					</div>
 				</div>
-			</div>
+			{/if}
+
 		</div>
 	</div>
 {/if}
