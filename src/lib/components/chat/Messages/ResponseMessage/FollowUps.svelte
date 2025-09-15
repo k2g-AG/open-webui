@@ -9,7 +9,9 @@
 
 	export let followUps: string[] = [];
 	export let onClick: (followUp: string) => void = () => {};
+	export let onSelect: (e: { type: string; data: string }) => void = () => {};
 	export let title: string | null = null;
+	export let isSuggestion: boolean = false;
 </script>
 
 <div class="mt-4">
@@ -24,7 +26,13 @@
 			<Tooltip content={followUp} placement="top-start" className="line-clamp-1">
 				<div
 					class=" mr-2 py-1.5 bg-transparent text-left text-sm flex items-center gap-2 px-1.5 text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition cursor-pointer"
-					on:click={() => onClick(followUp)}
+					on:click={() => {
+						if (isSuggestion) {
+							onSelect({ type: 'prompt', data: followUp });
+						} else {
+							onClick(followUp);
+						}
+					}}
 					title={followUp}
 					aria-label={followUp}
 				>

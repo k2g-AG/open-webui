@@ -1538,6 +1538,14 @@
 							<FollowUps
 								followUps={message?.followUps}
 								title={message?.followUpsTitle ?? null}
+								isSuggestion={message?.followUpsTitle === 'Suggested'}
+								onSelect={(e) => {
+									const { type, data } = e;
+									if (type === 'prompt') {
+										// Handle suggestion selection like in Suggestions component
+										setInputText(data);
+									}
+								}}
 								onClick={(prompt) => {
 									if ($settings?.insertFollowUpPrompt ?? false) {
 										// Insert the follow-up prompt into the input box
