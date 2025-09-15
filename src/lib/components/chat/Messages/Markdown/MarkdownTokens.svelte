@@ -23,6 +23,8 @@
 	import { settings } from '$lib/stores';
 	import HtmlToken from './HTMLToken.svelte';
 
+	import ArtifactsInline from '$lib/components/chat/ArtifactsInline.svelte';
+
 	export let id: string;
 	export let tokens: Token[];
 	export let top = true;
@@ -120,6 +122,12 @@
 				{onUpdate}
 				{onPreview}
 			/>
+
+			<ArtifactsInline 
+				inContent={token?.text ?? ''} 
+				inLang={token?.lang ?? ''}
+			/>
+
 		{:else}
 			{token.text}
 		{/if}

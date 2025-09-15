@@ -179,7 +179,7 @@
 			const { lang, text: code } = token;
 
 			if (
-				($settings?.detectArtifacts ?? true) &&
+				($settings?.detectArtifacts ?? false) &&
 				(['html', 'svg'].includes(lang) || (lang === 'xml' && code.includes('svg'))) &&
 				!$mobile &&
 				$chatId
@@ -189,7 +189,7 @@
 			}
 		}}
 		onPreview={async (value) => {
-			console.log('Preview', value);
+			console.info('Preview:', value);
 			await artifactCode.set(value);
 			await showControls.set(true);
 			await showArtifacts.set(true);
@@ -211,7 +211,7 @@
 				: model?.id}
 		messages={createMessagesList(history, id)}
 		onAdd={({ modelId, parentId, messages }) => {
-			console.log(modelId, parentId, messages);
+			console.info(modelId, parentId, messages);
 			onAddMessages({ modelId, parentId, messages });
 			closeFloatingButtons();
 		}}
