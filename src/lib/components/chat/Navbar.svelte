@@ -106,7 +106,17 @@
 						<ModelSelector
 							bind:selectedModels
 							showSetDefault={!shareEnabled}
-							disabled={Object.keys(history?.messages ?? {}).length > 0}
+							disabled={(() => {
+								const messageCount = Object.keys(history?.messages ?? {}).length;
+								if (messageCount === 0) return false;
+								if (messageCount === 1) {
+									// Check if the only message is a placeholder description
+									const messages = Object.values(history?.messages ?? {});
+									const onlyMessage = messages[0];
+									return !(onlyMessage?.info?.placeholder === true);
+								}
+								return true; // More than 1 message, disable
+							})()}
 						/>
 					{/if}
 				</div>

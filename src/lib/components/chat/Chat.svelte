@@ -325,6 +325,7 @@
 			childrenIds: [],
 			role: 'assistant',
 			content: description,
+			model: model?.name ?? model?.id ?? 'Unknown Model',
 			done: true,
 			// Mark as placeholder so other logic can ignore it when needed
 			info: { placeholder: true },
