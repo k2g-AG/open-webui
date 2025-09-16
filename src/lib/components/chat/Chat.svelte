@@ -331,12 +331,20 @@
 			info: { placeholder: true },
 			followUps: (
 				model?.info?.meta?.suggestion_prompts ??
-				$config?.default_prompt_suggestions.map(i => i.title[0]) ?? [
+				$config?.default_prompt_suggestions ?? [
 					'Calculate the main KPIs',
 					'KPIs across the age of the car',
 					'Show the chart Loss Ratio/Car make'
 				]
-			).filter((s) => typeof s === 'string' && s.trim()),
+			).filter((s) => {
+				if (typeof s === 'string') {
+					return s.trim() !== '';
+				}
+				if (typeof s === 'object' && s !== null && 'title' in s && 'content' in s) {
+					return s.title && s.title[0] && s.content && s.content.trim() !== '';
+				}
+				return false;
+			}),
 			followUpsTitle: 'Suggested',
 			timestamp: Math.floor(Date.now() / 1000)
 		};

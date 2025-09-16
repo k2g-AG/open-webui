@@ -968,7 +968,7 @@
 								</div>
 							{/if}
 
-							{#if message.done}
+							{#if message.done && !message?.info?.placeholder}
 								{#if !readOnly}
 									{#if $user?.role === 'user' ? ($user?.permissions?.chat?.edit ?? true) : true}
 										<Tooltip content={$i18n.t('Edit')} placement="bottom">

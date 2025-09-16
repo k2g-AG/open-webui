@@ -7,7 +7,7 @@
 
 	const i18n: Writable<i18nType> = getContext('i18n');
 
-	export let followUps: string[] = [];
+	export let followUps: (string | { title: string[]; content: string })[] = [];
 	export let onClick: (followUp: string) => void = () => {};
 	export let onSelect: (e: { type: string; data: string }) => void = () => {};
 	export let title: string | null = null;
@@ -21,25 +21,30 @@
 
 	<div class="flex flex-col text-left gap-1 mt-1.5">
 		{#each followUps as followUp, idx (idx)}
+			{@const isSuggestionFormat = typeof followUp === 'object' && followUp !== null && 'title' in followUp && 'content' in followUp}
+			{@const displayText = isSuggestionFormat ? followUp.title[0] : followUp}
+			{@const tooltipText = isSuggestionFormat ? followUp.content : followUp}
+			{@const clickData = isSuggestionFormat ? followUp.content : followUp}
+			
 			<!-- svelte-ignore a11y-no-static-element-interactions -->
 			<!-- svelte-ignore a11y-click-events-have-key-events -->
-			<Tooltip content={followUp} placement="top-start" className="line-clamp-1">
+			<Tooltip content={tooltipText} placement="top-start" className="line-clamp-1">
 				<div
 					class=" mr-2 py-1.5 bg-transparent text-left text-sm flex items-center gap-2 px-1.5 text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition cursor-pointer"
 					on:click={() => {
 						if (isSuggestion) {
-							onSelect({ type: 'prompt', data: followUp });
+							onSelect({ type: 'prompt', data: clickData });
 						} else {
-							onClick(followUp);
+							onClick(clickData);
 						}
 					}}
-					title={followUp}
-					aria-label={followUp}
+					title={tooltipText}
+					aria-label={tooltipText}
 				>
 					<ArrowTurnDownRight className="size-3.5" />
 
 					<div class="line-clamp-1">
-						{followUp}
+						{displayText}
 					</div>
 				</div>
 			</Tooltip>
