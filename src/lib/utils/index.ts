@@ -1178,6 +1178,16 @@ export const createMessagesList = (history, messageId) => {
 	if (message === undefined) {
 		return [];
 	}
+	
+	// Skip placeholder messages
+	if (message?.info?.placeholder === true) {
+		if (message?.parentId) {
+			return createMessagesList(history, message.parentId);
+		} else {
+			return [];
+		}
+	}
+	
 	if (message?.parentId) {
 		return [...createMessagesList(history, message.parentId), message];
 	} else {

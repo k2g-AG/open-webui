@@ -1615,6 +1615,15 @@
 			history.messages[parentIdForUser].childrenIds.push(userMessageId);
 		}
 
+		// Remove any placeholder guide messages completely from history
+		const placeholderIds = Object.keys(history.messages).filter(
+			(id) => history.messages[id]?.info?.placeholder === true
+		);
+		for (const placeholderId of placeholderIds) {
+			const { [placeholderId]: _removed, ...rest } = history.messages;
+			history.messages = rest;
+		}
+
 		// focus on chat input
 		const chatInput = document.getElementById('chat-input');
 		chatInput?.focus();
@@ -2067,11 +2076,11 @@
 		history.messages[userMessageId] = userMessage;
 		history.currentId = userMessageId;
 
-		// Remove any placeholder guide message when user submits their first real message
-		const placeholderId = Object.keys(history.messages).find(
+		// Remove any placeholder guide messages completely from history
+		const placeholderIds = Object.keys(history.messages).filter(
 			(id) => history.messages[id]?.info?.placeholder === true
 		);
-		if (placeholderId) {
+		for (const placeholderId of placeholderIds) {
 			const { [placeholderId]: _removed, ...rest } = history.messages;
 			history.messages = rest;
 		}
