@@ -1152,13 +1152,10 @@
 
 		if ($chatId == chatId) {
 			if (!$temporaryChatEnabled) {
-				// Remove placeholder description messages from history before updating chat
-				const cleanedHistory = cleanHistory(history);
-				
 				chat = await updateChatById(localStorage.token, chatId, {
 					models: selectedModels,
 					messages: messages,
-					history: cleanedHistory,
+					history: history,
 					params: params,
 					files: chatFiles
 				});
@@ -1172,9 +1169,7 @@
 	};
 
 	const chatActionHandler = async (chatId, actionId, modelId, responseMessageId, event = null) => {
-		// Clean history to remove placeholder description messages before API calls
-		const cleanedHistory = cleanHistory(history);
-		const messages = createMessagesList(cleanedHistory, responseMessageId);
+		const messages = createMessagesList(history, responseMessageId);
 
 		const res = await chatAction(localStorage.token, actionId, {
 			model: modelId,
@@ -1212,13 +1207,10 @@
 
 		if ($chatId == chatId) {
 			if (!$temporaryChatEnabled) {
-				// Remove placeholder description messages from history before updating chat
-				const cleanedHistoryForUpdate = cleanHistory(history);
-				
 				chat = await updateChatById(localStorage.token, chatId, {
 					models: selectedModels,
 					messages: messages,
-					history: cleanedHistoryForUpdate,
+					history: history,
 					params: params,
 					files: chatFiles
 				});
@@ -1654,9 +1646,6 @@
 		let _chatId = JSON.parse(JSON.stringify($chatId));
 		_history = JSON.parse(JSON.stringify(_history));
 
-		// Clean history to remove placeholder description messages before API calls
-		const cleanedHistory = cleanHistory(_history);
-
 		const responseMessageIds: Record<PropertyKey, string> = {};
 		// If modelId is provided, use it, else use selected model
 		let selectedModelIds = modelId
@@ -1710,7 +1699,7 @@
 
 		_history = JSON.parse(JSON.stringify(history));
 		// Save chat after all messages have been created
-		await saveChatHandler(_chatId, cleanedHistory);
+		await saveChatHandler(_chatId, _history);
 
 		await Promise.all(
 			selectedModelIds.map(async (modelId, _modelIdx) => {
@@ -1719,7 +1708,7 @@
 
 				if (model) {
 					// If there are image files, check if model is vision capable
-					const hasImages = createMessagesList(cleanedHistory, parentId).some((message) =>
+					const hasImages = createMessagesList(_history, parentId).some((message) =>
 						message.files?.some((file) => file.type === 'image')
 					);
 
@@ -1740,8 +1729,8 @@
 						model,
 						messages && messages.length > 0
 							? messages
-							: createMessagesList(cleanedHistory, responseMessageId),
-						cleanedHistory,
+							: createMessagesList(_history, responseMessageId),
+						_history,
 						responseMessageId,
 						_chatId
 					);
@@ -1823,10 +1812,12 @@
 						content: `${params?.system ?? $settings?.system ?? ''}`
 					}
 				: undefined,
-			..._messages.map((message) => ({
-				...message,
-				content: processDetails(message.content)
-			}))
+			..._messages
+				.filter((message) => !message?.info?.placeholder)
+				.map((message) => ({
+					...message,
+					content: processDetails(message.content)
+				}))
 		].filter((message) => message);
 
 		messages = messages
@@ -2207,18 +2198,6 @@
 		let _chatId = $chatId;
 
 		if (!$temporaryChatEnabled) {
-			// Remove placeholder description messages from history before creating chat
-			const cleanedMessages = Object.fromEntries(
-				Object.entries(history.messages).filter(([_, message]) => !message?.info?.placeholder)
-			);
-			
-			const cleanedHistory = {
-				...history,
-				messages: cleanedMessages,
-				// Reset currentId if it was pointing to a placeholder message
-				currentId: history.currentId && cleanedMessages[history.currentId] ? history.currentId : null
-			};
-
 			chat = await createNewChat(
 				localStorage.token,
 				{
@@ -2227,8 +2206,8 @@
 					models: selectedModels,
 					system: $settings.system ?? undefined,
 					params: params,
-					history: cleanedHistory,
-					messages: createMessagesList(cleanedHistory, cleanedHistory.currentId),
+					history: history,
+					messages: createMessagesList(history, history.currentId),
 					tags: [],
 					timestamp: Date.now()
 				},
@@ -2258,13 +2237,10 @@
 	const saveChatHandler = async (_chatId, history) => {
 		if ($chatId == _chatId) {
 			if (!$temporaryChatEnabled) {
-				// Remove placeholder description messages from history before updating chat
-				const cleanedHistory = cleanHistory(history);
-				
 				chat = await updateChatById(localStorage.token, _chatId, {
 					models: selectedModels,
-					history: cleanedHistory,
-					messages: createMessagesList(cleanedHistory, cleanedHistory.currentId),
+					history: history,
+					messages: createMessagesList(history, history.currentId),
 					params: params,
 					files: chatFiles
 				});
@@ -2299,20 +2275,6 @@
 			clearTimeout(saveDraftTimeout);
 		}
 		await sessionStorage.removeItem(`chat-input${chatId ? `-${chatId}` : ''}`);
-	};
-
-	// Helper function to remove placeholder description messages from history
-	const cleanHistory = (history) => {
-		const cleanedMessages = Object.fromEntries(
-			Object.entries(history.messages).filter(([_, message]) => !message?.info?.placeholder)
-		);
-		
-		return {
-			...history,
-			messages: cleanedMessages,
-			// Reset currentId if it was pointing to a placeholder message
-			currentId: history.currentId && cleanedMessages[history.currentId] ? history.currentId : null
-		};
 	};
 
 	const moveChatHandler = async (chatId, folderId) => {
@@ -2417,18 +2379,7 @@
 									toast.error($i18n.t('No conversation to save'));
 									return;
 								}
-								// Remove placeholder description messages from history before saving
-								const cleanedMessages = Object.fromEntries(
-									Object.entries(history.messages).filter(([_, message]) => !message?.info?.placeholder)
-								);
-								
-								const cleanedHistory = {
-									...history,
-									messages: cleanedMessages,
-									currentId: history.currentId && cleanedMessages[history.currentId] ? history.currentId : null
-								};
-
-								const messages = createMessagesList(cleanedHistory, cleanedHistory.currentId);
+								const messages = createMessagesList(history, history.currentId);
 								const title =
 									messages.find((m) => m.role === 'user')?.content ?? $i18n.t('New Chat');
 
@@ -2438,7 +2389,7 @@
 										id: uuidv4(),
 										title: title.length > 50 ? `${title.slice(0, 50)}...` : title,
 										models: selectedModels,
-										history: cleanedHistory,
+										history: history,
 										messages: messages,
 										timestamp: Date.now()
 									},
