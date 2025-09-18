@@ -2196,6 +2196,18 @@
 		let _chatId = $chatId;
 
 		if (!$temporaryChatEnabled) {
+			// Remove placeholder description messages from history before creating chat
+			const cleanedMessages = Object.fromEntries(
+				Object.entries(history.messages).filter(([_, message]) => !message?.info?.placeholder)
+			);
+			
+			const cleanedHistory = {
+				...history,
+				messages: cleanedMessages,
+				// Reset currentId if it was pointing to a placeholder message
+				currentId: history.currentId && cleanedMessages[history.currentId] ? history.currentId : null
+			};
+
 			chat = await createNewChat(
 				localStorage.token,
 				{
@@ -2204,8 +2216,8 @@
 					models: selectedModels,
 					system: $settings.system ?? undefined,
 					params: params,
-					history: history,
-					messages: createMessagesList(history, history.currentId),
+					history: cleanedHistory,
+					messages: createMessagesList(cleanedHistory, cleanedHistory.currentId),
 					tags: [],
 					timestamp: Date.now()
 				},
@@ -2377,7 +2389,18 @@
 									toast.error($i18n.t('No conversation to save'));
 									return;
 								}
-								const messages = createMessagesList(history, history.currentId);
+								// Remove placeholder description messages from history before saving
+								const cleanedMessages = Object.fromEntries(
+									Object.entries(history.messages).filter(([_, message]) => !message?.info?.placeholder)
+								);
+								
+								const cleanedHistory = {
+									...history,
+									messages: cleanedMessages,
+									currentId: history.currentId && cleanedMessages[history.currentId] ? history.currentId : null
+								};
+
+								const messages = createMessagesList(cleanedHistory, cleanedHistory.currentId);
 								const title =
 									messages.find((m) => m.role === 'user')?.content ?? $i18n.t('New Chat');
 
@@ -2387,7 +2410,7 @@
 										id: uuidv4(),
 										title: title.length > 50 ? `${title.slice(0, 50)}...` : title,
 										models: selectedModels,
-										history: history,
+										history: cleanedHistory,
 										messages: messages,
 										timestamp: Date.now()
 									},
