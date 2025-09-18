@@ -1152,10 +1152,13 @@
 
 		if ($chatId == chatId) {
 			if (!$temporaryChatEnabled) {
+				// Remove placeholder description messages from history before updating chat
+				const cleanedHistory = cleanHistory(history);
+				
 				chat = await updateChatById(localStorage.token, chatId, {
 					models: selectedModels,
 					messages: messages,
-					history: history,
+					history: cleanedHistory,
 					params: params,
 					files: chatFiles
 				});
@@ -1169,7 +1172,9 @@
 	};
 
 	const chatActionHandler = async (chatId, actionId, modelId, responseMessageId, event = null) => {
-		const messages = createMessagesList(history, responseMessageId);
+		// Clean history to remove placeholder description messages before API calls
+		const cleanedHistory = cleanHistory(history);
+		const messages = createMessagesList(cleanedHistory, responseMessageId);
 
 		const res = await chatAction(localStorage.token, actionId, {
 			model: modelId,
@@ -1207,10 +1212,13 @@
 
 		if ($chatId == chatId) {
 			if (!$temporaryChatEnabled) {
+				// Remove placeholder description messages from history before updating chat
+				const cleanedHistoryForUpdate = cleanHistory(history);
+				
 				chat = await updateChatById(localStorage.token, chatId, {
 					models: selectedModels,
 					messages: messages,
-					history: history,
+					history: cleanedHistoryForUpdate,
 					params: params,
 					files: chatFiles
 				});
@@ -1646,6 +1654,9 @@
 		let _chatId = JSON.parse(JSON.stringify($chatId));
 		_history = JSON.parse(JSON.stringify(_history));
 
+		// Clean history to remove placeholder description messages before API calls
+		const cleanedHistory = cleanHistory(_history);
+
 		const responseMessageIds: Record<PropertyKey, string> = {};
 		// If modelId is provided, use it, else use selected model
 		let selectedModelIds = modelId
@@ -1699,7 +1710,7 @@
 
 		_history = JSON.parse(JSON.stringify(history));
 		// Save chat after all messages have been created
-		await saveChatHandler(_chatId, _history);
+		await saveChatHandler(_chatId, cleanedHistory);
 
 		await Promise.all(
 			selectedModelIds.map(async (modelId, _modelIdx) => {
@@ -1708,7 +1719,7 @@
 
 				if (model) {
 					// If there are image files, check if model is vision capable
-					const hasImages = createMessagesList(_history, parentId).some((message) =>
+					const hasImages = createMessagesList(cleanedHistory, parentId).some((message) =>
 						message.files?.some((file) => file.type === 'image')
 					);
 
@@ -1729,8 +1740,8 @@
 						model,
 						messages && messages.length > 0
 							? messages
-							: createMessagesList(_history, responseMessageId),
-						_history,
+							: createMessagesList(cleanedHistory, responseMessageId),
+						cleanedHistory,
 						responseMessageId,
 						_chatId
 					);
@@ -2247,10 +2258,13 @@
 	const saveChatHandler = async (_chatId, history) => {
 		if ($chatId == _chatId) {
 			if (!$temporaryChatEnabled) {
+				// Remove placeholder description messages from history before updating chat
+				const cleanedHistory = cleanHistory(history);
+				
 				chat = await updateChatById(localStorage.token, _chatId, {
 					models: selectedModels,
-					history: history,
-					messages: createMessagesList(history, history.currentId),
+					history: cleanedHistory,
+					messages: createMessagesList(cleanedHistory, cleanedHistory.currentId),
 					params: params,
 					files: chatFiles
 				});
@@ -2285,6 +2299,20 @@
 			clearTimeout(saveDraftTimeout);
 		}
 		await sessionStorage.removeItem(`chat-input${chatId ? `-${chatId}` : ''}`);
+	};
+
+	// Helper function to remove placeholder description messages from history
+	const cleanHistory = (history) => {
+		const cleanedMessages = Object.fromEntries(
+			Object.entries(history.messages).filter(([_, message]) => !message?.info?.placeholder)
+		);
+		
+		return {
+			...history,
+			messages: cleanedMessages,
+			// Reset currentId if it was pointing to a placeholder message
+			currentId: history.currentId && cleanedMessages[history.currentId] ? history.currentId : null
+		};
 	};
 
 	const moveChatHandler = async (chatId, folderId) => {
