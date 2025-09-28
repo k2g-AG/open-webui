@@ -88,6 +88,17 @@ export const currentChatPage = writable(1);
 export const isLastActiveTab = writable(true);
 export const playingNotificationSound = writable(false);
 
+// Widget mode configuration
+export const widgetMode = writable(false);
+export const widgetConfig = writable({
+	theme: 'system',
+	width: '360px',
+	height: '560px',
+	model: '',
+	position: 'bottom-right',
+	zIndex: 9999
+});
+
 export type Model = OpenAIModel | OllamaModel;
 
 type BaseModel = {

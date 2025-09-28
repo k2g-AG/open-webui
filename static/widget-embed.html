@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Open WebUI Widget Embed</title>
+	<style>
+		.open-webui-widget {
+			position: fixed;
+			bottom: 20px;
+			right: 20px;
+			width: 360px;
+			height: 560px;
+			border: none;
+			border-radius: 12px;
+			box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+			z-index: 9999;
+			display: none;
+		}
+
+		.open-webui-widget.open {
+			display: block;
+		}
+
+		.open-webui-launcher {
+			position: fixed;
+			bottom: 20px;
+			right: 20px;
+			width: 60px;
+			height: 60px;
+			background: #007bff;
+			border: none;
+			border-radius: 50%;
+			color: white;
+			font-size: 24px;
+			cursor: pointer;
+			box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+			z-index: 10000;
+		}
+
+		.open-webui-launcher:hover {
+			background: #0056b3;
+		}
+	</style>
+</head>
+<body>
+	<button id="open-webui-launcher" class="open-webui-launcher">💬</button>
+	<iframe id="open-webui-widget" class="open-webui-widget" src=""></iframe>
+
+	<script>
+		class OpenWebUIWidget {
+			constructor(config = {}) {
+				this.config = {
+					src: config.src || 'http://localhost:5173/widget',
+					token: config.token || '',
+					theme: config.theme || 'system',
+					width: config.width || '360px',
+					height: config.height || '560px',
+					position: config.position || 'bottom-right',
+					zIndex: config.zIndex || 9999,
+					...config
+				};
+
+				this.iframe = document.getElementById('open-webui-widget');
+				this.launcher = document.getElementById('open-webui-launcher');
+				this.isOpen = false;
+
+				this.init();
+			}
+
+			init() {
+				// Set iframe source with parameters
+				const params = new URLSearchParams({
+					theme: this.config.theme,
+					width: this.config.width,
+					height: this.config.height,
+					position: this.config.position,
+					zIndex: this.config.zIndex.toString()
+				});
+
+				if (this.config.token) {
+					params.set('token', this.config.token);
+				}
+
+				this.iframe.src = `${this.config.src}?${params.toString()}`;
+
+				// Add event listeners
+				this.launcher.addEventListener('click', () => this.toggle());
+				window.addEventListener('message', (e) => this.handleMessage(e));
+
+				// Position elements
+				this.updatePosition();
+			}
+
+			handleMessage(event) {
+				if (event.data?.origin !== 'open-webui-widget') return;
+
+				switch (event.data.type) {
+					case 'open-webui-widget-ready':
+						console.log('Open WebUI Widget ready');
+						break;
+					case 'open':
+						this.open();
+						break;
+					case 'close':
+						this.close();
+						break;
+				}
+			}
+
+			toggle() {
+				if (this.isOpen) {
+					this.close();
+				} else {
+					this.open();
+				}
+			}
+
+			open() {
+				this.isOpen = true;
+				this.iframe.classList.add('open');
+				this.launcher.style.display = 'none';
+			}
+
+			close() {
+				this.isOpen = false;
+				this.iframe.classList.remove('open');
+				this.launcher.style.display = 'block';
+			}
+
+			updatePosition() {
+				const launcher = this.launcher;
+				const iframe = this.iframe;
+
+				if (this.config.position === 'bottom-left') {
+					launcher.style.left = '20px';
+					launcher.style.right = 'auto';
+					iframe.style.left = '20px';
+					iframe.style.right = 'auto';
+				} else {
+					launcher.style.right = '20px';
+					launcher.style.left = 'auto';
+					iframe.style.right = '20px';
+					iframe.style.left = 'auto';
+				}
+			}
+		}
+
+		// Auto-initialize if config is provided
+		if (window.openWebUIConfig) {
+			new OpenWebUIWidget(window.openWebUIConfig);
+		}
+
+		// Export for manual initialization
+		window.OpenWebUIWidget = OpenWebUIWidget;
+	</script>
+</body>
+</html>
