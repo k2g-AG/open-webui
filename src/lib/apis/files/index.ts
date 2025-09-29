@@ -103,7 +103,8 @@ export const getFileProcessStatus = async (token: string, id: string) => {
 	}
 
 	if (res) {
-		const status = await getFileProcessStatus(token, res.id);
+		// const status = await getFileProcessStatus(token, res.id);
+		const status = await getFileProcessStatus(token, id);
 
 		if (status && status.ok) {
 			const reader = status.body
