@@ -210,10 +210,10 @@
 			ALLOWED_DIRECT_FILE_EXTENSIONS: RAGConfig.ALLOWED_DIRECT_FILE_EXTENSIONS.split(',')
 				.map((ext) => ext.trim())
 				.filter((ext) => ext !== ''),
-			DATALAB_MARKER_LANGS: RAGConfig.DATALAB_MARKER_LANGS.split(',')
-				.map((code) => code.trim())
-				.filter((code) => code !== '')
-				.join(', '),
+			// DATALAB_MARKER_LANGS: RAGConfig.DATALAB_MARKER_LANGS.split(',')
+			// 	.map((code) => code.trim())
+			// 	.filter((code) => code !== '')
+			// 	.join(', '),
 			DOCLING_PICTURE_DESCRIPTION_LOCAL: JSON.parse(
 				RAGConfig.DOCLING_PICTURE_DESCRIPTION_LOCAL || '{}'
 			),
