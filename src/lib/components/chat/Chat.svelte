@@ -92,7 +92,6 @@
 	import Tooltip from '../common/Tooltip.svelte';
 	import Sidebar from '../icons/Sidebar.svelte';
 	import { uploadFile } from '$lib/apis/files';
-	import { widgetMode } from '$lib/stores';
 
 	export let chatIdProp = '';
 
@@ -2055,7 +2054,8 @@
 		let userMessageId = uuidv4();
 
 		// Ignore placeholder guide messages as parent (same logic as submitPrompt)
-		const actualParentId = parentId && history.messages[parentId]?.info?.placeholder ? null : parentId;
+		const actualParentId =
+			parentId && history.messages[parentId]?.info?.placeholder ? null : parentId;
 
 		let userMessage = {
 			id: userMessageId,
@@ -2307,13 +2307,6 @@
 			toast.error($i18n.t('Failed to move chat'));
 		}
 	};
-
-	// Hide sidebar and other UI elements in widget mode
-	$: if ($widgetMode) {
-		showSidebar.set(false);
-		showControls.set(false);
-		showOverview.set(false);
-	}
 </script>
 
 <svelte:head>
@@ -2369,67 +2362,65 @@
 
 			<PaneGroup direction="horizontal" class="w-full h-full">
 				<Pane defaultSize={50} class="h-full flex relative max-w-full flex-col">
-					{#if !$widgetMode}
-						<!-- Only show navbar in non-widget mode -->
-						<Navbar
-							bind:this={navbarElement}
-							chat={{
-								id: $chatId,
-								chat: {
-									title: $chatTitle,
-									models: selectedModels,
-									system: $settings.system ?? undefined,
-									params: params,
-									history: history,
-									timestamp: Date.now()
+					<!-- Only show navbar in non-widget mode -->
+					<Navbar
+						bind:this={navbarElement}
+						chat={{
+							id: $chatId,
+							chat: {
+								title: $chatTitle,
+								models: selectedModels,
+								system: $settings.system ?? undefined,
+								params: params,
+								history: history,
+								timestamp: Date.now()
+							}
+						}}
+						{history}
+						title={$chatTitle}
+						bind:selectedModels
+						shareEnabled={!!history.currentId}
+						{initNewChat}
+						showBanners={!showCommands}
+						archiveChatHandler={() => {}}
+						{moveChatHandler}
+						onSaveTempChat={async () => {
+							try {
+								if (!history?.currentId || !Object.keys(history.messages).length) {
+									toast.error($i18n.t('No conversation to save'));
+									return;
 								}
-							}}
-							{history}
-							title={$chatTitle}
-							bind:selectedModels
-							shareEnabled={!!history.currentId}
-							{initNewChat}
-							showBanners={!showCommands}
-							archiveChatHandler={() => {}}
-							{moveChatHandler}
-							onSaveTempChat={async () => {
-								try {
-									if (!history?.currentId || !Object.keys(history.messages).length) {
-										toast.error($i18n.t('No conversation to save'));
-										return;
-									}
-									const messages = createMessagesList(history, history.currentId);
-									const title =
-										messages.find((m) => m.role === 'user')?.content ?? $i18n.t('New Chat');
+								const messages = createMessagesList(history, history.currentId);
+								const title =
+									messages.find((m) => m.role === 'user')?.content ?? $i18n.t('New Chat');
 
-									const savedChat = await createNewChat(
-										localStorage.token,
-										{
-											id: uuidv4(),
-											title: title.length > 50 ? `${title.slice(0, 50)}...` : title,
-											models: selectedModels,
-											history: history,
-											messages: messages,
-											timestamp: Date.now()
-										},
-										null
-									);
+								const savedChat = await createNewChat(
+									localStorage.token,
+									{
+										id: uuidv4(),
+										title: title.length > 50 ? `${title.slice(0, 50)}...` : title,
+										models: selectedModels,
+										history: history,
+										messages: messages,
+										timestamp: Date.now()
+									},
+									null
+								);
 
-									if (savedChat) {
-										temporaryChatEnabled.set(false);
-										chatId.set(savedChat.id);
-										chats.set(await getChatList(localStorage.token, $currentChatPage));
+								if (savedChat) {
+									temporaryChatEnabled.set(false);
+									chatId.set(savedChat.id);
+									chats.set(await getChatList(localStorage.token, $currentChatPage));
 
-										await goto(`/c/${savedChat.id}`);
-										toast.success($i18n.t('Conversation saved successfully'));
-									}
-								} catch (error) {
-									console.error('Error saving conversation:', error);
-									toast.error($i18n.t('Failed to save conversation'));
+									await goto(`/c/${savedChat.id}`);
+									toast.success($i18n.t('Conversation saved successfully'));
 								}
-							}}
-						/>
-					{/if}
+							} catch (error) {
+								console.error('Error saving conversation:', error);
+								toast.error($i18n.t('Failed to save conversation'));
+							}
+						}}
+					/>
 
 					<div class="flex flex-col flex-auto z-10 w-full @container overflow-auto">
 						{#if ($settings?.landingPageMode === 'chat' && !$selectedFolder) || createMessagesList(history, history.currentId).length > 0}
