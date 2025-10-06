@@ -60,10 +60,10 @@ class OpenWebUIWidget {
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 90%;
-      max-width: 1200px;
-      height: 90%;
-      max-height: 800px;
+      width: ${this.config.width || '80%'};
+      max-width: ${this.config.maxWidth || '1200px'};
+      height: ${this.config.height || '80%'};
+      max-height: ${this.config.maxHeight || '800px'};
       border: none;
       border-radius: 16px;
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);

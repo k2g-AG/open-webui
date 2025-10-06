@@ -138,9 +138,9 @@
 			</div>
 			<div class="header-text">
 				<h2>{widgetData.title}</h2>
-				{#if widgetData.fileName}
+				<!-- {#if widgetData.fileName}
 					<p class="file-name">{widgetData.fileName}</p>
-				{/if}
+				{/if} -->
 			</div>
 		</div>
 		<button class="close-button" on:click={closeWidget} aria-label="Close widget">
@@ -166,12 +166,12 @@
 		<Chat chatIdProp={widgetData.fileId} />
 	</div>
 
-	<!-- Debug Info (remove in production) -->
+	<!-- Debug Info (remove in production)
 	{#if widgetData.fileId}
 		<div class="debug-info">
 			<small>File ID: {widgetData.fileId}</small>
 		</div>
-	{/if}
+	{/if} -->
 </div>
 
 <style>
