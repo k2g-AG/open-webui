@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import { page } from '$app/stores';
 	import { widgetMode, widgetConfig } from '$lib/stores';
 	import Chat from '$lib/components/chat/Chat.svelte';
@@ -36,7 +36,13 @@
 	onMount(async () => {
 		// Initialize authentication for widget
 		try {
-			await getSessionUser();
+			// Try to get token from URL parameter or localStorage
+			const urlParams = new URLSearchParams(window.location.search);
+			const token = urlParams.get('token') || localStorage.getItem('token') || '';
+			
+			if (token) {
+				await getSessionUser(token);
+			}
 		} catch (error) {
 			console.error('Widget authentication failed:', error);
 		}
@@ -54,10 +60,10 @@
 				'*'
 			);
 		}
+	});
 
-		return () => {
-			window.removeEventListener('message', handleParentMessage);
-		};
+	onDestroy(() => {
+		window.removeEventListener('message', handleParentMessage);
 	});
 
 	function handleParentMessage(event: MessageEvent) {
@@ -208,7 +214,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: var(--color-primary, #007bff);
+		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 		color: white;
 		border-radius: 8px;
 	}
