@@ -17,6 +17,18 @@ class OpenWebUIWidget {
       // UI Options
       showLauncher: config.showLauncher !== false,
       autoOpen: config.autoOpen || false,
+      // Positioning
+      position: config.position || 'modal', // 'modal' (center) | 'dock'
+      dockPosition: config.dockPosition || 'bottom-right', // when position === 'dock'
+      useOverlay: config.useOverlay !== false, // show dark overlay for modal; ignored for dock
+      // Sizing (can be overridden later)
+      width: config.width,
+      height: config.height,
+      maxWidth: config.maxWidth,
+      maxHeight: config.maxHeight,
+      // Offsets for dock mode
+      offsetX: config.offsetX ?? 24,
+      offsetY: config.offsetY ?? 24,
       ...config
     };
 
@@ -36,7 +48,7 @@ class OpenWebUIWidget {
   }
 
   createElements() {
-    // Create overlay
+    // Create overlay (may be unused for dock)
     this.overlay = document.createElement('div');
     this.overlay.className = 'open-webui-modal-overlay';
     this.overlay.style.cssText = `
@@ -45,31 +57,36 @@ class OpenWebUIWidget {
       left: 0;
       right: 0;
       bottom: 0;
-      background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(4px);
       z-index: 9998;
       display: none;
       animation: fadeIn 0.2s ease;
+      background: rgba(0,0,0,0.5);
     `;
 
     // Create iframe
     this.iframe = document.createElement('iframe');
     this.iframe.className = 'open-webui-widget';
+    const isDock = this.config.position === 'dock';
+    const defaultModalWidth = this.config.width || '80%';
+    const defaultModalHeight = this.config.height || '80%';
+    const defaultDockWidth = this.config.width || '380px';
+    const defaultDockHeight = this.config.height || '560px';
+
     this.iframe.style.cssText = `
       position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: ${this.config.width || '80%'};
-      max-width: ${this.config.maxWidth || '1200px'};
-      height: ${this.config.height || '80%'};
-      max-height: ${this.config.maxHeight || '800px'};
+      ${isDock ? '' : 'top: 50%;'}
+      ${isDock ? '' : 'left: 50%;'}
+      ${isDock ? '' : 'transform: translate(-50%, -50%);'}
+      width: ${isDock ? defaultDockWidth : defaultModalWidth};
+      max-width: ${this.config.maxWidth || (isDock ? defaultDockWidth : '1200px')};
+      height: ${isDock ? defaultDockHeight : defaultModalHeight};
+      max-height: ${this.config.maxHeight || (isDock ? defaultDockHeight : '800px')};
       border: none;
       border-radius: 16px;
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-      z-index: 9999;
+      z-index: 10001;
       display: none;
-      animation: slideUp 0.3s ease;
+      ${isDock ? '' : 'animation: slideUp 0.3s ease;'}
     `;
 
     // Create launcher button (optional)
@@ -127,10 +144,16 @@ class OpenWebUIWidget {
     document.head.appendChild(style);
 
     // Append to body
+    // Append to body
     document.body.appendChild(this.overlay);
     document.body.appendChild(this.iframe);
     if (this.launcher) {
       document.body.appendChild(this.launcher);
+    }
+
+    // Apply dock positioning if needed
+    if (isDock) {
+      this.applyDockPosition();
     }
   }
 
@@ -139,7 +162,7 @@ class OpenWebUIWidget {
     const params = new URLSearchParams({
       theme: this.config.theme,
       title: this.config.title,
-      position: 'fullscreen'
+      position: this.config.position === 'dock' ? 'dock' : 'fullscreen'
     });
 
     if (this.config.token) params.set('token', this.config.token);
@@ -237,11 +260,20 @@ class OpenWebUIWidget {
   open() {
     this.isOpen = true;
     this.iframe.style.display = 'block';
-    this.overlay.style.display = 'block';
-    if (this.launcher) {
-      this.launcher.style.display = 'none';
+
+    // Only show overlay for centered modal when enabled
+    const isDock = this.config.position === 'dock';
+    if (!isDock && this.config.useOverlay) {
+      this.overlay.style.display = 'block';
+    } else {
+      this.overlay.style.display = 'none';
     }
-    document.body.style.overflow = 'hidden';
+    if (this.launcher) {
+      // Keep launcher visible in dock mode (acts as anchor)
+      this.launcher.style.display = isDock ? 'flex' : 'none';
+    }
+    // Do not lock scroll for dock mode
+    document.body.style.overflow = (!isDock && this.config.useOverlay) ? 'hidden' : '';
     this.emit('open');
   }
 
@@ -298,6 +330,36 @@ class OpenWebUIWidget {
     this.iframe?.remove();
     this.launcher?.remove();
     this.messageHandlers.clear();
+  }
+
+  // Helpers
+  applyDockPosition() {
+    const pos = this.config.dockPosition || 'bottom-right';
+    const offsetX = `${this.config.offsetX ?? 24}px`;
+    const offsetY = `${this.config.offsetY ?? 24}px`;
+
+    this.iframe.style.top = 'auto';
+    this.iframe.style.left = 'auto';
+    this.iframe.style.transform = 'none';
+
+    if (pos.includes('bottom')) {
+      this.iframe.style.bottom = offsetY;
+      this.iframe.style.top = 'auto';
+    } else {
+      this.iframe.style.top = offsetY;
+      this.iframe.style.bottom = 'auto';
+    }
+
+    if (pos.includes('right')) {
+      this.iframe.style.right = offsetX;
+      this.iframe.style.left = 'auto';
+    } else {
+      this.iframe.style.left = offsetX;
+      this.iframe.style.right = 'auto';
+    }
+
+    // Ensure it's above launcher
+    this.iframe.style.zIndex = '10001';
   }
 }
 
