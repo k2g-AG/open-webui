@@ -35,6 +35,7 @@ class OpenWebUIWidget {
     this.iframe = null;
     this.overlay = null;
     this.launcher = null;
+    this.closeBtn = null;
     this.isOpen = false;
     this.isReady = false;
     this.messageHandlers = new Map();
@@ -155,6 +156,30 @@ class OpenWebUIWidget {
     if (isDock) {
       this.applyDockPosition();
     }
+
+    // Create close button (global, outside iframe)
+    this.closeBtn = document.createElement('button');
+    this.closeBtn.className = 'open-webui-widget-close';
+    this.closeBtn.setAttribute('aria-label', 'Close chat');
+    this.closeBtn.innerHTML = '&#10005;';
+    this.closeBtn.style.cssText = `
+      position: fixed;
+      width: 28px;
+      height: 28px;
+      border-radius: 9999px;
+      border: none;
+      background: rgba(17, 24, 39, 0.8);
+      color: #fff;
+      font-size: 14px;
+      line-height: 28px;
+      text-align: center;
+      cursor: pointer;
+      z-index: 10002;
+      display: none;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    `;
+    document.body.appendChild(this.closeBtn);
+    this.closeBtn.addEventListener('click', () => this.close());
   }
 
   init() {
@@ -185,6 +210,10 @@ class OpenWebUIWidget {
         this.close();
       }
     });
+
+    // Keep close button aligned with iframe
+    window.addEventListener('resize', () => this.updateCloseBtnPosition());
+    window.addEventListener('scroll', () => this.updateCloseBtnPosition(), { passive: true });
   }
 
   handleMessage(event) {
@@ -274,6 +303,9 @@ class OpenWebUIWidget {
     }
     // Do not lock scroll for dock mode
     document.body.style.overflow = (!isDock && this.config.useOverlay) ? 'hidden' : '';
+    // Show and place close button
+    this.updateCloseBtnPosition();
+    this.closeBtn.style.display = 'block';
     this.emit('open');
   }
 
@@ -285,6 +317,9 @@ class OpenWebUIWidget {
       this.launcher.style.display = 'flex';
     }
     document.body.style.overflow = '';
+    if (this.closeBtn) {
+      this.closeBtn.style.display = 'none';
+    }
     
     // Notify widget about close
     if (this.isReady) {
@@ -360,6 +395,19 @@ class OpenWebUIWidget {
 
     // Ensure it's above launcher
     this.iframe.style.zIndex = '10001';
+    this.updateCloseBtnPosition();
+  }
+
+  updateCloseBtnPosition() {
+    if (!this.closeBtn || this.iframe.style.display === 'none') return;
+    const rect = this.iframe.getBoundingClientRect();
+    // Place close button slightly outside top-right corner of the iframe
+    const gap = 8; // px
+    const size = 28; // button size
+    const top = Math.max(8, rect.top - (size / 2) + gap);
+    const left = rect.right - (size / 2) - gap;
+    this.closeBtn.style.top = `${top}px`;
+    this.closeBtn.style.left = `${left}px`;
   }
 }
 
