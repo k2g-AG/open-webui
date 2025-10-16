@@ -1,14 +1,15 @@
 <script lang="ts">
 	export let handleClose: () => void; // Accept close function
 	export let setFile: (file: any) => void;
-	export let allFiles = [];
+	export let allFiles: any[] = [];
 	export let headerTitle = '';
 
 	function formatSize(bytes: number) {
 		return (bytes / 1_000_000).toFixed(1);
 	}
-	function formatDate(dateStr: string) {
-		const d = new Date(dateStr * 1000);
+	function formatDate(dateStr: string | number) {
+		const timestamp = typeof dateStr === 'string' ? parseFloat(dateStr) : dateStr;
+		const d = new Date(timestamp * 1000);
 		const day = String(d.getDate()).padStart(2, '0');
 		const month = String(d.getMonth() + 1).padStart(2, '0');
 		const year = d.getFullYear();
@@ -70,21 +71,34 @@
 		background: rgb(255 255 255);
 		border-radius: 12px;
 		width: 100%;
+		max-height: calc(100vh - 2rem);
+		max-height: calc(100dvh - 2rem);
 		margin: auto;
 		font-family: system-ui, sans-serif;
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
 	}
 
 	:global(.dark) .modal {
 		background: rgb(31 41 55);
 	}
 
+	@media (min-width: 768px) {
+		.modal {
+			max-height: calc(100vh - 4rem);
+			max-height: calc(100dvh - 4rem);
+		}
+	}
+
 	.title {
 		padding: 1rem 1rem 0.75rem 1rem;
 		font-size: 17px;
 		font-weight: 600;
-		margin-bottom: 1rem;
+		margin-bottom: 0;
 		border-bottom: 1px solid rgb(229 231 235);
 		color: rgb(17 24 39);
+		flex-shrink: 0;
 	}
 
 	:global(.dark) .title {
@@ -100,7 +114,10 @@
 
 	.table-wrapper {
 		overflow-x: auto;
+		overflow-y: auto;
 		padding: 0.5rem 0.5rem 1rem 0.5rem;
+		flex: 1;
+		min-height: 0;
 	}
 
 	@media (min-width: 768px) {
@@ -272,10 +289,13 @@
 		padding: 0.75rem 1rem;
 		text-align: right;
 		border-top: 1px solid rgb(229 231 235);
+		flex-shrink: 0;
+		background: rgb(255 255 255);
 	}
 
 	:global(.dark) .footer {
 		border-top-color: rgb(55 65 81);
+		background: rgb(31 41 55);
 	}
 
 	@media (min-width: 768px) {
