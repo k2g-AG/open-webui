@@ -36,8 +36,11 @@ from open_webui.config import (
     RAG_EMBEDDING_PREFIX_FIELD_NAME,
 )
 
+
 log = logging.getLogger(__name__)
-log.setLevel(SRC_LOG_LEVELS["RAG"])
+# log.setLevel(SRC_LOG_LEVELS["RAG"])
+logging.basicConfig(level=logging.DEBUG)
+log.setLevel("DEBUG")
 
 
 from typing import Any
