@@ -19,6 +19,8 @@ from open_webui.env import (
 if TYPE_CHECKING:
     from loguru import Record
 
+google: bool = False
+
 
 def stdout_format(record: "Record") -> str:
     """
@@ -34,6 +36,10 @@ def stdout_format(record: "Record") -> str:
         extra_format = " - {extra[extra_json]}"
     else:
         extra_format = ""
+
+    if google:
+        return "{name}:{function}:{line} - {message} {extra_format} \n{exception}"
+
     return (
         "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
         "<level>{level: <8}</level> | "
@@ -124,6 +130,8 @@ def start_logger():
     Parameters:
     enable_audit_logging (bool): Determines whether audit-specific log entries should be recorded to file.
     """
+    global google
+
     logger.remove()
 
     # import google.cloud.logging
@@ -148,6 +156,7 @@ def start_logger():
     #     filter=lambda record: "auditable" not in record["extra"],
     # )
 
+    google = True
     logger.add(
         handler,
         format=stdout_format,
