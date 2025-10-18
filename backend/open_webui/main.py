@@ -494,6 +494,11 @@ log = logging.getLogger(__name__)
 # log.setLevel(SRC_LOG_LEVELS["MAIN"])
 log.setLevel(GLOBAL_LOG_LEVEL)
 
+log.info("info:main start ..")
+log.debug("debug:main start ..")
+log.error("error:main start ..")
+log.exception("exception:main start ..")
+
 
 class SPAStaticFiles(StaticFiles):
     async def get_response(self, path: str, scope):
