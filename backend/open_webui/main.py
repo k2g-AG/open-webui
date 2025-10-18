@@ -480,10 +480,7 @@ from open_webui.tasks import (
 )  # Import from tasks.py
 
 from open_webui.utils.redis import get_sentinels_from_env
-
-
 from open_webui.constants import ERROR_MESSAGES
-
 
 if SAFE_MODE:
     print("SAFE MODE ENABLED")

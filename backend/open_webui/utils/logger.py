@@ -126,8 +126,16 @@ def start_logger():
     """
     logger.remove()
 
+    # import google.cloud.logging
+
+    # try:
+    #     client = google.cloud.logging.Client()
+    #     client.setup_logging()
+    # except Exception as e:
+    #     print(f"Google Cloud Logging not configured: {e}")
+
     logger.add(
-        sys.stdout,
+        # sys.stdout,
         level=GLOBAL_LOG_LEVEL,
         format=stdout_format,
         filter=lambda record: "auditable" not in record["extra"],
