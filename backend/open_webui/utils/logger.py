@@ -134,12 +134,12 @@ def start_logger():
     # except Exception as e:
     #     print(f"Google Cloud Logging not configured: {e}")
 
-    logger.add(
-        # sys.stdout,
-        level=GLOBAL_LOG_LEVEL,
-        format=stdout_format,
-        filter=lambda record: "auditable" not in record["extra"],
-    )
+    # logger.add(
+    #     sys.stdout,
+    #     level=GLOBAL_LOG_LEVEL,
+    #     format=stdout_format,
+    #     filter=lambda record: "auditable" not in record["extra"],
+    # )
     if AUDIT_LOG_LEVEL != "NONE":
         try:
             logger.add(
