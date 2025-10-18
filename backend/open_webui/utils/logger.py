@@ -127,12 +127,19 @@ def start_logger():
     logger.remove()
 
     # import google.cloud.logging
+    from google.cloud.logging_v2 import handlers
+
+    # from google.cloud.logging_v2.handlers import CloudLoggingHandler
 
     # try:
     #     client = google.cloud.logging.Client()
     #     client.setup_logging()
+    #     handler = CloudLoggingHandler(client)
+    #     handler.setLevel(level=GLOBAL_LOG_LEVEL)
     # except Exception as e:
     #     print(f"Google Cloud Logging not configured: {e}")
+
+    handler = handlers.StructuredLogHandler(stream=sys.stdout)
 
     # logger.add(
     #     sys.stdout,
@@ -142,12 +149,21 @@ def start_logger():
     # )
 
     logger.add(
-        sys.stdout,
+        handler,
         format=stdout_format,
         level=GLOBAL_LOG_LEVEL,
         colorize=True,
         filter=lambda record: "auditable" not in record["extra"],
     )
+
+    # logger.add(
+    #     sys.stdout,
+    #     format=stdout_format,
+    #     level=GLOBAL_LOG_LEVEL,
+    #     colorize=True,
+    #     filter=lambda record: "auditable" not in record["extra"],
+    # )
+
     # logger.add(
     #     logging.Handler(),
     #     level=GLOBAL_LOG_LEVEL,
