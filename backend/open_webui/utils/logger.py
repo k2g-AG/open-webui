@@ -19,8 +19,6 @@ from open_webui.env import (
 if TYPE_CHECKING:
     from loguru import Record
 
-google: bool = False
-
 
 def stdout_format(record: "Record") -> str:
     """
@@ -37,14 +35,34 @@ def stdout_format(record: "Record") -> str:
     else:
         extra_format = ""
 
-    if google:
-        return "{name}:{function}:{line} - {message} {extra_format} \n{exception}"
-
     return (
         "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
         "<level>{level: <8}</level> | "
         "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - "
         "<level>{message}</level>" + extra_format + "\n{exception}"
+    )
+
+
+def stdout_format_google(record: "Record") -> str:
+    """
+    Generates a formatted string for log records that are output to the console. This format includes a timestamp, log level, source location (module, function, and line), the log message, and any extra data (serialized as JSON).
+
+    Parameters:
+    record (Record): A Loguru record that contains logging details including time, level, name, function, line, message, and any extra context.
+    Returns:
+    str: A formatted log string intended for stdout.
+    """
+    if record["extra"]:
+        record["extra"]["extra_json"] = json.dumps(record["extra"])
+        extra_format = " - {extra[extra_json]}"
+    else:
+        extra_format = ""
+
+    return (
+        " | "
+        "{level: <8} | "
+        "{name}:{function}:{line} - "
+        "{message}" + extra_format + "\n{exception}"
     )
 
 
@@ -130,7 +148,6 @@ def start_logger():
     Parameters:
     enable_audit_logging (bool): Determines whether audit-specific log entries should be recorded to file.
     """
-    global google
 
     logger.remove()
 
@@ -156,10 +173,9 @@ def start_logger():
     #     filter=lambda record: "auditable" not in record["extra"],
     # )
 
-    google = True
     logger.add(
         handler,
-        format=stdout_format,
+        format=stdout_format_google,
         level=GLOBAL_LOG_LEVEL,
         colorize=True,
         filter=lambda record: "auditable" not in record["extra"],
