@@ -41,7 +41,8 @@ from open_webui.env import (
 )
 
 
-logging.basicConfig(stream=sys.stdout, level=GLOBAL_LOG_LEVEL)
+# logging.basicConfig(stream=sys.stdout, level=GLOBAL_LOG_LEVEL, force=True)
+logging.basicConfig(level=GLOBAL_LOG_LEVEL, force=True)
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["SOCKET"])
 
@@ -285,7 +286,7 @@ async def user_join(sid, data):
         return
 
     data = decode_token(auth["token"])
-    
+
     # if data is None or "id" not in data:
     if data is None or "sub" not in data:
         return
