@@ -589,6 +589,8 @@ def get_sources_from_items(
                     )
                     if uploadType != "direct":
                         collection_names.append(f"file-{item['id']}")
+                    else:
+                        log.debug("file item with uploadType = direct")
 
         elif item.get("type") == "collection":
             if (
