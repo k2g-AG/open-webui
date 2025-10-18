@@ -553,9 +553,11 @@ def get_sources_from_items(
                             ]
                         ],
                     }
+                    log.debug(f"query_result: {query_result}")
                 elif item.get("id"):
                     file_object = Files.get_file_by_id(item.get("id"))
                     if file_object:
+                        log.debug(f"file_object: {file_object}")
                         query_result = {
                             "documents": [[file_object.data.get("content", "")]],
                             "metadatas": [
@@ -573,6 +575,7 @@ def get_sources_from_items(
                 if item.get("legacy"):
                     collection_names.append(f"{item['id']}")
                 else:
+                    log.debug(f"file item: {item}")
                     collection_names.append(f"file-{item['id']}")
 
         elif item.get("type") == "collection":
