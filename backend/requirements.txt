@@ -153,3 +153,4 @@ opentelemetry-instrumentation-aiohttp-client==0.57b0
 
 ## Google logging
 google.cloud.logging
+google-cloud-trace
