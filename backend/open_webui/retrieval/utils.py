@@ -553,11 +553,11 @@ def get_sources_from_items(
                             ]
                         ],
                     }
-                    log.debug(f"query_result: {query_result}")
+                    log.exception(f"query_result: {query_result}")
                 elif item.get("id"):
                     file_object = Files.get_file_by_id(item.get("id"))
                     if file_object:
-                        log.debug(f"file_object: {file_object}")
+                        log.exception(f"file_object: {file_object}")
                         query_result = {
                             "documents": [[file_object.data.get("content", "")]],
                             "metadatas": [
@@ -573,9 +573,10 @@ def get_sources_from_items(
             else:
                 # Fallback to collection names
                 if item.get("legacy"):
+                    log.exception(f"file item1: {item}")
                     collection_names.append(f"{item['id']}")
                 else:
-                    log.debug(f"file item: {item}")
+                    log.exception(f"file item2: {item}")
                     collection_names.append(f"file-{item['id']}")
 
         elif item.get("type") == "collection":
