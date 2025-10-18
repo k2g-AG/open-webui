@@ -1,3 +1,11 @@
+import google.cloud.logging
+
+try:
+    client = google.cloud.logging.Client()
+    client.setup_logging()
+except Exception as e:
+    print(f"Google Cloud Logging not configured: {e}")
+
 import asyncio
 import inspect
 import json
@@ -480,14 +488,6 @@ from open_webui.constants import ERROR_MESSAGES
 if SAFE_MODE:
     print("SAFE MODE ENABLED")
     Functions.deactivate_all_functions()
-
-import google.cloud.logging
-
-try:
-    client = google.cloud.logging.Client()
-    client.setup_logging()
-except Exception as e:
-    print(f"Google Cloud Logging not configured: {e}")
 
 # logging.basicConfig(stream=sys.stdout, level=GLOBAL_LOG_LEVEL)
 log = logging.getLogger(__name__)
