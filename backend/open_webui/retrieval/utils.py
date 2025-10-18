@@ -350,6 +350,9 @@ def query_collection_with_hybrid_search(
                 log.debug(
                     f"query_collection_with_hybrid_search:VECTOR_DB_CLIENT.get:collection {collection_name}"
                 )
+                log.exception(
+                    f"query_collection_with_hybrid_search:VECTOR_DB_CLIENT.get:collection2 {collection_name}"
+                )
                 collection_results[collection_name] = VECTOR_DB_CLIENT.get(
                     collection_name=collection_name
                 )
