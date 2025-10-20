@@ -26,10 +26,10 @@
 				<tr>
 					<th class="pl-4 md:pl-6">File name</th>
 					<th class="format-col">Format</th>
-					<th class="hidden md:table-cell">Headers</th>
-					<th class="hidden md:table-cell">Lines</th>
-					<th class="hidden sm:table-cell">Size, Mb</th>
-					<th class="hidden lg:table-cell">Date uploaded</th>
+					<th>Headers</th>
+					<th>Lines</th>
+					<th>Size, Mb</th>
+					<th>Date uploaded</th>
 					<th></th>
 				</tr>
 			</thead>
@@ -44,10 +44,10 @@
 								>{file.filename?.split('.')?.pop()?.toUpperCase()}</span
 							>
 						</td>
-						<td class="hidden md:table-cell">{''}</td>
-						<td class="hidden md:table-cell">{''}</td>
-						<td class="hidden sm:table-cell">{formatSize(file.meta.size)}</td>
-						<td class="hidden lg:table-cell">{formatDate(file.created_at)}</td>
+						<td>{''}</td>
+						<td>{''}</td>
+						<td>{formatSize(file.meta.size)}</td>
+						<td>{formatDate(file.created_at)}</td>
 						<td>
 							<button
 								class="upload-btn"
@@ -164,9 +164,6 @@
 		background-color: rgb(55 65 81 / 0.3);
 	}
 
-	.file-table tr:hover .upload-btn {
-		opacity: 1;
-	}
 
 	.file-table th {
 		color: rgb(107 114 128);
@@ -249,13 +246,13 @@
 	.upload-btn {
 		background-color: rgb(59 130 246);
 		color: white;
-		opacity: 0;
+		opacity: 1;
 		padding: 0.375rem 0.75rem;
 		border: none;
 		border-radius: 4px;
 		font-size: 13px;
 		cursor: pointer;
-		transition: opacity 0.2s, background-color 0.2s;
+		transition: background-color 0.2s;
 		white-space: nowrap;
 	}
 
@@ -271,18 +268,11 @@
 	}
 
 	.upload-btn:hover {
-		opacity: 1;
 		background-color: rgb(37 99 235);
 	}
 
 	:global(.dark) .upload-btn:hover {
 		background-color: rgb(37 99 235);
-	}
-
-	@media (hover: none) {
-		.upload-btn {
-			opacity: 1;
-		}
 	}
 
 	.footer {
