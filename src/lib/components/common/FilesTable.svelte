@@ -129,7 +129,7 @@
 	.file-table {
 		width: 100%;
 		border-collapse: collapse;
-		min-width: 500px;
+		min-width: 800px;
 	}
 
 	.file-table th,
