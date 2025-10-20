@@ -63,7 +63,8 @@ from open_webui.env import SRC_LOG_LEVELS, GLOBAL_LOG_LEVEL
 
 from open_webui.utils.integrations.stripe.service import StripeService
 
-logging.basicConfig(stream=sys.stdout, level=GLOBAL_LOG_LEVEL)
+# logging.basicConfig(stream=sys.stdout, level=GLOBAL_LOG_LEVEL)
+logging.basicConfig(level=GLOBAL_LOG_LEVEL)
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["OAUTH"])
 
@@ -486,9 +487,13 @@ class OAuthManager:
             # Synchronize Stripe customer ID for the user
             log.info(f"Attempting to synchronize Stripe customer for user {user.email}")
             try:
-                await StripeService.sync_stripe_customer(user, user.email, user.name, sub)
+                await StripeService.sync_stripe_customer(
+                    user, user.email, user.name, sub
+                )
             except Exception as e:
-                log.error(f"Error synchronizing Stripe customer for user {user.email}: {e}")
+                log.error(
+                    f"Error synchronizing Stripe customer for user {user.email}: {e}"
+                )
 
         if not user:
             user_count = Users.get_num_users()
@@ -520,20 +525,28 @@ class OAuthManager:
 
                 role = self.get_user_role(None, user_data)
 
-                log.info(f"New user signup via OAuth. Attempting to create Stripe customer and trial subscription for email: {email}.")
+                log.info(
+                    f"New user signup via OAuth. Attempting to create Stripe customer and trial subscription for email: {email}."
+                )
                 # Create Stripe customer and get customer_id
                 # This call is now handled by the StripeService
-                log.info(f"Attempting to get or create Stripe customer for new user {email}")
+                log.info(
+                    f"Attempting to get or create Stripe customer for new user {email}"
+                )
                 try:
-                    stripe_customer, stripe_customer_id = StripeService.get_or_create_stripe_customer(
-                        email=email,
-                        name=name,
-                        sub=sub
+                    stripe_customer, stripe_customer_id = (
+                        StripeService.get_or_create_stripe_customer(
+                            email=email, name=name, sub=sub
+                        )
                     )
                 except Exception as e:
-                    log.error(f"Error getting or creating Stripe customer for new user {email}: {e}")
+                    log.error(
+                        f"Error getting or creating Stripe customer for new user {email}: {e}"
+                    )
                     stripe_customer_id = None
-                log.info(f"Stripe customer ID for new user {email}: {stripe_customer_id}")
+                log.info(
+                    f"Stripe customer ID for new user {email}: {stripe_customer_id}"
+                )
 
                 user = Auths.insert_new_auth(
                     email=email,
@@ -545,7 +558,7 @@ class OAuthManager:
                     role=role,
                     oauth_sub=provider_sub,
                     id=sub,
-                    stripe_customer_id=stripe_customer_id
+                    stripe_customer_id=stripe_customer_id,
                 )
 
                 if auth_manager_config.WEBHOOK_URL:
@@ -749,11 +762,17 @@ class OAuthManager:
                         log.debug(f"Updated profile picture for user {user.email}")
 
             # Synchronize Stripe customer ID for the user during refresh
-            log.info(f"Attempting to synchronize Stripe customer for user {user.email} during refresh")
+            log.info(
+                f"Attempting to synchronize Stripe customer for user {user.email} during refresh"
+            )
             try:
-                await StripeService.sync_stripe_customer(user, user.email, user.name, sub)
+                await StripeService.sync_stripe_customer(
+                    user, user.email, user.name, sub
+                )
             except Exception as e:
-                log.error(f"Error synchronizing Stripe customer for user {user.email} during refresh: {e}")
+                log.error(
+                    f"Error synchronizing Stripe customer for user {user.email} during refresh: {e}"
+                )
 
         if not user:
             # If the user does not exist, check if signups are enabled
@@ -783,20 +802,28 @@ class OAuthManager:
 
                 role = self.get_user_role(None, user_data)
 
-                log.info(f"New user signup via OAuth during refresh. Attempting to create Stripe customer and trial subscription for email: {email}.")
+                log.info(
+                    f"New user signup via OAuth during refresh. Attempting to create Stripe customer and trial subscription for email: {email}."
+                )
                 # Create Stripe customer or get customer_id
                 # This call is now handled by the StripeService
-                log.info(f"Attempting to get or create Stripe customer for new user {email} during refresh")
+                log.info(
+                    f"Attempting to get or create Stripe customer for new user {email} during refresh"
+                )
                 try:
-                    stripe_customer, stripe_customer_id = StripeService.get_or_create_stripe_customer(
-                        email=email,
-                        name=name,
-                        sub=sub
+                    stripe_customer, stripe_customer_id = (
+                        StripeService.get_or_create_stripe_customer(
+                            email=email, name=name, sub=sub
+                        )
                     )
                 except Exception as e:
-                    log.error(f"Error getting or creating Stripe customer for new user {email} during refresh: {e}")
+                    log.error(
+                        f"Error getting or creating Stripe customer for new user {email} during refresh: {e}"
+                    )
                     stripe_customer_id = None
-                log.info(f"Stripe customer ID for new user {email} during refresh: {stripe_customer_id}")
+                log.info(
+                    f"Stripe customer ID for new user {email} during refresh: {stripe_customer_id}"
+                )
 
                 user = Auths.insert_new_auth(
                     email=email,
@@ -807,8 +834,8 @@ class OAuthManager:
                     profile_image_url=picture_url,
                     role=role,
                     oauth_sub=provider_sub,
-                    id = sub,
-                    stripe_customer_id=stripe_customer_id
+                    id=sub,
+                    stripe_customer_id=stripe_customer_id,
                 )
 
                 if auth_manager_config.WEBHOOK_URL:
@@ -906,6 +933,8 @@ class OAuthManager:
             "profile_image_url": user.profile_image_url,
             "permissions": user_permissions,
         }
-        
-        log.info(f'oauth_refresh Creating user info for user {user.id} user_info: {user_info}')
+
+        log.info(
+            f"oauth_refresh Creating user info for user {user.id} user_info: {user_info}"
+        )
         return user_info

@@ -1,3 +1,11 @@
+import google.cloud.logging
+
+try:
+    client = google.cloud.logging.Client()
+    client.setup_logging()
+except Exception as e:
+    print(f"Google Cloud Logging not configured: {e}")
+
 import asyncio
 import inspect
 import json
@@ -472,18 +480,21 @@ from open_webui.tasks import (
 )  # Import from tasks.py
 
 from open_webui.utils.redis import get_sentinels_from_env
-
-
 from open_webui.constants import ERROR_MESSAGES
-
 
 if SAFE_MODE:
     print("SAFE MODE ENABLED")
     Functions.deactivate_all_functions()
 
-logging.basicConfig(stream=sys.stdout, level=GLOBAL_LOG_LEVEL)
+# logging.basicConfig(stream=sys.stdout, level=GLOBAL_LOG_LEVEL)
 log = logging.getLogger(__name__)
-log.setLevel(SRC_LOG_LEVELS["MAIN"])
+# log.setLevel(SRC_LOG_LEVELS["MAIN"])
+log.setLevel(GLOBAL_LOG_LEVEL)
+
+log.info("info:main start ..")
+log.debug("debug:main start ..")
+log.error("error:main start ..")
+log.exception("exception:main start ..")
 
 
 class SPAStaticFiles(StaticFiles):

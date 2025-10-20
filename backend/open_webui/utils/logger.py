@@ -34,11 +34,35 @@ def stdout_format(record: "Record") -> str:
         extra_format = " - {extra[extra_json]}"
     else:
         extra_format = ""
+
     return (
         "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
         "<level>{level: <8}</level> | "
         "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - "
         "<level>{message}</level>" + extra_format + "\n{exception}"
+    )
+
+
+def stdout_format_google(record: "Record") -> str:
+    """
+    Generates a formatted string for log records that are output to the console. This format includes a timestamp, log level, source location (module, function, and line), the log message, and any extra data (serialized as JSON).
+
+    Parameters:
+    record (Record): A Loguru record that contains logging details including time, level, name, function, line, message, and any extra context.
+    Returns:
+    str: A formatted log string intended for stdout.
+    """
+    if record["extra"]:
+        record["extra"]["extra_json"] = json.dumps(record["extra"])
+        extra_format = " - {extra[extra_json]}"
+    else:
+        extra_format = ""
+
+    return (
+        " | "
+        "{level: <8} | "
+        "{name}:{function}:{line} - "
+        "{message}" + extra_format + "\n{exception}"
     )
 
 
@@ -124,14 +148,54 @@ def start_logger():
     Parameters:
     enable_audit_logging (bool): Determines whether audit-specific log entries should be recorded to file.
     """
+
     logger.remove()
 
+    # import google.cloud.logging
+    from google.cloud.logging_v2 import handlers
+
+    # from google.cloud.logging_v2.handlers import CloudLoggingHandler
+
+    # try:
+    #     client = google.cloud.logging.Client()
+    #     client.setup_logging()
+    #     handler = CloudLoggingHandler(client)
+    #     handler.setLevel(level=GLOBAL_LOG_LEVEL)
+    # except Exception as e:
+    #     print(f"Google Cloud Logging not configured: {e}")
+
+    handler = handlers.StructuredLogHandler(stream=sys.stdout)
+
+    # logger.add(
+    #     sys.stdout,
+    #     level=GLOBAL_LOG_LEVEL,
+    #     format=stdout_format,
+    #     filter=lambda record: "auditable" not in record["extra"],
+    # )
+
     logger.add(
-        sys.stdout,
+        handler,
+        format=stdout_format_google,
         level=GLOBAL_LOG_LEVEL,
-        format=stdout_format,
+        colorize=True,
         filter=lambda record: "auditable" not in record["extra"],
     )
+
+    # logger.add(
+    #     sys.stdout,
+    #     format=stdout_format,
+    #     level=GLOBAL_LOG_LEVEL,
+    #     colorize=True,
+    #     filter=lambda record: "auditable" not in record["extra"],
+    # )
+
+    # logger.add(
+    #     logging.Handler(),
+    #     level=GLOBAL_LOG_LEVEL,
+    #     format=stdout_format,
+    #     filter=lambda record: "auditable" not in record["extra"],
+    # )
+
     if AUDIT_LOG_LEVEL != "NONE":
         try:
             logger.add(

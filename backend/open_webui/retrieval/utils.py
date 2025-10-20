@@ -36,8 +36,11 @@ from open_webui.config import (
     RAG_EMBEDDING_PREFIX_FIELD_NAME,
 )
 
+
 log = logging.getLogger(__name__)
-log.setLevel(SRC_LOG_LEVELS["RAG"])
+# log.setLevel(SRC_LOG_LEVELS["RAG"])
+logging.basicConfig(level=logging.DEBUG)
+log.setLevel("DEBUG")
 
 
 from typing import Any
@@ -350,6 +353,9 @@ def query_collection_with_hybrid_search(
                 log.debug(
                     f"query_collection_with_hybrid_search:VECTOR_DB_CLIENT.get:collection {collection_name}"
                 )
+                log.exception(
+                    f"query_collection_with_hybrid_search:VECTOR_DB_CLIENT.get:collection2 {collection_name}"
+                )
                 collection_results[collection_name] = VECTOR_DB_CLIENT.get(
                     collection_name=collection_name
                 )
@@ -553,9 +559,11 @@ def get_sources_from_items(
                             ]
                         ],
                     }
+                    log.debug(f"query_result: {query_result}")
                 elif item.get("id"):
                     file_object = Files.get_file_by_id(item.get("id"))
                     if file_object:
+                        log.debug(f"file_object: {file_object}")
                         query_result = {
                             "documents": [[file_object.data.get("content", "")]],
                             "metadatas": [
@@ -573,7 +581,16 @@ def get_sources_from_items(
                 if item.get("legacy"):
                     collection_names.append(f"{item['id']}")
                 else:
-                    collection_names.append(f"file-{item['id']}")
+                    uploadType = (
+                        item.get("file", {})
+                        .get("meta", {})
+                        .get("data", {})
+                        .get("uploadType", "")
+                    )
+                    if uploadType != "direct":
+                        collection_names.append(f"file-{item['id']}")
+                    else:
+                        log.debug("file item with uploadType = direct")
 
         elif item.get("type") == "collection":
             if (

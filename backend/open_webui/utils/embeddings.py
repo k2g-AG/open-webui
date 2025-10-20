@@ -18,7 +18,8 @@ from open_webui.routers.ollama import (
 from open_webui.utils.payload import convert_embedding_payload_openai_to_ollama
 from open_webui.utils.response import convert_embedding_response_ollama_to_openai
 
-logging.basicConfig(stream=sys.stdout, level=GLOBAL_LOG_LEVEL)
+# logging.basicConfig(stream=sys.stdout, level=GLOBAL_LOG_LEVEL)
+logging.basicConfig(level=GLOBAL_LOG_LEVEL)
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MAIN"])
 
