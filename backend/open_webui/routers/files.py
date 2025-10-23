@@ -49,6 +49,7 @@ from open_webui.storage.provider import Storage
 from open_webui.utils.access_control import get_permissions
 from open_webui.utils.auth import get_admin_user, get_verified_user
 from pydantic import BaseModel
+import shutil
 
 
 log = logging.getLogger(__name__)
@@ -319,7 +320,7 @@ def upload_file_handler(
 ############################
 
 router.include_router(
-    TusRouter(store_dir=f"{UPLOAD_DIR}/tus", location=f"/api/v1/files/tus"),
+    TusRouter(store_dir=f"{UPLOAD_DIR}/tus", location="/api/v1/files/tus"),
     prefix="/tus",
     dependencies=[Depends(get_verified_user)],
 )
@@ -443,12 +444,14 @@ async def upload_file_tus(
                     "filename", tusDoneData.filename
                 )
 
-            os.remove(tusFileInfo)
+        #     os.remove(tusFileInfo)
 
-        if os.path.exists(f"{tus_file_path}.lock"):
-            os.remove(f"{tus_file_path}.lock")
+        # if os.path.exists(f"{tus_file_path}.lock"):
+        #     os.remove(f"{tus_file_path}.lock")
 
-        os.rename(tus_file_path, file_path)
+        # os.rename(tus_file_path, file_path)
+
+        shutil.copyfile(tus_file_path, file_path)
         fileInfo = os.stat(file_path)
         if int(fileInfo.st_size) != int(tusDoneData.filesize):
             raise HTTPException(
