@@ -406,6 +406,7 @@ async def upload_file_tus(
         tusIdUUID = (
             f"{tusId[:8]}-{tusId[8:12]}-{tusId[12:16]}-{tusId[16:20]}-{tusId[20:]}"
         )
+        tusIdUUID = str(uuid.uuid4())
         filename = f"{tusIdUUID}_{filename}"
         log.info(f"file lenght: {tusDoneData.filesize}")
 
@@ -460,6 +461,7 @@ async def upload_file_tus(
                     f"File {tusDoneData.fileURL} size mismatch: expected {tusDoneData.filesize}, got {fileInfo.st_size}"
                 ),
             )
+        metadata["tusId"] = tusId
         file_item = Files.insert_new_file(
             user.id,
             FileForm(
